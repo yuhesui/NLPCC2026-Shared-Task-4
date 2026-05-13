@@ -56,7 +56,7 @@ python .\dataset\dataloader_eval.py
 Run a future strategy once:
 
 ```powershell
-python -m nlpcc4.experiments.run_strategy --track track1 --strategy s1_quant_core --config .\configs\track1\s1_quant_core.yaml
+python .\scripts\run_strategy.py --track track1 --strategy s1_quant_core --config .\configs\track1\s1_quant_core.yaml
 ```
 
 Status: PLANNED - not implemented yet.
@@ -64,7 +64,7 @@ Status: PLANNED - not implemented yet.
 Run future batch experiments:
 
 ```powershell
-python -m nlpcc4.experiments.run_batch --config .\configs\track1\s1_quant_core.yaml --output .\.var\runs
+python .\scripts\run_batch.py --config .\configs\track1\s1_quant_core.yaml --output-dir .\.var\runs
 ```
 
 Status: PLANNED - not implemented yet.
@@ -74,14 +74,13 @@ Status: PLANNED - not implemented yet.
 Run lightweight tests:
 
 ```powershell
-$env:PYTHONPATH = "$PWD\src"
-pytest
+python -m pytest tests
 ```
 
 Run future no-leakage checks:
 
 ```powershell
-python -m nlpcc4.data.leakage_checks --track track1 --start-date 2025-01-02 --end-date 2025-01-31
+python .\scripts\validate_no_leakage.py --track track1 --config .\configs\track1\s1_quant_core.yaml
 ```
 
 Status: PLANNED - not implemented yet.
@@ -97,7 +96,7 @@ python .\tools\create_impl_log.py "repo init"
 Generate future implementation reports:
 
 ```powershell
-python -m nlpcc4.reports.generate_report --run-id RUN_ID --output .\docs\reports\implementation_logs
+python .\scripts\make_report.py --run-id RUN_ID --output-dir .\docs\reports\implementation_logs
 ```
 
 Status: PLANNED - not implemented yet.
@@ -105,7 +104,7 @@ Status: PLANNED - not implemented yet.
 Compare future runs:
 
 ```powershell
-python -m nlpcc4.reports.compare_runs --runs-dir .\.var\runs --metric sharpe
+python .\scripts\compare_runs.py --runs-dir .\.var\runs --metric sharpe
 ```
 
 Status: PLANNED - not implemented yet.
@@ -115,17 +114,17 @@ Status: PLANNED - not implemented yet.
 Package a future submission:
 
 ```powershell
-python -m nlpcc4.submission.package_submission --track track1 --run-id RUN_ID --output .\submissions
+python .\scripts\package_submission.py --track track1 --run-id RUN_ID --output-dir .\.var\submissions
 ```
 
 Status: PLANNED - not implemented yet.
 
 ## Safe Local Cleanup
 
-Remove ignored runtime artifacts:
+Remove selected ignored runtime artifacts after inspecting `.var/` contents:
 
 ```powershell
-Remove-Item -LiteralPath .\.var,.\outputs,.\logs,.\cache,.\artifacts -Recurse -Force
+Remove-Item -LiteralPath .\.var\cache,.\.var\outputs,.\.var\logs,.\.var\artifacts -Recurse -Force
 ```
 
-Use only for local generated artifacts. Do not run cleanup against `NLPCC_tasks/`, `src/`, `configs/`, `scripts/`, `tests/`, or `docs/`.
+Use only for local generated artifacts. Do not run cleanup against `NLPCC_tasks/`, `src/`, `configs/`, `scripts/`, `tests/`, `tools/`, or `docs/`.

@@ -1,0 +1,15 @@
+strategy:
+  name: logging
+data:
+  include_data_snapshots: false
+signals:
+  store_raw_llm_outputs: false
+portfolio:
+  store_daily_targets: true
+risk:
+  store_risk_diagnostics: true
+execution:
+  store_trade_payloads: true
+logging:
+  level: INFO
+  output_dir: .var/runs

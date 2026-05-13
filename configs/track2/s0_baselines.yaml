@@ -1,0 +1,20 @@
+strategy:
+  name: s0_baselines
+  track: track2
+data:
+  source: official_loader
+signals:
+  baselines:
+    - equal_weight
+    - inverse_vol
+    - momentum_only
+    - sector_trend_following
+    - persistence
+portfolio:
+  target_weight_sum_max: 1.0
+risk:
+  friction: 0.0001
+execution:
+  trade_converter: planned
+logging:
+  output_dir: .var/runs

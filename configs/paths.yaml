@@ -1,0 +1,15 @@
+strategy:
+  name: paths
+data:
+  official_starter_root: NLPCC_tasks
+  runtime_root: .var
+signals:
+  cache_dir: .var/llm_cache
+portfolio:
+  configs_root: configs
+risk:
+  reports_root: docs/reports
+execution:
+  submissions_root: submissions
+logging:
+  logs_root: logs

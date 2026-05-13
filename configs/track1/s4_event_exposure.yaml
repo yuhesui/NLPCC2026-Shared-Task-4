@@ -1,4 +1,15 @@
-# PLANNED - not implemented yet.
 strategy:
   name: s4_event_exposure
   track: track1
+data:
+  source: official_loader
+signals:
+  llm_schema: event_exposure
+portfolio:
+  fallback_strategy: s1_quant_core
+risk:
+  min_confidence: null
+execution:
+  trade_converter: planned
+logging:
+  output_dir: .var/runs

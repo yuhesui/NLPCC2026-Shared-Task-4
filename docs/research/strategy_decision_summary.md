@@ -1,115 +1,67 @@
 # Strategy Decision Summary
 
-This is the cleaned implementation-oriented summary for S0-S4. It replaces brainstorming notes with decisions that should guide coding.
+## 1. Phase 0 Status
 
-## Final Strategy Stack
+Phase 0 is repository scaffold, documentation, cleanup, validation, and pre-strategy setup. The canonical Phase 0 research source is `docs/research/phase0-init.md`.
 
-- S0: Baseline Battery for sanity checks, performance floors, and regression tests.
-- S1: Robust Quant Core Allocator. This is the first real strategy and the default fallback.
-- S2: Structured LLM Regime-to-Rules Allocator. The LLM emits bounded regime JSON only.
-- S3: Risk-Budgeted LLM Alpha-Tilt Optimizer. The LLM emits bounded alpha scores that tilt S1.
-- S4: Event-to-Exposure Sector Mapper. Mainly a Track 2 overlay after core infrastructure is stable.
+No full trading strategy is implemented yet. All strategy work after this cleanup must preserve the target-weight-first contract.
 
-## Track Separation
+## 2. Final Build Policy
 
-- Track 1 is macro-asset allocation across broad assets, bond/gold-like defensive assets, and macro categories.
-- Track 2 is sector rotation across industry-themed ETFs.
-- Shared portfolio construction, risk controls, metrics, LLM schemas, and trade conversion should live in shared modules.
-- Track-specific universe definitions, regime maps, and exposure matrices should remain separate.
+Build the simplest reproducible system that passes baseline, leakage, turnover, and ablation checks. Strategies output target weights, not direct official trade payloads. Execution and target-weight-to-trade conversion belong in `src/nlpcc4/execution/trade_converter.py`.
 
-## Baseline Requirements
+If LLM signals fail ablations, the final submission falls back to S1.
 
-S0 must include:
+## 3. Strategy Stack
 
-- equal weight,
-- inverse-volatility,
-- momentum-only,
-- sector trend-following,
-- persistence,
-- rule-based macro/sector rotation,
-- news sentiment only,
-- random constrained allocation.
+- S0 = Baseline Battery.
+- S1 = Robust Quant Core Allocator.
+- S2 = Structured LLM Regime-to-Rules Allocator.
+- S3 = Risk-Budgeted LLM Alpha-Tilt Optimizer.
+- S4 = Event-to-Exposure Sector Mapper.
 
-Baselines must run before any LLM performance claim is accepted.
+S1 is the first real strategy to implement after Phase 0 cleanup.
 
-## S1 Requirements
+## 4. Track Separation
 
-S1 should be implemented first and should output target weights. Core components:
+Track 1 is macro-asset allocation and is prioritized first. Track 2 is sector-rotation allocation and should be attempted only when infrastructure is reusable with low extra cost.
 
-- inverse-volatility allocation,
-- multi-horizon momentum,
-- momentum breadth,
-- defensive sleeve for Track 1 if allowed by task mechanics,
-- sector trend-following for Track 2,
-- no-trade zone,
-- turnover cap.
+S4 is mainly a Track 2 overlay and should wait until S1-S3 infrastructure is stable.
 
-If S1 cannot beat simple baselines in robust validation, refine S1 before building S2 or S3.
+## 5. Baselines Required Before LLM Work
 
-## LLM Strategy Requirements
+S0 must establish at least equal weight, inverse-volatility, momentum-only, sector trend-following, persistence, rule-based macro/sector rotation, news sentiment only, and random constrained allocation baselines.
 
-S2 and S3 may use LLMs only through structured bounded JSON. Invalid, low-confidence, contradictory, or out-of-schema output must fall back to S1.
+LLM work must not start until baseline runs, leakage checks, turnover reporting, and target-weight conversion tests are in place.
 
-Before using LLM signals, validate:
+## 6. Ablations Required Before Promotion
 
-- schema validity rate,
-- confidence calibration,
-- no direct trade or final-weight authority,
-- no future-data leakage,
-- incremental value over S1 and non-LLM ablations,
-- turnover and cost robustness,
-- reproducibility with cached prompts and deterministic parsing.
+Before promoting S2, S3, or S4, run no-LLM, no-news, LLM-scores-only, quant-features-only, fallback-only, higher-friction, and stricter-turnover ablations.
 
-## S4 Requirements
+S2 and S3 may use LLMs only through structured bounded JSON signals with schema validation, confidence gating, and fallback to S1.
 
-S4 should be attempted only after S1-S3 infrastructure is stable. Before Track 2 event mapping, validate:
+## 7. Rejected or Deferred Approaches
 
-- a fixed event taxonomy,
-- deterministic event-to-sector or event-to-ETF exposure matrix,
-- confidence gating,
-- fallback to sector trend-following,
-- improvement over Track 2 baselines after transaction costs.
+Do not build pure LLM allocation, multi-agent debate, direct LLM trade generation, early heavy RAG, or public-leaderboard prompt hacks.
 
-## Required Ablations
+Supervised ETF ranking and ensemble submission layers remain deferred until S1-S4 evidence justifies them.
 
-- no LLM,
-- LLM scores only,
-- quant features only,
-- no news input,
-- no regime classifier,
-- fallback only,
-- doubled friction cost,
-- stricter turnover cap,
-- Track 1 and Track 2 separate evaluations.
+## 8. Build Order
 
-## Rejected or Deferred Approaches
+1. Finish Phase 0 cleanup and verification.
+2. Confirm official server, demo agent, DataLoader semantics, and trade API semantics.
+3. Implement S0 baselines.
+4. Implement S1 for Track 1.
+5. Add reusable Track 2 infrastructure only where low-cost.
+6. Implement S2/S3 structured LLM systems only after S1 is stable.
+7. Implement S4 only after S1-S3 infrastructure is stable.
 
-Do not implement in early phases:
+## 9. Final Submission Policy
 
-- pure LLM end-to-end allocation,
-- direct LLM trade generation,
-- multi-agent debate,
-- heavy RAG,
-- leaderboard-tuned prompt hacks,
-- supervised ETF ranking model,
-- ensemble submission layer.
+Submit S1 if structured LLM signals are weak or fail ablations. Submit S3 only if bounded LLM alpha tilts improve validated risk-adjusted performance without excessive turnover or leakage risk.
 
-These can be revisited only after S1-S4 evidence shows a reproducible need.
+Submission artifacts must be reproducible and must not include committed raw LLM outputs, caches, generated backtest artifacts, or submission archives.
 
-## Build Order
+## 10. Immediate Next Implementation Task
 
-1. Repository structure, logging, docs, and artifact policy.
-2. S0 baselines and target-weight contract tests.
-3. S1 robust quant core for Track 1, then Track 2.
-4. Trade converter and official API integration.
-5. S2 structured regime JSON with fallback to S1.
-6. S3 bounded alpha tilts if S2/S1 infrastructure is stable.
-7. S4 Track 2 event overlay only if sector baselines leave room.
-
-## Final Submission Policy
-
-- Prefer the simplest strategy that passes validation and ablations.
-- Use S1 as the fallback and reproducibility anchor.
-- Include S2/S3/S4 only if each improves risk-adjusted performance after costs without excessive turnover or leakage risk.
-- Package only executable, reproducible code and required documentation.
-- Keep raw LLM outputs, caches, generated run artifacts, and submission zips out of Git.
+Run official server/demo smoke checks, clarify DataLoader same-day news semantics and trade API cash timing, then implement S0 baselines and S1 infrastructure.

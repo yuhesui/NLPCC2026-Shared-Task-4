@@ -9,7 +9,8 @@ Before making non-trivial changes, read:
 1. `README.md`
 2. `NLPCC_tasks/README.md`
 3. `docs/design/repo_architecture.md`
-4. the latest log under `docs/reports/implementation_logs/`
+4. `docs/research/phase0-init.md`
+5. the latest log under `docs/reports/implementation_logs/`
 
 If strategy logic or data slicing is involved, also read:
 
@@ -26,6 +27,7 @@ If strategy logic or data slicing is involved, also read:
 - Put durable configs under `configs/`.
 - Keep scripts that are meant to be reused under `scripts/` or `tools/`.
 - Keep temporary outputs under `.var/` or another ignored runtime directory.
+- Treat `docs/research/phase0-init.md` as the canonical Phase 0 research source. Do not create a duplicate root-level `phase0-init.md`.
 
 ## Strategy Contract
 

@@ -1,4 +1,15 @@
-# PLANNED - not implemented yet.
 strategy:
   name: s3_llm_alpha_tilt
   track: track1
+data:
+  source: official_loader
+signals:
+  llm_schema: alpha_score
+portfolio:
+  base_strategy: s1_quant_core
+risk:
+  max_tilt: null
+execution:
+  trade_converter: planned
+logging:
+  output_dir: .var/runs

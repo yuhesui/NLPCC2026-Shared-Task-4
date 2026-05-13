@@ -2,58 +2,63 @@
 NLPCC_tasks/dataset/
 
 # Local environments and editor state.
-.venv/
-venv/
-env/
-.idea/
-.vscode/
+/.venv/
+/venv/
+/env/
+/.idea/
+/.vscode/
 *.code-workspace
 
-# Python caches and test caches.
-__pycache__/
-*.py[cod]
-*$py.class
-.pytest_cache/
-pytest-cache-files-*/
-.ruff_cache/
-.mypy_cache/
-.coverage
-htmlcov/
-.ipynb_checkpoints/
+# Runtime sink.
+.var/
 
-# Local secrets. Keep examples trackable.
+# Accidental root runtime artifacts.
+/cache/
+/logs/
+/outputs/
+/artifacts/
+/runs/
+/sessions/
+/official_runs/
+/leaderboard_runs/
+/batch_runs/
+/submissions/
+/llm_cache/
+/prompt_cache/
+/raw_llm_outputs/
+/references_tmp/
+/scratch/
+/tmp/
+/temp/
+/pytest-cache-files-*/
+
+# Secrets. Keep examples trackable.
 .env
 .env.*
 !.env.example
 !NLPCC_tasks/.env.example
-*.pem
 *.key
-*.crt
+*.pem
+secrets/
+credentials/
+api_keys/
 *secret*
 *secrets*
 
-# Runtime outputs, caches, experiments, and generated reports.
-.var/
-tmp/
-temp/
-cache/
-logs/
-outputs/
-artifacts/
-runs/
-sessions/
-batch_runs/
-official_runs/
-submissions/
-leaderboard_runs/
-raw_llm_outputs/
-llm_cache/
-prompt_cache/
-references_tmp/
-docs/references_tmp/
-scratch/
+# Python/cache.
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 
-# Common generated archives and large derived data.
+# Jupyter.
+.ipynb_checkpoints/
+
+# Archives and large derived data.
 *.zip
 *.tar
 *.tar.gz

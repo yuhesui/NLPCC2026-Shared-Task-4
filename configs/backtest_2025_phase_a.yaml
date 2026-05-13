@@ -1,0 +1,15 @@
+strategy:
+  name: backtest_2025_phase_a
+data:
+  start_date: "2025-01-01"
+  end_date: "2025-12-31"
+signals:
+  use_news: true
+portfolio:
+  initial_capital: 100000
+risk:
+  friction: 0.0001
+execution:
+  official_server_url: http://localhost:6207
+logging:
+  output_dir: .var/runs

@@ -1,6 +1,6 @@
 # NLPCC 2026 Shared Task 4 — Repository Architecture Reference
 
-## Phase-0 Canonical Init Scope
+## Phase 0 Canonical Init Scope
 
 This repository is initialized for clean S0-S4 development while preserving the official starter kit under `NLPCC_tasks/`.
 
@@ -12,9 +12,19 @@ Active implementation scope:
 - `src/nlpcc4/execution/trade_converter.py` owns target-weight-to-trade conversion.
 - durable configs live under `configs/track1/` and `configs/track2/`.
 - implementation logs live under `docs/reports/implementation_logs/`.
-- local runtime artifacts live under ignored directories such as `.var/`, `outputs/`, `logs/`, `cache/`, `artifacts/`, and `references_tmp/`.
+- local runtime artifacts live under `.var/`; root-level runtime folders such as `outputs/`, `logs/`, `cache/`, `artifacts/`, and `references_tmp/` are ignored only as accidental cleanup targets.
 
 Only S0-S4 are active early-phase strategy systems. Any older notes about supervised ETF rankers, ensemble submission layers, heavy RAG, multi-agent debate, pure LLM allocation, or direct LLM trade generation are deferred and must not be implemented during the initialization or first strategy-coding phases.
+
+## Phase Naming and Runtime Root Policy
+
+Implementation phases and competition phases are distinct.
+
+- `docs/reports/phase_0/` stores Phase 0 repository initialization, cleanup, validation, and pre-strategy setup reports.
+- `docs/reports/phase_a/` stores competition Phase A evaluation artifacts for the 2025 leaderboard split.
+- `docs/research/phase0-init.md` is the canonical Phase 0 research source.
+- The canonical runtime sink is `.var/`.
+- Root-level runtime folders such as `outputs/`, `logs/`, `cache/`, `runs/`, and `submissions/` are ignored for safety if they accidentally appear, but should not normally be created at repository root.
 
 ## 1. Purpose
 

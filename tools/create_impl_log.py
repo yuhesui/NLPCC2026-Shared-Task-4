@@ -45,6 +45,10 @@ def create_impl_log(title: str, output_dir: str | Path | None = None) -> Path:
 
 TBD
 
+## Scope
+
+TBD
+
 ## Read-First Evidence Table
 
 | File | Exists? | Key facts extracted | Implications for init | Action needed |
@@ -74,11 +78,11 @@ TBD
 
 TBD
 
-## Issues Found
+## Known Limitations
 
 TBD
 
-## Must Fix Before Real Implementation
+## Required Fixes Before Strategy Implementation
 
 TBD
 

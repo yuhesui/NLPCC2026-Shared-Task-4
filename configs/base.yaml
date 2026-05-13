@@ -1,0 +1,15 @@
+strategy:
+  name: base
+  track: null
+data:
+  official_data_root: NLPCC_tasks/dataset
+signals:
+  enabled: false
+portfolio:
+  target_weight_sum_max: 1.0
+risk:
+  max_asset_weight: null
+execution:
+  trade_converter: planned
+logging:
+  output_dir: .var/runs
