@@ -1,1 +1,68 @@
-# NLPCC_tasks/dataset/
+# Official dataset payloads are large and should remain local.
+NLPCC_tasks/dataset/
+
+# Local environments and editor state.
+.venv/
+venv/
+env/
+.idea/
+.vscode/
+*.code-workspace
+
+# Python caches and test caches.
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+pytest-cache-files-*/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+
+# Local secrets. Keep examples trackable.
+.env
+.env.*
+!.env.example
+!NLPCC_tasks/.env.example
+*.pem
+*.key
+*.crt
+*secret*
+*secrets*
+
+# Runtime outputs, caches, experiments, and generated reports.
+.var/
+tmp/
+temp/
+cache/
+logs/
+outputs/
+artifacts/
+runs/
+sessions/
+batch_runs/
+official_runs/
+submissions/
+leaderboard_runs/
+raw_llm_outputs/
+llm_cache/
+prompt_cache/
+references_tmp/
+docs/references_tmp/
+scratch/
+
+# Common generated archives and large derived data.
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+*.rar
+*.parquet
+*.feather
+*.h5
+*.hdf5
+*.pkl
+*.pickle

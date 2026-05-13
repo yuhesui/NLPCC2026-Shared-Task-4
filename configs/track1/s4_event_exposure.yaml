@@ -1,0 +1,4 @@
+# PLANNED - not implemented yet.
+strategy:
+  name: s4_event_exposure
+  track: track1
