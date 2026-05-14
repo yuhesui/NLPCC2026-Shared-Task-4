@@ -1,15 +1,20 @@
 strategy:
   name: logging
+  track: track1
 data:
-  include_data_snapshots: false
+  same_day_news_policy: previous_day_only
 signals:
-  store_raw_llm_outputs: false
+  log_signal_values: true
 portfolio:
-  store_daily_targets: true
+  log_holdings: true
 risk:
-  store_risk_diagnostics: true
+  log_constraints: true
 execution:
-  store_trade_payloads: true
+  log_trades: true
+llm:
+  mode: "off"
+  log_raw_outputs: false
 logging:
-  level: INFO
   output_dir: .var/runs
+  log_dir: .var/logs
+  level: INFO

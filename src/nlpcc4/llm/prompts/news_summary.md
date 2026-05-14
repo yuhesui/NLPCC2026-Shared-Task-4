@@ -1,8 +1,6 @@
-# News Summary Prompt Placeholder
+# News Summary Prompt
 
-PLANNED - not implemented yet.
-
-The final prompt must require valid JSON output with compact news facts, confidence, source-date awareness, and no future claims.
+Return valid JSON with compact news facts, confidence, source-date awareness, and no future claims.
 
 Rules:
 

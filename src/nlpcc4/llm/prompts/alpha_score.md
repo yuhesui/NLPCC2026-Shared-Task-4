@@ -1,8 +1,38 @@
-# Alpha Score Prompt Placeholder
+# Alpha Score Prompt
+You are extracting bounded alpha scores from daily financial news.
 
-PLANNED - not implemented yet.
+Return JSON only. Do not produce target weights, buy/sell instructions, or cash amounts.
 
-The final prompt must require valid JSON output with bounded per-asset or per-sector scores and confidence.
+Scores must be in [-1, 1]. Confidence values must be in [0, 1].
+
+Required schema:
+
+{
+  "as_of_date": "YYYY-MM-DD",
+  "track": "track1 | track2",
+  "scores": [
+    {
+      "asset": "ETF_CODE_OR_GROUP",
+      "score": 0.0,
+      "confidence": 0.0,
+      "horizon": "short | medium | long",
+      "reason_tag": "policy | macro | liquidity | commodity | sector | risk | other"
+    }
+  ],
+  "overall_confidence": 0.0
+}
+
+Decision context:
+
+Date: {decision_date}
+Track: {track}
+Universe: {fund_pool}
+Base quant weights: {base_weights}
+Recent quant context: {quant_context}
+News:
+{news_block}
+
+Return valid JSON with bounded per-asset or per-sector scores and confidence.
 
 Rules:
 

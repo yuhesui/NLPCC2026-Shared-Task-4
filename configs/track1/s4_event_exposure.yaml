@@ -3,13 +3,37 @@ strategy:
   track: track1
 data:
   source: official_loader
+  same_day_news_policy: previous_day_only
+  lookback_days: 80
+  news_sources: [caixin, tiantian, sinafinance, tencent]
+  top_rank: 20
+  pre_k_days: 1
 signals:
-  llm_schema: event_exposure
+  momentum_windows: [5, 20, 60]
+  volatility_window: 20
 portfolio:
-  fallback_strategy: s1_quant_core
+  target_weight_sum_max: 1.0
+  cash_buffer: 0.01
+  max_single_weight: 0.30
+  max_daily_turnover: 0.20
+  no_trade_band: 0.02
 risk:
-  min_confidence: null
+  volatility_window: 20
+  breadth_window: 20
+  weak_breadth_threshold: 0.40
+  defensive_weight_when_weak: 0.35
+  drawdown_window: 60
+  drawdown_trigger: 0.10
+  defensive_weight_on_drawdown: 0.45
 execution:
-  trade_converter: planned
+  initial_capital: 100000.0
+  transaction_friction: 0.0001
+  no_trade_band: 0.02
+  max_daily_turnover: 0.20
+  trade_converter_band: 0.0
+llm:
+  mode: "off"
+  confidence_threshold: 0.50
 logging:
   output_dir: .var/runs
+  diagnostics: true

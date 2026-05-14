@@ -1,15 +1,23 @@
 strategy:
   name: paths
+  track: track1
 data:
   official_starter_root: NLPCC_tasks
-  runtime_root: .var
+  official_data_root: NLPCC_tasks/dataset
+  same_day_news_policy: previous_day_only
 signals:
-  cache_dir: .var/llm_cache
+  cache_dir: .var/cache
 portfolio:
   configs_root: configs
 risk:
   reports_root: docs/reports
 execution:
-  submissions_root: submissions
+  runs_root: .var/runs
+  submissions_root: .var/submissions
+llm:
+  manual_request_root: .var/manual_llm/requests
+  manual_response_root: .var/manual_llm/responses
+  mode: "off"
 logging:
-  logs_root: logs
+  logs_root: .var/logs
+  output_dir: .var/runs

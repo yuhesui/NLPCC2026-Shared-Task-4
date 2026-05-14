@@ -3,18 +3,34 @@ strategy:
   track: track2
 data:
   source: official_loader
+  same_day_news_policy: previous_day_only
+  lookback_days: 60
+  news_sources: [caixin, tiantian, sinafinance, tencent]
+  top_rank: 20
+  pre_k_days: 1
 signals:
-  baselines:
-    - equal_weight
-    - inverse_vol
-    - momentum_only
-    - sector_trend_following
-    - persistence
+  momentum_windows: [20]
+  volatility_window: 20
+  random_seed: 17
+  momentum_window: 20
+  top_k: 5
 portfolio:
   target_weight_sum_max: 1.0
+  cash_buffer: 0.01
+  max_single_weight: 0.22
+  max_daily_turnover: 0.20
+  no_trade_band: 0.015
 risk:
-  friction: 0.0001
+  volatility_window: 20
 execution:
-  trade_converter: planned
+  initial_capital: 100000.0
+  transaction_friction: 0.0001
+  no_trade_band: 0.015
+  max_daily_turnover: 0.20
+  trade_converter_band: 0.0
+llm:
+  mode: "off"
+  confidence_threshold: 0.55
 logging:
   output_dir: .var/runs
+  diagnostics: true

@@ -1,8 +1,10 @@
 strategy:
   name: backtest_2025_phase_a
+  track: track1
 data:
   start_date: "2025-01-01"
   end_date: "2025-12-31"
+  same_day_news_policy: previous_day_only
 signals:
   use_news: true
 portfolio:
@@ -11,5 +13,7 @@ risk:
   friction: 0.0001
 execution:
   official_server_url: http://localhost:6207
+llm:
+  mode: "off"
 logging:
   output_dir: .var/runs
