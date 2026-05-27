@@ -31,8 +31,8 @@
   * 2024 年全年数据集：已发布，作为训练集，用于Agent的构建；
   * 2025 年全年数据集：已发布，作为**A 榜公开评测榜单**；
   * 2026 年数据：我们将持续收集整理，用于构建**不对外公开的 B 榜最终评测榜单**。
-* 中文 starter kit 指引：[NLPCC_tasks/README-CN.md](NLPCC_tasks/README-CN.md)
-* 英文 starter kit 指引：[NLPCC_tasks/README.md](NLPCC_tasks/README.md)
+* 中文 starter kit 指引：[NLPCC_tasks/README-CN.md](../NLPCC_tasks/README-CN.md)
+* 英文 starter kit 指引：[NLPCC_tasks/README.md](../NLPCC_tasks/README.md)
 
 ## 奖项与参会支持
 

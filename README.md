@@ -1,102 +1,96 @@
-# NLPCC2026-Shared-Task-4: LLM-based Investment Advisor Agents for Asset Allocation in the Chinese Market
+# NLPCC 2026 Shared Task 4 Implementation Workspace
 
-[中文](README-CN.md)
+This repository workspace is for building a reproducible, leakage-safe, and report-worthy system for **NLPCC 2026 Shared Task 4: LLM-based Investment Advisor Agents for Asset Allocation in the Chinese Market**.
 
-> ⚠️ **IMPORTANT DISCLAIMER**
-> 
-> **All data, competition materials, and code related to this task are intended for academic research purposes only and do not constitute any form of investment advice.**
-## Abstract
-This task evaluates the ability of LLM-based Investment Advisor Agents to perform complex reasoning and quantitative decision-making in the Chinese capital market. Moving beyond traditional text analysis, the competition challenges participants to develop agents that interpret daily macroeconomic signals and sectoral shifts to execute daily asset allocation strategies.
-Operating in a backtesting environment, agents are provided with a "Top-20 Financial Hot News" feed and historical price data. Agents must autonomously generate daily rebalancing instructions (target weights) for specific ETF pools. All submissions will be evaluated via a standardized daily-frequency backtesting engine with a 0.01% transaction friction cost. The core challenge lies in filtering news noise and maintaining consistent investment logic without "future-data bias."
-The competition consists of two tracks:
-* Track 1: Macro-Asset Allocation: Evaluates macro-inference capabilities by rebalancing approximately 11 macro-category ETFs (e.g., broad indices, treasury bonds, and gold) to navigate economic cycles.
-* Track 2: Sector-Rotation Allocation: Focuses on sensitivity to industrial policies and trends, requiring tactical adjustments across approximately 14 industry-themed ETFs (e.g., New Energy, Semiconductors, and Healthcare).
+This project is not investment advice. It is an academic shared-task implementation workspace.
 
+## Current Execution Philosophy
 
-Performance will be ranked primarily by Sharpe Ratio, alongside cumulative returns and maximum drawdown, to measure risk-adjusted performance in the backtesting scenario. Note: This task and related datasets are intended for academic research only and do not constitute any form of investment advice.
+The repository should be developed through a prompt execution sequence:
 
-## Timeline and Data Release
-* Task Schedule: Please refer to [http://tcci.ccf.org.cn/conference/2026/](http://tcci.ccf.org.cn/conference/2026/shared-tasks/) for the official conference timeline.
-* Task Details: Detailed task specifications and starter materials are listed in the `Materials` section below.
-* ~Public Data Release: The public price and news dataset will be released when the competition officially begins.~
-* Public Data Release: The Dataset, corresponding DataLoader, and Starter Kit are now **officially released**.
-## Materials
-* **Dataset and DataLoader**: The Dataset, corresponding DataLoader, and Starter Kit are now **officially released**. The datasets are located under the path `NLPCC_tasks/dataset`. We recommend referring to the starter kit for usage guidance.
-  *   The full-year data of 2024 is provided as the training set for Agent development.
-  *   The 2025 dataset has been released and serves as the Phase A leaderboard.
-  *   We will continue collecting 2026 data to construct the non-public Phase B leaderboard subsequently.
-* Starter kit guide in Chinese: [NLPCC_tasks/README-CN.md](NLPCC_tasks/README-CN.md)
-* Starter kit guide in English: [NLPCC_tasks/README.md](NLPCC_tasks/README.md)
+1. establish repository structure and documentation;
+2. set up data/environment smoke tests;
+3. build contracts, leakage guards, and backtesting foundations;
+4. build Stage 3 price/trade baselines;
+5. build research tools;
+6. build Stage 1 and Stage 2 text modules;
+7. build robust allocation engines;
+8. build Track 2 sector systems;
+9. add fallback/ensemble control;
+10. run ablations, verification, and packaging.
 
+## Repository Placement Policy
 
+```text
+Official-facing submitted wrapper:
+  NLPCC_tasks/agent_platform/agents/build_agent.py
 
-## Awards & Conference Support
-* NLPCC & CCF-NLP Certification: The top 1 participating team of each track will be certified by NLPCC and CCF-NLP.
-* Workshop Registration Support: One member from each of the top 3 teams of each track who attends the conference in person will receive support for the workshop registration fee.
+Reusable competition implementation:
+  src/nlpcc/
 
-## Organizer: 
-E Fund Management Co., Ltd., Tsinghua University, Peking University, Wuhan University, The Hong Kong University of Science and Technology (Guangzhou), The Hong Kong Polytechnic University
+Local research/development tools:
+  src/tools/
 
-Contact: 
-* Shilong Li (lishilong@efunds.com.cn), Jiangpeng Yan (yanjiangpeng@efunds.com.cn)
+Configuration:
+  configs/
 
-**Note: This task and related datasets are intended for academic research only and do not constitute any form of investment advice. This dataset is limited to non-commercial academic evaluation and research experiments only. The copyright of all news content is reserved by each original platform. This project shall not be utilized for commercial training, secondary reproduction, or any profit-making activities. Should any copyright objections exist, please contact the project principal for immediate data removal.**
+Tests:
+  tests/
 
-## FAQ
+Documentation:
+  docs/
 
-### 1. Is formal registration required for Task 4?
+Execution prompts:
+  docs/prompts/execution/
 
-Yes. Formal registration is required for Task 4. Please download the registration form template from:
+Generated outputs:
+  outputs/
+```
 
-[http://tcci.ccf.org.cn/conference/2026/shared-tasks/RegistrationForm-Task4.doc](http://tcci.ccf.org.cn/conference/2026/shared-tasks/RegistrationForm-Task4.doc)
+## Four-Stage System
 
-After completing the form, please send it to the task contact email.
+```text
+Stage 1 — News Processing
+Stage 2 — Quantified Text Data Storage Medium
+Stage 3 — Trade Data Processing
+Stage 4 — Final Trading Agent
+```
 
-### 2. Does the May 25, 2026 registration deadline apply to Task 4?
+Each stage has a `pipeline.py` for orchestration and a `models/` subfolder for alternative methods. This keeps the broad method universe available for comparison while preserving a clean production pathway.
 
-Yes. The registration deadline is May 25, 2026, and it also applies to Task 4. This task follows the official NLPCC shared task schedule.
+## First Build Target
 
-### 3. Is there an official participant group?
+The first executable build should be a smoke pipeline:
 
-Yes. We maintain an official WeChat group for registered teams. After the organizing committee receives your completed registration form, we will invite your team to join the group.
+```text
+official data / copied sample data
+→ read first track asset
+→ buy a tiny fixed amount / one safe notional unit equivalent
+→ run through official server if available
+→ run through minimal local backtester
+→ write logs and smoke-test outputs
+```
 
-### 4. Is there a public leaderboard or online submission platform for the A-list evaluation?
+The first serious strategy target remains:
 
-There is no public online leaderboard at the moment. The A-list test data has been released for participant-side evaluation, and teams may discuss progress and questions in the official WeChat group.
+```text
+Stage 1: BL view extraction or rule-based fallback
+Stage 2: BL view store + confidence matrix
+Stage 3: covariance + inverse-volatility + momentum/risk state
+Stage 4: robust Black-Litterman + risk parity + S1 fallback
+```
 
-### 5. What are the A-list and B-list evaluation rules?
+## Documentation Map
 
-The shared task schedule follows the official NLPCC dates page:
+- `docs/REPO_STRUCTURE.md` — exact desired repository structure.
+- `docs/workflow/PROMPT_EXECUTION_PLAN.md` — full prompt execution sequence.
+- `docs/prompts/execution/` — executable prompts for coding agents.
+- `docs/architecture/` — architecture, official compatibility, repo policy, track design.
+- `docs/strategy/` — methodology, ablation, B-list hardening, implementation plan.
+- `docs/context/` — main conversation context and current decisions.
+- `docs/research/` — prior deep research reports.
+- `docs/implementation_logs/` — logs created by `create_implementation_log`.
 
-[http://tcci.ccf.org.cn/conference/2026/shared-tasks/#dates](http://tcci.ccf.org.cn/conference/2026/shared-tasks/#dates)
+## Exact Target Structure
 
-Because Task 4 uses both A-list and B-list evaluations, and agent execution may take a long time, we have released the complete A-list data for 20250101-20251231. The B-list test data is not public. The organizing committee will run each team's submitted agent code on the secret B-list dataset to produce the final official ranking.
-
-Models, extra datasets, and knowledge bases used by participating systems must be limited to resources available before 2026.
-
-### 6. What are the submission deadlines?
-
-All participating teams should submit A-list results and full code between June 11 and June 20, 2026. The final B-list ranking will be produced by the organizing committee using the submitted code on the non-public B-list dataset.
-
-### 7. What should participants submit for the final evaluation?
-
-The required final evaluation materials include:
-
-* Full code
-* A runnable agent
-* A-list prediction files
-* Intermediate logs
-
-Detailed packaging and submission instructions will be announced through this repository and the official participant group.
-
-### 8. What does the paper deadline around May 26, 2026 on the conference page or OpenReview refer to?
-
-The paper deadline shown around May 26, 2026 on the conference page or OpenReview is not the deadline for this shared task. The system report and shared task paper schedule for Task 4 will be arranged later, after the evaluation process. Participants do not need to submit Task 4 results, code, system reports, or shared task paper materials by this paper deadline.
-
-### 9. Will there be a system report or shared task paper after the evaluation?
-
-System reports and shared task papers will follow the final publication requirements of the conference. The tentative format is the NLPCC paper template, with no more than two pages per team.
-
-We currently expect the final shared task paper to cover the top three teams in each track, together with selected reports that are creative or especially informative. Inclusion is voluntary for each team and subject to the final conference publication arrangement.
-
-No separate system report deadline has been set yet. Further details will be announced together with the official conference publication process.
+See `docs/REPO_STRUCTURE.md`.
