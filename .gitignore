@@ -3,3 +3,11 @@
 /.venv/
 
 /archived official documents/images/
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.pytest_tmp/
+pytest-cache-files-*/
+outputs/pytest_tmp/
+outputs/pytest-cache-files-*/

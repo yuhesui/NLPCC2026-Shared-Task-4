@@ -1,4 +1,4 @@
-## Role
+﻿## Role
 
 You are a senior quantitative research lead, LLM-systems architect, and technical documentation architect.
 
@@ -26,7 +26,7 @@ Read all available project context, especially:
 - all prior deep research reports under `docs/`;
 - official task README files;
 - official Q&A/demo notes if available;
-- the current discussion about putting the official-facing agent in `NLPCC_tasks/agent_platform/agents/` and reusable implementation in `src/nlpcc4/`.
+- the current discussion about putting the official-facing agent in `NLPCC_tasks/agent_platform/agents/` and reusable implementation in `src/nlpcc/`.
 
 If some files are missing, state this clearly and proceed with available context.
 
@@ -54,10 +54,10 @@ This project is for NLPCC 2026 Shared Task 4:
 The project should use a four-stage architecture:
 
 ```text
-Stage 1 — News Processing
-Stage 2 — Quantified Text Data Storage Medium
-Stage 3 — Trade Data Processing
-Stage 4 — Final Trading Agent
+Stage 1 鈥?News Processing
+Stage 2 鈥?Quantified Text Data Storage Medium
+Stage 3 鈥?Trade Data Processing
+Stage 4 鈥?Final Trading Agent
 ```
 
 Current placement policy:
@@ -67,7 +67,7 @@ Official-facing submitted agent:
   NLPCC_tasks/agent_platform/agents/build_agent.py
 
 Reusable implementation:
-  src/nlpcc4/
+  src/nlpcc/
 
 Configuration:
   configs/
@@ -300,8 +300,8 @@ Completed:
   official-agent vs src placement decision
 
 Now:
-  Prompt 01 — analyse all docs into main conversation context
-  Prompt 02 — generate starter-kit Markdown documentation
+  Prompt 01 鈥?analyse all docs into main conversation context
+  Prompt 02 鈥?generate starter-kit Markdown documentation
 
 Next:
   official starter reproduction

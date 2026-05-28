@@ -1,4 +1,4 @@
-# Workflow.md — NLPCC 2026 Shared Task 4 AI-Assisted Build Workflow
+﻿# Workflow.md 鈥?NLPCC 2026 Shared Task 4 AI-Assisted Build Workflow
 
 ## 0. Purpose
 
@@ -10,16 +10,16 @@ The workflow is designed for a one-student quant/LLM-systems build, where AI is 
 
 The project goal is to build a modular, reproducible, leakage-safe, and report-worthy competition system for:
 
-1. **Track 1 — Macro-Asset Allocation**
-2. **Track 2 — Sector-Rotation Allocation**
+1. **Track 1 鈥?Macro-Asset Allocation**
+2. **Track 2 鈥?Sector-Rotation Allocation**
 
 The current recommended architecture is:
 
 ```text
 News Processing
-→ Quantified Text Data Storage Medium
-→ Trade Data Processing
-→ Final Trading Agent
+鈫?Quantified Text Data Storage Medium
+鈫?Trade Data Processing
+鈫?Final Trading Agent
 ```
 
 The current recommended repository policy is:
@@ -29,7 +29,7 @@ Official-facing submitted agent:
   NLPCC_tasks/agent_platform/agents/build_agent.py
 
 Reusable implementation package:
-  src/nlpcc4/
+  src/nlpcc/
 
 Project documentation:
   docs/
@@ -96,10 +96,10 @@ The strategy universe has been consolidated from full-system names into modular 
 The previous strategy names should not be implemented as isolated monoliths. Instead, they should be decomposed into four stages:
 
 ```text
-Stage 1 — News Processing
-Stage 2 — Quantified Text Data Storage Medium
-Stage 3 — Trade Data Processing
-Stage 4 — Final Trading Agent
+Stage 1 鈥?News Processing
+Stage 2 鈥?Quantified Text Data Storage Medium
+Stage 3 鈥?Trade Data Processing
+Stage 4 鈥?Final Trading Agent
 ```
 
 This is preferable because:
@@ -139,7 +139,7 @@ News Processing:
   Event extraction + Black-Litterman view extraction
 
 Text Storage:
-  View matrix P_t, view vector q_t, confidence matrix Ω_t
+  View matrix P_t, view vector q_t, confidence matrix 惟_t
 
 Trade Processing:
   Shrinkage covariance, inverse-volatility anchor, momentum/risk state
@@ -251,7 +251,7 @@ Use light prompting for quick local decisions.
 Examples:
 
 ```text
-Should this module be under src/nlpcc4/agents or src/nlpcc4/portfolio?
+Should this module be under src/nlpcc/stage4_agent/models or src/nlpcc/portfolio?
 Should Track 1 and Track 2 be separated by folders or configs?
 Is this leakage-safe?
 ```
@@ -304,7 +304,7 @@ It should:
 
 1. receive official daily inputs;
 2. load configuration;
-3. call the reusable `src/nlpcc4/` package;
+3. call the reusable `src/nlpcc/` package;
 4. convert target weights into official trades;
 5. return server-compatible instructions;
 6. log decisions if allowed.
@@ -316,13 +316,13 @@ It should not contain the full model implementation.
 Reusable code should live in:
 
 ```text
-src/nlpcc4/
+src/nlpcc/
 ```
 
 Recommended package structure:
 
 ```text
-src/nlpcc4/
+src/nlpcc/
   core/
     data_contracts.py
     fund_universe.py
@@ -387,12 +387,12 @@ src/nlpcc4/
 
 ### 4.3 Track Separation Policy
 
-Use a **stage-first structure** inside `src/nlpcc4/`, not a track-first structure.
+Use a **stage-first structure** inside `src/nlpcc/`, not a track-first structure.
 
 Do not do this as the main layout:
 
 ```text
-src/nlpcc4/
+src/nlpcc/
   track1/
     news_processing/
     trade_processing/
@@ -421,7 +421,7 @@ configs/systems/
 Track-specific logic should only be placed under:
 
 ```text
-src/nlpcc4/tracks/
+src/nlpcc/tracks/
   macro.py
   sector.py
 ```
@@ -432,7 +432,7 @@ or in specific final agents where the method is materially track-specific.
 
 ## 5. Detailed Phase Plan
 
-## Phase 0R — Completed Research and Context Consolidation
+## Phase 0R 鈥?Completed Research and Context Consolidation
 
 ### Status
 
@@ -463,7 +463,7 @@ docs/prompts/prompt00_repo_structure_analysis_and_main_code_placement.md
 ```text
 1. Use four-stage modular architecture.
 2. Put official-facing agent wrapper in NLPCC_tasks/agent_platform/agents/.
-3. Put reusable implementation in repo-root src/nlpcc4/.
+3. Put reusable implementation in repo-root src/nlpcc/.
 4. Build Stage 3 and S1 baselines before fancy news.
 5. Build robust BL Track 1 first.
 6. Build simplified sector Track 2 second.
@@ -477,7 +477,7 @@ Generate starter project documentation and prompt pack.
 
 ---
 
-## Phase 1R — Main Conversation Document Analysis
+## Phase 1R 鈥?Main Conversation Document Analysis
 
 ### Purpose
 
@@ -506,7 +506,7 @@ The main conversation can use the produced context to generate consistent future
 
 ---
 
-## Phase 2R — Starter Kit Documentation Generation
+## Phase 2R 鈥?Starter Kit Documentation Generation
 
 ### Purpose
 
@@ -562,7 +562,7 @@ A new AI assistant or coding agent can read these documents and understand:
 
 ---
 
-## Phase 3R — Official Starter Reproduction
+## Phase 3R 鈥?Official Starter Reproduction
 
 ### Purpose
 
@@ -596,7 +596,7 @@ Do not implement custom strategy before starter reproduction works.
 
 ---
 
-## Phase 4R — Repo Skeleton and Import Boundary
+## Phase 4R 鈥?Repo Skeleton and Import Boundary
 
 ### Purpose
 
@@ -605,7 +605,7 @@ Create a clean package structure while preserving the official starter kit.
 ### Key Actions
 
 ```text
-1. Create src/nlpcc4/ package skeleton.
+1. Create src/nlpcc/ package skeleton.
 2. Create official-facing build_agent.py wrapper.
 3. Create configs/ skeleton.
 4. Create tests/ skeleton.
@@ -615,7 +615,7 @@ Create a clean package structure while preserving the official starter kit.
 ### Deliverables
 
 ```text
-src/nlpcc4/
+src/nlpcc/
 NLPCC_tasks/agent_platform/agents/build_agent.py
 configs/
 tests/
@@ -624,11 +624,11 @@ docs/implementation_logs/phase04_repo_skeleton.md
 
 ### Success Criterion
 
-`build_agent.py` can import from `src/nlpcc4/` without fragile path hacks.
+`build_agent.py` can import from `src/nlpcc/` without fragile path hacks.
 
 ---
 
-## Phase 5R — Data Contract and Leakage Guard
+## Phase 5R 鈥?Data Contract and Leakage Guard
 
 ### Purpose
 
@@ -637,8 +637,8 @@ Prevent invalid features before any serious modelling.
 ### Key Files
 
 ```text
-src/nlpcc4/core/data_contracts.py
-src/nlpcc4/core/leakage_guard.py
+src/nlpcc/core/data_contracts.py
+src/nlpcc/core/leakage_guard.py
 tests/test_core/test_leakage_guard.py
 ```
 
@@ -660,7 +660,7 @@ Tests fail if future price fields are used as features before decision time.
 
 ---
 
-## Phase 6R — Stage 3 Trade Processing and S0/S1 Baselines
+## Phase 6R 鈥?Stage 3 Trade Processing and S0/S1 Baselines
 
 ### Purpose
 
@@ -669,12 +669,12 @@ Build the quantitative baseline before news/LLM modules.
 ### Key Files
 
 ```text
-src/nlpcc4/trade_processing/price_features.py
-src/nlpcc4/trade_processing/volatility.py
-src/nlpcc4/trade_processing/covariance.py
-src/nlpcc4/trade_processing/momentum.py
-src/nlpcc4/trade_processing/drawdown.py
-src/nlpcc4/agents/baseline_s1.py
+src/nlpcc/stage3_trade/price_features.py
+src/nlpcc/stage3_trade/volatility.py
+src/nlpcc/stage3_trade/covariance.py
+src/nlpcc/stage3_trade/momentum.py
+src/nlpcc/stage3_trade/drawdown.py
+src/nlpcc/stage4_agent/models/baseline_s1.py
 configs/systems/s0_equal_weight.yaml
 configs/systems/s1_macro.yaml
 configs/systems/s1_sector.yaml
@@ -706,7 +706,7 @@ Cash utilisation
 
 ---
 
-## Phase 7R — Official Trade Adapter
+## Phase 7R 鈥?Official Trade Adapter
 
 ### Purpose
 
@@ -715,9 +715,9 @@ Convert target weights into official buy/sell instructions safely.
 ### Key Files
 
 ```text
-src/nlpcc4/execution/target_weights.py
-src/nlpcc4/execution/official_adapter.py
-src/nlpcc4/execution/trade_validator.py
+src/nlpcc/execution/target_weights.py
+src/nlpcc/execution/official_adapter.py
+src/nlpcc/execution/trade_validator.py
 tests/test_execution/test_official_adapter.py
 ```
 
@@ -733,7 +733,7 @@ No invalid trades under baseline backtests, or all invalid trades are caught bef
 
 ---
 
-## Phase 8R — Stage 1 News Processing MVP
+## Phase 8R 鈥?Stage 1 News Processing MVP
 
 ### Purpose
 
@@ -742,11 +742,11 @@ Convert Top-20 news into structured signals.
 ### Key Files
 
 ```text
-src/nlpcc4/news_processing/schema.py
-src/nlpcc4/news_processing/relevance_filter.py
-src/nlpcc4/news_processing/event_extractor.py
-src/nlpcc4/news_processing/view_extractor.py
-src/nlpcc4/news_processing/sector_mapper.py
+src/nlpcc/stage1_news/schema.py
+src/nlpcc/stage1_news/relevance_filter.py
+src/nlpcc/stage1_news/event_extractor.py
+src/nlpcc/stage1_news/view_extractor.py
+src/nlpcc/stage1_news/sector_mapper.py
 docs/prompts/news_event_extraction_v1.md
 docs/prompts/bl_view_extraction_v1.md
 ```
@@ -790,7 +790,7 @@ Every trading day produces valid structured news records or a clean empty/fallba
 
 ---
 
-## Phase 9R — Stage 2 Quantified Text Storage MVP
+## Phase 9R 鈥?Stage 2 Quantified Text Storage MVP
 
 ### Purpose
 
@@ -799,10 +799,10 @@ Store structured news in a quantitative representation.
 ### Key Files
 
 ```text
-src/nlpcc4/text_store/event_table.py
-src/nlpcc4/text_store/view_matrix.py
-src/nlpcc4/text_store/confidence_matrix.py
-src/nlpcc4/text_store/belief_state.py
+src/nlpcc/stage2_text_store/event_table.py
+src/nlpcc/stage2_text_store/view_matrix.py
+src/nlpcc/stage2_text_store/confidence_matrix.py
+src/nlpcc/stage2_text_store/belief_state.py
 ```
 
 ### Candidate Storage Media to Document
@@ -841,13 +841,13 @@ For any date, the system can reconstruct:
 event records
 P_t view matrix
 q_t view vector
-Ω_t confidence matrix
+惟_t confidence matrix
 belief state
 ```
 
 ---
 
-## Phase 10R — Stage 4 First Complete Agent: Robust BL Track 1
+## Phase 10R 鈥?Stage 4 First Complete Agent: Robust BL Track 1
 
 ### Purpose
 
@@ -860,7 +860,7 @@ News Processing:
   event extraction + BL view extraction
 
 Text Storage:
-  P_t, q_t, Ω_t
+  P_t, q_t, 惟_t
 
 Trade Processing:
   shrinkage covariance + momentum/risk state
@@ -872,11 +872,11 @@ Final Agent:
 ### Key Files
 
 ```text
-src/nlpcc4/portfolio/black_litterman.py
-src/nlpcc4/portfolio/robust_optimizer.py
-src/nlpcc4/portfolio/constraints.py
-src/nlpcc4/portfolio/turnover_control.py
-src/nlpcc4/agents/robust_bl_agent.py
+src/nlpcc/portfolio/black_litterman.py
+src/nlpcc/portfolio/robust_optimizer.py
+src/nlpcc/portfolio/constraints.py
+src/nlpcc/portfolio/turnover_control.py
+src/nlpcc/stage4_agent/models/robust_bl_agent.py
 configs/systems/robust_bl_track1.yaml
 ```
 
@@ -894,7 +894,7 @@ Promote if it:
 
 ---
 
-## Phase 11R — Second System: Track 2 Sector Rotation
+## Phase 11R 鈥?Second System: Track 2 Sector Rotation
 
 ### Purpose
 
@@ -919,10 +919,10 @@ Final Agent:
 ### Key Files
 
 ```text
-src/nlpcc4/news_processing/sector_mapper.py
-src/nlpcc4/text_store/sector_impact_panel.py
-src/nlpcc4/trade_processing/correlation_graph.py
-src/nlpcc4/agents/sector_rotation_agent.py
+src/nlpcc/stage1_news/sector_mapper.py
+src/nlpcc/stage2_text_store/sector_impact_panel.py
+src/nlpcc/stage3_trade/correlation_graph.py
+src/nlpcc/stage4_agent/models/sector_rotation_agent.py
 configs/systems/sector_rotation_track2.yaml
 ```
 
@@ -939,7 +939,7 @@ S1 sector baseline
 
 ---
 
-## Phase 12R — OCO / Conservative Ensemble Fallback
+## Phase 12R 鈥?OCO / Conservative Ensemble Fallback
 
 ### Purpose
 
@@ -948,8 +948,8 @@ Make the final system safer under hidden B-list conditions.
 ### Key Files
 
 ```text
-src/nlpcc4/agents/oco_ensemble.py
-src/nlpcc4/agents/fallbacks.py
+src/nlpcc/stage4_agent/models/oco_ensemble.py
+src/nlpcc/stage4_agent/models/fallbacks.py
 configs/systems/conservative_ensemble.yaml
 ```
 
@@ -972,7 +972,7 @@ The ensemble should reduce catastrophic failure risk and support fallback to S1 
 
 ---
 
-## Phase 13R — Experiment and Ablation Suite
+## Phase 13R 鈥?Experiment and Ablation Suite
 
 ### Purpose
 
@@ -1020,7 +1020,7 @@ known caveats
 
 ---
 
-## Phase 14R — B-List Hardening and Final Packaging
+## Phase 14R 鈥?B-List Hardening and Final Packaging
 
 ### Purpose
 
@@ -1045,7 +1045,7 @@ Complete logs and report artifacts
 
 ```text
 NLPCC_tasks/agent_platform/agents/build_agent.py
-src/nlpcc4/
+src/nlpcc/
 configs/systems/final_submission.yaml
 requirements.txt or dependency lock
 Dockerfile or equivalent environment
@@ -1081,7 +1081,7 @@ The first two prompts should be **chat prompts**, not coding prompts.
 
 ---
 
-# Prompt 01 — Main Conversation Document Analysis
+# Prompt 01 鈥?Main Conversation Document Analysis
 
 Save as:
 
@@ -1090,7 +1090,7 @@ docs/prompts/prompt01_main_conversation_doc_analysis.md
 ```
 
 ```md
-# Prompt 01 — Main Conversation Document Analysis
+# Prompt 01 鈥?Main Conversation Document Analysis
 
 ## Role
 
@@ -1153,9 +1153,9 @@ The current intended architecture is four-stage modular:
 
 ```text
 News Processing
-→ Quantified Text Data Storage Medium
-→ Trade Data Processing
-→ Final Trading Agent
+鈫?Quantified Text Data Storage Medium
+鈫?Trade Data Processing
+鈫?Final Trading Agent
 ```
 
 The current intended repo policy is:
@@ -1165,7 +1165,7 @@ Official-facing submitted agent:
   NLPCC_tasks/agent_platform/agents/build_agent.py
 
 Reusable implementation:
-  src/nlpcc4/
+  src/nlpcc/
 
 Docs:
   docs/
@@ -1269,7 +1269,7 @@ Use this table:
 
 ---
 
-# Prompt 02 — Starter Kit Documentation Generation
+# Prompt 02 鈥?Starter Kit Documentation Generation
 
 Save as:
 
@@ -1278,7 +1278,7 @@ docs/prompts/prompt02_starter_kit_documentation_generation.md
 ```
 
 ```md
-# Prompt 02 — Starter Kit Documentation Generation
+# Prompt 02 鈥?Starter Kit Documentation Generation
 
 ## Role
 
@@ -1308,7 +1308,7 @@ Read all available project context, especially:
 - all prior deep research reports under `docs/`;
 - official task README files;
 - official Q&A/demo notes if available;
-- the current discussion about putting the official-facing agent in `NLPCC_tasks/agent_platform/agents/` and reusable implementation in `src/nlpcc4/`.
+- the current discussion about putting the official-facing agent in `NLPCC_tasks/agent_platform/agents/` and reusable implementation in `src/nlpcc/`.
 
 If some files are missing, state this clearly and proceed with available context.
 
@@ -1336,10 +1336,10 @@ This project is for NLPCC 2026 Shared Task 4:
 The project should use a four-stage architecture:
 
 ```text
-Stage 1 — News Processing
-Stage 2 — Quantified Text Data Storage Medium
-Stage 3 — Trade Data Processing
-Stage 4 — Final Trading Agent
+Stage 1 鈥?News Processing
+Stage 2 鈥?Quantified Text Data Storage Medium
+Stage 3 鈥?Trade Data Processing
+Stage 4 鈥?Final Trading Agent
 ```
 
 Current placement policy:
@@ -1349,7 +1349,7 @@ Official-facing submitted agent:
   NLPCC_tasks/agent_platform/agents/build_agent.py
 
 Reusable implementation:
-  src/nlpcc4/
+  src/nlpcc/
 
 Configuration:
   configs/
@@ -1582,8 +1582,8 @@ Completed:
   official-agent vs src placement decision
 
 Now:
-  Prompt 01 — analyse all docs into main conversation context
-  Prompt 02 — generate starter-kit Markdown documentation
+  Prompt 01 鈥?analyse all docs into main conversation context
+  Prompt 02 鈥?generate starter-kit Markdown documentation
 
 Next:
   official starter reproduction

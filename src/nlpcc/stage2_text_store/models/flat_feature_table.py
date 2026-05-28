@@ -1,0 +1,2 @@
+"""Flat feature table placeholder."""
+

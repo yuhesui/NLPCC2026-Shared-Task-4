@@ -1,4 +1,4 @@
-# METHODOLOGY.md — Method Universe and Execution Stance
+# METHODOLOGY.md - Method Universe and Execution Stance
 
 ## 1. Core Principle
 

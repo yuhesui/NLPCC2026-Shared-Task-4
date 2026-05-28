@@ -1,0 +1,2 @@
+"""Sector trend placeholder."""
+

@@ -1,0 +1,2 @@
+"""Event table placeholder."""
+

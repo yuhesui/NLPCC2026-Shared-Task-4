@@ -1,0 +1,2 @@
+"""Belief state placeholder."""
+

@@ -1,4 +1,4 @@
-# Main Conversation Context — NLPCC 2026 Shared Task 4
+﻿# Main Conversation Context 鈥?NLPCC 2026 Shared Task 4
 
 ## A. Project Objective
 
@@ -6,10 +6,10 @@ This project is for **NLPCC 2026 Shared Task 4: LLM-based Investment Advisor Age
 
 The objective is to build a **modular, leakage-safe, reproducible, and report-worthy investment-advisor agent** for two tracks:
 
-1. **Track 1 — Macro-Asset Allocation**: daily allocation across broad macro ETF/index instruments, including equity indices, treasury bonds, gold, and major style/thematic baskets.
-2. **Track 2 — Sector-Rotation Allocation**: daily allocation across industry/thematic ETFs, with stronger sensitivity to sector policy, supply-chain narratives, and thematic rotations.
+1. **Track 1 鈥?Macro-Asset Allocation**: daily allocation across broad macro ETF/index instruments, including equity indices, treasury bonds, gold, and major style/thematic baskets.
+2. **Track 2 鈥?Sector-Rotation Allocation**: daily allocation across industry/thematic ETFs, with stronger sensitivity to sector policy, supply-chain narratives, and thematic rotations.
 
-The project should not become a generic “LLM says buy/sell” system. The working thesis is:
+The project should not become a generic 鈥淟LM says buy/sell鈥?system. The working thesis is:
 
 > A competitive LLM investment advisor should convert financial hot news into bounded, auditable, structured signals; deterministic portfolio mathematics should make the final allocation and execution decision.
 
@@ -99,7 +99,7 @@ The initial research and planning stage has been completed. The following upload
 - `Workflow.md`
 - `README.md` uploaded as dataset/DataLoader README
 - `README (1).md` uploaded as starter-kit README
-- `NLPCCSharedTask4演示与答疑.md` uploaded as official/demo Q&A notes
+- `NLPCCSharedTask4婕旂ず涓庣瓟鐤?md` uploaded as official/demo Q&A notes
 
 The following files were referenced by project docs but were **not uploaded as standalone sandbox files** in this turn:
 
@@ -134,7 +134,7 @@ News Processing:
   denoising + event extraction + Black-Litterman view extraction
 
 Quantified Text Storage:
-  view matrix P_t, view vector q_t, confidence / uncertainty matrix Ω_t
+  view matrix P_t, view vector q_t, confidence / uncertainty matrix 惟_t
 
 Trade Data Processing:
   shrinkage covariance, inverse-volatility anchor, momentum, breadth, drawdown, turnover/cash feasibility
@@ -183,17 +183,17 @@ All designs should be decomposed into the same four-stage interface:
 
 ```text
 News Processing
-→ Quantified Text Data Storage Medium
-→ Trade Data Processing
-→ Final Trading Agent
+鈫?Quantified Text Data Storage Medium
+鈫?Trade Data Processing
+鈫?Final Trading Agent
 ```
 
 | Stage | Purpose | Inputs | Outputs | Main Risk | Fallback |
 |---|---|---|---|---|---|
-| Stage 1 — News Processing | Convert raw Top-20 news into typed, validated financial observations. | Timestamp-safe official news before cutoff; frozen pre-2026 dictionaries/models. | Event tuples, macro tags, sector tags, relevance scores, BL views, regime observations, confidence flags. | Prompt instability, schema drift, hallucinated mapping, timestamp misuse. | Rule-based keyword tags, sentiment-only, or neutral no-news signals. |
-| Stage 2 — Quantified Text Data Storage Medium | Store structured news as numerical state for mathematical modules. | Stage 1 outputs across current and prior days. | Flat event panel, BL view store, confidence matrix, belief vector, decayed memory, retrieval index, KG, causal graph. | Over-complex stores that cannot be reproduced or ablated; hidden-period overfit. | Daily flat feature table + neutral confidence store. |
-| Stage 3 — Trade Data Processing | Convert official price and portfolio data into market/risk state. | Official historical prices, current-day open only, holdings, cash, previous weights/trades. | Returns, vol, covariance, momentum, drawdown, breadth, correlation graph, cash/turnover feasibility. | Future-price leakage; execution mismatch; wrong turnover/cost accounting. | S0/S1 quant core with inverse-vol, momentum, drawdown, turnover caps. |
-| Stage 4 — Final Trading Agent | Combine text and market state into target weights and executable official trades. | Stage 2 text state, Stage 3 market state, configs, previous portfolio. | Target weights, official buy/sell instructions, reason codes, fallback flags, logs. | Overfit optimiser, excessive turnover, direct LLM allocation, dependency failure. | Conservative ensemble or S1 fallback with low-turnover rebalancing. |
+| Stage 1 鈥?News Processing | Convert raw Top-20 news into typed, validated financial observations. | Timestamp-safe official news before cutoff; frozen pre-2026 dictionaries/models. | Event tuples, macro tags, sector tags, relevance scores, BL views, regime observations, confidence flags. | Prompt instability, schema drift, hallucinated mapping, timestamp misuse. | Rule-based keyword tags, sentiment-only, or neutral no-news signals. |
+| Stage 2 鈥?Quantified Text Data Storage Medium | Store structured news as numerical state for mathematical modules. | Stage 1 outputs across current and prior days. | Flat event panel, BL view store, confidence matrix, belief vector, decayed memory, retrieval index, KG, causal graph. | Over-complex stores that cannot be reproduced or ablated; hidden-period overfit. | Daily flat feature table + neutral confidence store. |
+| Stage 3 鈥?Trade Data Processing | Convert official price and portfolio data into market/risk state. | Official historical prices, current-day open only, holdings, cash, previous weights/trades. | Returns, vol, covariance, momentum, drawdown, breadth, correlation graph, cash/turnover feasibility. | Future-price leakage; execution mismatch; wrong turnover/cost accounting. | S0/S1 quant core with inverse-vol, momentum, drawdown, turnover caps. |
+| Stage 4 鈥?Final Trading Agent | Combine text and market state into target weights and executable official trades. | Stage 2 text state, Stage 3 market state, configs, previous portfolio. | Target weights, official buy/sell instructions, reason codes, fallback flags, logs. | Overfit optimiser, excessive turnover, direct LLM allocation, dependency failure. | Conservative ensemble or S1 fallback with low-turnover rebalancing. |
 
 The architecture should remain **stage-first**, not track-first. Track 1 and Track 2 share most infrastructure but use separate configs, fund universes, and a small number of track-specific modules.
 
@@ -206,7 +206,10 @@ Official-facing submitted agent:
   NLPCC_tasks/agent_platform/agents/build_agent.py
 
 Reusable implementation:
-  src/nlpcc4/
+  src/nlpcc/
+
+Local research/development tools:
+  src/tools/
 
 Documentation:
   docs/
@@ -224,7 +227,7 @@ Generated outputs:
 
 1. receive official daily inputs;
 2. load deterministic config;
-3. call the reusable `src/nlpcc4/` package;
+3. call the reusable `src/nlpcc/` package;
 4. convert target weights into official buy/sell trade schema;
 5. return server-compatible instructions;
 6. log bounded decision metadata where allowed.
@@ -233,20 +236,31 @@ It should not contain the model implementation.
 
 ### Reusable implementation package
 
-The reusable system should live under `src/nlpcc4/`, with stage-aligned modules:
+The reusable competition system should live under `src/nlpcc/`, with stage-aligned modules:
 
 ```text
-src/nlpcc4/
-  data_contract/
-  news_processing/
-  text_store/
-  trade_processing/
+src/nlpcc/
+  core/
+  stage1_news/
+  stage2_text_store/
+  stage3_trade/
+  stage4_agent/
   portfolio/
-  agents/
   execution/
   tracks/
-  evaluation/
-  reports/
+  runtime/
+```
+
+Local research and development infrastructure should live under `src/tools/`:
+
+```text
+src/tools/
+  data_tools/
+  backtesting/
+  optimiser/
+  experiments/
+  reporting/
+  verification/
   utils/
 ```
 
@@ -256,24 +270,18 @@ Use config separation rather than track-first source-code duplication:
 
 ```text
 configs/
-  data_contract/
-  news_processing/
-  text_store/
-  trade_processing/
-  agents/
+  stage1_news/
+  stage2_text_store/
+  stage3_trade/
+  stage4_agent/
   systems/
   tracks/
-  evaluation/
+  tools/
 
 tests/
-  test_data_contract/
-  test_news_processing/
-  test_text_store/
-  test_trade_processing/
-  test_agents/
-  test_portfolio/
-  test_execution/
-  test_systems/
+  test_nlpcc/
+  test_tools/
+  test_integration/
 ```
 
 Generated experiment logs, caches, feature matrices, report figures, and backtest results should go under `outputs/`, not under `src/`, `docs/`, or `NLPCC_tasks/dataset/`.
@@ -311,10 +319,10 @@ At the current stage, **including more methods is preferred**. This does not mea
 The current recommended build order is:
 
 1. **Official starter reproduction**: run starter server/client; verify both tracks; save logs.
-2. **Repo skeleton and import boundary**: create `src/nlpcc4/`, configs, tests, and thin official wrapper.
+2. **Repo skeleton and import boundary**: create `src/nlpcc/`, `src/tools/`, configs, tests, and thin official wrapper.
 3. **Data contract and leakage guard**: centralise all safe field definitions; prevent raw CSV bypass.
 4. **Stage 3 trade processing + S0/S1 baselines**: equal weight, inverse-vol, momentum, sector trend, breadth, drawdown, covariance, turnover state.
-5. **Official trade adapter**: target weights → buy amount / sell percentage; cash feasibility; no overspend.
+5. **Official trade adapter**: target weights 鈫?buy amount / sell percentage; cash feasibility; no overspend.
 6. **Stage 1 news processing MVP**: denoising, event tuples, entity/sector mapping, BL-view schema, validator.
 7. **Stage 2 text storage MVP**: flat event table, BL view store, confidence/uncertainty matrix, decayed memory.
 8. **DRO-BL-RP Track 1 system**: robust BL with RP/S1 anchor and turnover penalty.

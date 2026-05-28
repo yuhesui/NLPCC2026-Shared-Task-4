@@ -1,0 +1,2 @@
+"""Cash feasibility placeholder."""
+

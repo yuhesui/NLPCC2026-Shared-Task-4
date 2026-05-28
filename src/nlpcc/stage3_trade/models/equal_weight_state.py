@@ -1,0 +1,2 @@
+"""Equal-weight state placeholder."""
+

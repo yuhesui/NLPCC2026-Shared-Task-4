@@ -1,6 +1,6 @@
 # NLPCC 2026 Shared Task 4 Implementation Workspace
 
-This repository workspace is for building a reproducible, leakage-safe, and report-worthy system for **NLPCC 2026 Shared Task 4: LLM-based Investment Advisor Agents for Asset Allocation in the Chinese Market**.
+This repository is for building a reproducible, leakage-safe, and report-worthy system for **NLPCC 2026 Shared Task 4: LLM-based Investment Advisor Agents for Asset Allocation in the Chinese Market**.
 
 This project is not investment advice. It is an academic shared-task implementation workspace.
 
@@ -50,10 +50,10 @@ Generated outputs:
 ## Four-Stage System
 
 ```text
-Stage 1 — News Processing
-Stage 2 — Quantified Text Data Storage Medium
-Stage 3 — Trade Data Processing
-Stage 4 — Final Trading Agent
+Stage 1 - News Processing
+Stage 2 - Quantified Text Data Storage Medium
+Stage 3 - Trade Data Processing
+Stage 4 - Final Trading Agent
 ```
 
 Each stage has a `pipeline.py` for orchestration and a `models/` subfolder for alternative methods. This keeps the broad method universe available for comparison while preserving a clean production pathway.
@@ -64,11 +64,11 @@ The first executable build should be a smoke pipeline:
 
 ```text
 official data / copied sample data
-→ read first track asset
-→ buy a tiny fixed amount / one safe notional unit equivalent
-→ run through official server if available
-→ run through minimal local backtester
-→ write logs and smoke-test outputs
+-> read first track asset
+-> buy a tiny fixed amount / one safe notional unit equivalent
+-> run through official server if available
+-> run through minimal local backtester
+-> write logs and smoke-test outputs
 ```
 
 The first serious strategy target remains:
@@ -82,14 +82,14 @@ Stage 4: robust Black-Litterman + risk parity + S1 fallback
 
 ## Documentation Map
 
-- `docs/REPO_STRUCTURE.md` — exact desired repository structure.
-- `docs/workflow/PROMPT_EXECUTION_PLAN.md` — full prompt execution sequence.
-- `docs/prompts/execution/` — executable prompts for coding agents.
-- `docs/architecture/` — architecture, official compatibility, repo policy, track design.
-- `docs/strategy/` — methodology, ablation, B-list hardening, implementation plan.
-- `docs/context/` — main conversation context and current decisions.
-- `docs/research/` — prior deep research reports.
-- `docs/implementation_logs/` — logs created by `create_implementation_log`.
+- `docs/REPO_STRUCTURE.md` - exact desired repository structure.
+- `docs/workflow/PROMPT_EXECUTION_PLAN.md` - full prompt execution sequence.
+- `docs/prompts/execution/` - executable prompts for coding agents.
+- `docs/architecture/` - architecture, official compatibility, repo policy, track design.
+- `docs/strategy/` - methodology, ablation, B-list hardening, implementation plan.
+- `docs/context/` - main conversation context and current decisions.
+- `docs/research/` - prior deep research reports.
+- `docs/implementation_logs/` - logs created by `create_implementation_log`.
 
 ## Exact Target Structure
 

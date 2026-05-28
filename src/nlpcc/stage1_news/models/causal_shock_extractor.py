@@ -1,0 +1,2 @@
+"""Causal shock extractor placeholder."""
+

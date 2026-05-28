@@ -1,0 +1,2 @@
+"""Candidate news-processing models."""
+

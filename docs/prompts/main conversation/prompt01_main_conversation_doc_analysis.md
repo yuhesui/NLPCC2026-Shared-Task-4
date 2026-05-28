@@ -1,4 +1,4 @@
-# Prompt 01 — Main Conversation Document Analysis
+﻿# Prompt 01 鈥?Main Conversation Document Analysis
 
 ## Role
 
@@ -61,9 +61,9 @@ The current intended architecture is four-stage modular:
 
 ```text
 News Processing
-→ Quantified Text Data Storage Medium
-→ Trade Data Processing
-→ Final Trading Agent
+鈫?Quantified Text Data Storage Medium
+鈫?Trade Data Processing
+鈫?Final Trading Agent
 ```
 
 The current intended repo policy is:
@@ -73,7 +73,7 @@ Official-facing submitted agent:
   NLPCC_tasks/agent_platform/agents/build_agent.py
 
 Reusable implementation:
-  src/nlpcc4/
+  src/nlpcc/
 
 Docs:
   docs/

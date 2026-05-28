@@ -1,4 +1,4 @@
-# Current Decisions — NLPCC 2026 Shared Task 4
+﻿# Current Decisions 鈥?NLPCC 2026 Shared Task 4
 
 ## A. Decisions Already Made
 
@@ -6,9 +6,9 @@
 
    ```text
    News Processing
-   → Quantified Text Data Storage Medium
-   → Trade Data Processing
-   → Final Trading Agent
+   鈫?Quantified Text Data Storage Medium
+   鈫?Trade Data Processing
+   鈫?Final Trading Agent
    ```
 
 2. **Use a stage-first implementation layout, not a track-first layout.**
@@ -27,11 +27,11 @@
    NLPCC_tasks/agent_platform/agents/build_agent.py
    ```
 
-   It should call reusable logic from `src/nlpcc4/`, not contain the whole model.
+   It should call reusable logic from `src/nlpcc/`, not contain the whole model.
 
-5. **Place reusable implementation under repo-root `src/nlpcc4/`.**
+5. **Place reusable implementation under repo-root `src/nlpcc/`.**
 
-   The package should contain reusable stage modules, portfolio logic, execution adapters, metrics, and report tooling.
+   The package should contain reusable stage modules, portfolio logic, execution adapters, tracks, and runtime fallback logic. Metrics, experiments, reports, and verification tools belong under `src/tools/`.
 
 6. **Keep documentation under `docs/`, prompts under `docs/prompts/`, and generated outputs under `outputs/`.**
 
@@ -43,7 +43,7 @@
 
 8. **Build robust Black-Litterman first.**
 
-   The first complete innovative prototype should be **DRO-BL-RP / M1 robust BL**, using structured news views, confidence matrix `Ω_t`, shrinkage covariance, risk-parity/S1 anchor, and turnover control.
+   The first complete innovative prototype should be **DRO-BL-RP / M1 robust BL**, using structured news views, confidence matrix `惟_t`, shrinkage covariance, risk-parity/S1 anchor, and turnover control.
 
 9. **Keep S1 and no-LLM fallback mandatory.**
 
@@ -156,7 +156,7 @@
 
 4. **Build the repo skeleton only after official starter reproduction is understood.**
 
-   Add `src/nlpcc4/`, `configs/`, `tests/`, and `outputs/` without disturbing official starter files.
+   Add `src/nlpcc/`, `src/tools/`, `configs/`, `tests/`, and `outputs/` without disturbing official starter files.
 
 5. **Implement the data contract and leakage guard before any alpha logic.**
 

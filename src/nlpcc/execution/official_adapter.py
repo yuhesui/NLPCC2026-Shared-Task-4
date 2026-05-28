@@ -1,0 +1,2 @@
+"""Official trade adapter placeholder."""
+

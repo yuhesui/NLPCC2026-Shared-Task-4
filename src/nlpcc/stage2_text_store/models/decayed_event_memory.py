@@ -1,0 +1,2 @@
+"""Decayed event memory placeholder."""
+

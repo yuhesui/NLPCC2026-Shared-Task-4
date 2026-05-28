@@ -1,0 +1,2 @@
+"""Sector-rotation agent placeholder."""
+

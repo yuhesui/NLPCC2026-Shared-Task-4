@@ -1,4 +1,4 @@
-# prompt00 — Repository Reset, Documentation Migration, Skeleton Creation, and Implementation Log Helper
+﻿# prompt00 鈥?Repository Reset, Documentation Migration, Skeleton Creation, and Implementation Log Helper
 
 ## Role
 
@@ -50,7 +50,8 @@ If the helper is unavailable because the repository is still being bootstrapped,
 
 1. Inspect the current repository tree.
 2. Preserve `NLPCC_tasks/` as official starter/reference code.
-3. Reorganise existing documentation into the desired `docs/` structure shown in `docs/REPO_STRUCTURE.md`.
+3. Reorganise existing documentation into the desired `docs/` structure shown in 
+   `docs/REPO_STRUCTURE.md`. *If unedited
 4. If a document category is unclear, move or keep it under `docs/archived/` and record it in `docs/archived/README.md`.
 5. Create `docs/prompts/execution/` and place/copy the execution prompts there if not already present.
 6. Create `AGENTS.md`, root `README.md`, root `METHODOLOGY.md`, root `WORKFLOW.md` if missing or stale.

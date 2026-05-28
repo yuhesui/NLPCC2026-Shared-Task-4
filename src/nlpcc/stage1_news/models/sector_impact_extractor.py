@@ -1,0 +1,2 @@
+"""Sector impact extractor placeholder."""
+

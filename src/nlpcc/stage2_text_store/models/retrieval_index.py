@@ -1,0 +1,2 @@
+"""Retrieval index placeholder."""
+

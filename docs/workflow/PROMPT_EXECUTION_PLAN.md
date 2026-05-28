@@ -1,4 +1,4 @@
-# PROMPT_EXECUTION_PLAN.md — NLPCC Task 4 Build Sequence
+# PROMPT_EXECUTION_PLAN.md - NLPCC Task 4 Build Sequence
 
 ## 1. Purpose
 
@@ -52,5 +52,5 @@ Every prompt execution must end by using `create_implementation_log`.
 The helper is created or repaired in `prompt00`. Expected command:
 
 ```bash
-python scripts/create_implementation_log.py   --prompt-id "promptXX"   --phase "phase_name"   --summary "Summary"   --files "changed_file_1,changed_file_2"   --tests "pytest ... / smoke run ..."   --caveats "Known caveats"   --next-steps "Next action"
+python scripts/create_implementation_log.py --prompt-id "promptXX" --phase "phase_name" --summary "Summary" --files "changed_file_1,changed_file_2" --tests "pytest ... / smoke run ..." --caveats "Known caveats" --next-steps "Next action"
 ```

@@ -1,0 +1,2 @@
+"""Fallback manager placeholder."""
+

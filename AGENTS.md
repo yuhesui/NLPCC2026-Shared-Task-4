@@ -1,4 +1,4 @@
-# AGENTS.md — Repository Rules for AI Coding Agents
+# AGENTS.md - Repository Rules for AI Coding Agents
 
 ## 1. Read Order
 
@@ -49,7 +49,7 @@ Every prompt execution must write an implementation log using `create_implementa
 Expected command:
 
 ```bash
-python scripts/create_implementation_log.py   --prompt-id "promptXX"   --phase "short_phase_name"   --summary "What changed"   --files "file1,file2"   --tests "tests/checks run"   --caveats "known issues"   --next-steps "next recommended action"
+python scripts/create_implementation_log.py --prompt-id "promptXX" --phase "short_phase_name" --summary "What changed" --files "file1,file2" --tests "tests/checks run" --caveats "known issues" --next-steps "next recommended action"
 ```
 
 If the helper is missing, create or repair it before finishing the task.

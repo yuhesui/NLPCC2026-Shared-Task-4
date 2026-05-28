@@ -1,0 +1,2 @@
+"""Price HMM state placeholder."""
+

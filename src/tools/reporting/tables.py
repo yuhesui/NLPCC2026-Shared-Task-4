@@ -1,0 +1,2 @@
+"""Table-generation placeholder."""
+

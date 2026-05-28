@@ -1,0 +1,2 @@
+"""Track-specific configuration adapters."""
+
