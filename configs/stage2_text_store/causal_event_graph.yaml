@@ -1,0 +1,4 @@
+name: causal_event_graph
+stage: stage2_text_store
+status: deferred
+reason: Causal event graph construction is deferred until event labels are validated.

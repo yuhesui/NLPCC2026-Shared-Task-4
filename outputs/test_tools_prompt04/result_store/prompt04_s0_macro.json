@@ -1,0 +1,137 @@
+{
+  "decisions": [
+    {
+      "date": "20250102",
+      "decision": {
+        "metadata": {
+          "agent": "s0_equal_weight",
+          "available_funds": [
+            "000300.SH"
+          ],
+          "current_day_fields_used": [
+            "open"
+          ],
+          "forbidden_current_fields_used": [],
+          "track": "macro"
+        },
+        "reasoning": "S0 equal-weight no-news baseline.",
+        "target_weights": {
+          "000300.SH": 0.98
+        },
+        "trades": [
+          {
+            "action": "buy",
+            "amount": 98000.0,
+            "fund_id": "000300.SH"
+          }
+        ]
+      }
+    },
+    {
+      "date": "20250103",
+      "decision": {
+        "metadata": {
+          "agent": "s0_equal_weight",
+          "available_funds": [
+            "000300.SH"
+          ],
+          "current_day_fields_used": [
+            "open"
+          ],
+          "forbidden_current_fields_used": [],
+          "track": "macro"
+        },
+        "reasoning": "S0 equal-weight no-news baseline.",
+        "target_weights": {
+          "000300.SH": 0.98
+        },
+        "trades": []
+      }
+    },
+    {
+      "date": "20250106",
+      "decision": {
+        "metadata": {
+          "agent": "s0_equal_weight",
+          "available_funds": [
+            "000300.SH"
+          ],
+          "current_day_fields_used": [
+            "open"
+          ],
+          "forbidden_current_fields_used": [],
+          "track": "macro"
+        },
+        "reasoning": "S0 equal-weight no-news baseline.",
+        "target_weights": {
+          "000300.SH": 0.98
+        },
+        "trades": []
+      }
+    }
+  ],
+  "experiment": {
+    "agent_name": "s0_equal_weight",
+    "data_root": "data\\sample\\smoke_test",
+    "load_news": false,
+    "lookback_days": 2,
+    "name": "prompt04_s0_macro",
+    "track": "macro"
+  },
+  "final_value": 101911.576471,
+  "fund_pool": [
+    "000300.SH"
+  ],
+  "initial_capital": 100000.0,
+  "leakage_note": "Current-day close/high/low/change/pct_change are masked before agent decision; close is used only for post-decision execution.",
+  "metrics": {
+    "annualized_volatility": 0.0010263195182989766,
+    "cumulative_return": 0.019215647843488615,
+    "max_drawdown": 0.0,
+    "sharpe_ratio": 2347.8567600397114,
+    "turnover": 9.427607983730768e-05
+  },
+  "portfolio_history": [
+    {
+      "cash": 2000.0,
+      "date": "20250102",
+      "holdings_value": 97990.2,
+      "total_value": 99990.2,
+      "weights": {
+        "000300.SH": 0.97999804
+      }
+    },
+    {
+      "cash": 2000.0,
+      "date": "20250103",
+      "holdings_value": 98950.888235,
+      "total_value": 100950.888235,
+      "weights": {
+        "000300.SH": 0.98018839
+      }
+    },
+    {
+      "cash": 2000.0,
+      "date": "20250106",
+      "holdings_value": 99911.576471,
+      "total_value": 101911.576471,
+      "weights": {
+        "000300.SH": 0.98037514
+      }
+    }
+  ],
+  "selected_fund": "000300.SH",
+  "status": "ok",
+  "track": "macro",
+  "transactions": [
+    {
+      "action": "buy",
+      "amount": 98000.0,
+      "commission": 9.8,
+      "date": "20250102",
+      "execution_price": 10.2,
+      "fund_id": "000300.SH",
+      "shares": 9606.8823529412
+    }
+  ]
+}

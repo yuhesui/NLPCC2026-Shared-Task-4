@@ -1,0 +1,19 @@
+{
+  "final_value": 101.0,
+  "metrics": {
+    "cumulative_return": 0.01,
+    "max_drawdown": 0.0,
+    "sharpe_ratio": 1.0,
+    "turnover": 0.1
+  },
+  "portfolio_history": [
+    {
+      "total_value": 100.0
+    },
+    {
+      "total_value": 101.0
+    }
+  ],
+  "run_name": "s0",
+  "track": "macro"
+}

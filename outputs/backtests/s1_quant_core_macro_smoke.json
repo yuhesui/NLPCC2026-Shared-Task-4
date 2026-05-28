@@ -1,0 +1,156 @@
+{
+  "status": "ok",
+  "track": "macro",
+  "selected_fund": "000300.SH",
+  "fund_pool": [
+    "000300.SH"
+  ],
+  "initial_capital": 100000.0,
+  "final_value": 101892.070588,
+  "metrics": {
+    "cumulative_return": 0.019019550776425254,
+    "annualized_volatility": 0.0010055768409629139,
+    "sharpe_ratio": 2371.947849853721,
+    "max_drawdown": 0.0,
+    "turnover": 0.00013999777413231662
+  },
+  "transactions": [
+    {
+      "date": "20250102",
+      "fund_id": "000300.SH",
+      "action": "buy",
+      "amount": 97000.0,
+      "execution_price": 10.2,
+      "commission": 9.7,
+      "shares": 9508.8529411765
+    }
+  ],
+  "decisions": [
+    {
+      "date": "20250102",
+      "decision": {
+        "trades": [
+          {
+            "fund_id": "000300.SH",
+            "action": "buy",
+            "amount": 97000.0
+          }
+        ],
+        "target_weights": {
+          "000300.SH": 0.97
+        },
+        "reasoning": "S1 no-news quant core: inverse-volatility, momentum/trend, drawdown and breadth filters.",
+        "metadata": {
+          "agent": "s1_quant_core",
+          "track": "macro",
+          "available_funds": [
+            "000300.SH"
+          ],
+          "current_day_fields_used": [
+            "open"
+          ],
+          "forbidden_current_fields_used": [],
+          "stage3_diagnostics": {
+            "available_funds": [
+              "000300.SH"
+            ],
+            "missing_funds": [],
+            "uses_current_day_fields": [
+              "open"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "date": "20250103",
+      "decision": {
+        "trades": [],
+        "target_weights": {
+          "000300.SH": 0.97
+        },
+        "reasoning": "S1 no-news quant core: inverse-volatility, momentum/trend, drawdown and breadth filters.",
+        "metadata": {
+          "agent": "s1_quant_core",
+          "track": "macro",
+          "available_funds": [
+            "000300.SH"
+          ],
+          "current_day_fields_used": [
+            "open"
+          ],
+          "forbidden_current_fields_used": [],
+          "stage3_diagnostics": {
+            "available_funds": [
+              "000300.SH"
+            ],
+            "missing_funds": [],
+            "uses_current_day_fields": [
+              "open"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "date": "20250106",
+      "decision": {
+        "trades": [],
+        "target_weights": {
+          "000300.SH": 0.97
+        },
+        "reasoning": "S1 no-news quant core: inverse-volatility, momentum/trend, drawdown and breadth filters.",
+        "metadata": {
+          "agent": "s1_quant_core",
+          "track": "macro",
+          "available_funds": [
+            "000300.SH"
+          ],
+          "current_day_fields_used": [
+            "open"
+          ],
+          "forbidden_current_fields_used": [],
+          "stage3_diagnostics": {
+            "available_funds": [
+              "000300.SH"
+            ],
+            "missing_funds": [],
+            "uses_current_day_fields": [
+              "open"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "portfolio_history": [
+    {
+      "date": "20250102",
+      "cash": 3000.0,
+      "holdings_value": 96990.3,
+      "total_value": 99990.3,
+      "weights": {
+        "000300.SH": 0.96999709
+      }
+    },
+    {
+      "date": "20250103",
+      "cash": 3000.0,
+      "holdings_value": 97941.185294,
+      "total_value": 100941.185294,
+      "weights": {
+        "000300.SH": 0.97027972
+      }
+    },
+    {
+      "date": "20250106",
+      "cash": 3000.0,
+      "holdings_value": 98892.070588,
+      "total_value": 101892.070588,
+      "weights": {
+        "000300.SH": 0.97055708
+      }
+    }
+  ],
+  "leakage_note": "Current-day close/high/low/change/pct_change are masked before agent decision; close is used only for post-decision execution."
+}

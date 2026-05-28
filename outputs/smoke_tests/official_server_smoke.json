@@ -1,0 +1,6 @@
+{
+  "status": "blocked",
+  "blocker": "official_server_unavailable",
+  "detail": "<urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
+  "base_url": "http://localhost:6207"
+}

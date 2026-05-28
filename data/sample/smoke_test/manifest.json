@@ -1,0 +1,15 @@
+{
+  "price_files": [
+    "D:\\Projects\\NLPCC2026-Shared-Task-4\\data\\sample\\smoke_test\\price_data\\000300.SH.csv",
+    "D:\\Projects\\NLPCC2026-Shared-Task-4\\data\\sample\\smoke_test\\price_data\\512880.SH.csv"
+  ],
+  "news_files": [
+    "D:\\Projects\\NLPCC2026-Shared-Task-4\\data\\sample\\smoke_test\\news_data\\caixin_daily_dedup.csv",
+    "D:\\Projects\\NLPCC2026-Shared-Task-4\\data\\sample\\smoke_test\\news_data\\sinafinance_daily_dedup.csv",
+    "D:\\Projects\\NLPCC2026-Shared-Task-4\\data\\sample\\smoke_test\\news_data\\sina_finance_daily_dedup.csv",
+    "D:\\Projects\\NLPCC2026-Shared-Task-4\\data\\sample\\smoke_test\\news_data\\tencent_daily_dedup.csv",
+    "D:\\Projects\\NLPCC2026-Shared-Task-4\\data\\sample\\smoke_test\\news_data\\tiantian_daily_dedup.csv",
+    "D:\\Projects\\NLPCC2026-Shared-Task-4\\data\\sample\\smoke_test\\news_data\\tiantian_fund_daily_dedup.csv"
+  ],
+  "note": "Synthetic smoke subset for plumbing checks only; not training data."
+}

@@ -1,0 +1,5 @@
+name: confidence_matrix
+stage: stage2_text_store
+matrix_type: diagonal_confidence
+min_confidence: 0.0
+max_confidence: 1.0

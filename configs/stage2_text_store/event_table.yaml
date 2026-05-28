@@ -1,0 +1,8 @@
+name: event_table
+stage: stage2_text_store
+duplicate_policy: merge
+dedupe_key:
+  - news_id
+  - event_type
+  - sector
+  - direction
