@@ -10,6 +10,30 @@
 
 Do not use current-day close, high, low, change, or return before decision time. Same-day news must respect the official timestamp cutoff.
 
+Prompt02 defines the internal safety contract in `src/nlpcc/core/data_contracts.py` and validates it in `src/nlpcc/core/leakage_guard.py`.
+
+- Past trading days may expose complete OHLCV fields and should use `PriceVisibility.HISTORICAL_FULL`.
+- The current decision day may expose only the opening price and should use `PriceVisibility.CURRENT_OPEN_ONLY`.
+- Current-day `close`, `high`, `low`, `change`, `pct_change`, and `return` are treated as forbidden decision-time fields.
+- Same-day news must have `publish_time` before the official 15:00 cutoff. Items at or after 15:00 are not visible for that decision.
+- Future price bars and future news are invalid in `DailyDecisionInput`.
+
+## Canonical Contracts
+
+Canonical objects are shared by official-facing agents and local tooling:
+
+- `RawNewsItem` for normalized official news records.
+- `PriceBar` and `PricePanel` for decision-visible market data.
+- `DailyDecisionInput` for one agent decision timestamp.
+- `PortfolioState`, `TargetWeights`, and `OfficialTrade` for portfolio and order exchange.
+- `DecisionTrace` for auditable decision metadata.
+
+These contracts are dependency-free so they can be imported by both `src/nlpcc/` and `src/tools/` without binding production agents to local research tooling.
+
+## Local Backtesting Parity
+
+Local evaluation utilities should compare their outputs against official-server runs when that server is available. `src/tools/backtesting/metrics.py` computes cumulative return, volatility, Sharpe, drawdown, and turnover from local runs. `src/tools/backtesting/compare_official_local.py` compares official and local metric dictionaries with explicit tolerances so parity gaps are visible.
+
 ## Trade Execution
 
 The official environment uses buy-by-cash and sell-by-holding-percentage semantics. Same-day sell proceeds should not be assumed available for same-day buys. The adapter must validate cash feasibility before submitting orders.

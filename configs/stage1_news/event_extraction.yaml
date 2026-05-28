@@ -1,2 +1,11 @@
-# Stage 1 event extraction configuration placeholder.
-
+name: event_extraction
+model: event_tuple_extractor
+supported_event_types:
+  - monetary_policy
+  - fiscal_policy
+  - earnings
+  - regulation
+  - geopolitical
+  - macro_growth
+  - general_news
+schema_version: stage1_mvp_v1

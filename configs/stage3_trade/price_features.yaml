@@ -1,2 +1,12 @@
-# Stage 3 price features configuration placeholder.
-
+name: price_features
+decision_visibility:
+  historical_days: full_ohlcv
+  current_day: open_only
+forbidden_current_day_fields:
+  - close
+  - high
+  - low
+  - change
+  - pctchange
+  - pct_change
+  - return

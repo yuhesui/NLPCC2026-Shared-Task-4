@@ -1,2 +1,7 @@
-# Stage 1 BL view extraction configuration placeholder.
-
+name: bl_view_extraction
+model: bl_view_extractor
+max_abs_expected_return_bps: 50
+confidence_range:
+  min: 0.0
+  max: 1.0
+neutral_views_are_dropped: true

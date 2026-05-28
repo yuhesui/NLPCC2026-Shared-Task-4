@@ -1,4 +1,16 @@
 # Sector Mapping V1
 
-Prompt template placeholder. No production prompt logic is implemented in prompt00.
+Optional controlled mapper prompt. Map visible news entities to the project sector vocabulary:
 
+- broad_equity
+- technology
+- healthcare
+- consumer
+- energy
+- materials
+- financials
+- real_estate
+- gold
+- bonds
+
+Use `unknown` only when no grounded mapping exists.

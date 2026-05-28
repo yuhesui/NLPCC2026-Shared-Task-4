@@ -1,2 +1,8 @@
-# Stage 3 risk state configuration placeholder.
-
+name: risk_state
+volatility_window: 20
+drawdown_window: 20
+breadth_window: 20
+sector_trend_window: 20
+max_weight: 0.35
+cash_reserve: 0.03
+rebalance_threshold: 0.01

@@ -1,2 +1,8 @@
-# Stage 4 S1 quant core configuration placeholder.
-
+name: s1_quant_core
+fallback_role: mandatory_no_news_benchmark
+supported_tracks:
+  - macro
+  - sector
+default_cash_reserve: 0.03
+default_max_weight: 0.35
+uses_news: false

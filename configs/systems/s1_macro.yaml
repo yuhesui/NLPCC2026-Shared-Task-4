@@ -1,2 +1,18 @@
-# S1 macro system configuration placeholder.
-
+name: s1_macro
+agent: s1_quant_core
+track: macro
+description: Track 1 no-news quant benchmark.
+inverse_vol_weight: 0.55
+momentum_weight: 0.30
+sector_trend_weight: 0.15
+drawdown_penalty_weight: 0.35
+cash_reserve: 0.03
+max_weight: 0.35
+rebalance_threshold: 0.01
+stage3:
+  volatility_window: 20
+  momentum_windows:
+    - 3
+    - 5
+    - 20
+  shrinkage_alpha: 0.2

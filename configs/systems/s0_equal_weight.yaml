@@ -1,2 +1,6 @@
-# S0 equal-weight system configuration placeholder.
-
+name: s0_equal_weight
+agent: s0_equal_weight
+description: Equal-weight no-news baseline.
+cash_reserve: 0.02
+max_weight: 0.35
+rebalance_threshold: 0.01

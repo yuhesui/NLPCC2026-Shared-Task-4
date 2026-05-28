@@ -1,2 +1,4 @@
-# Stage 3 covariance configuration placeholder.
-
+name: covariance
+method: sample_with_diagonal_shrinkage
+volatility_window: 20
+shrinkage_alpha: 0.2

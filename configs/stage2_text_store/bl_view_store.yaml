@@ -1,2 +1,9 @@
-# Stage 2 BL view store configuration placeholder.
-
+name: bl_view_store
+stage: stage2_text_store
+duplicate_policy: average_by_asset_group_and_direction
+fields:
+  - asset_group
+  - direction
+  - expected_return_bps
+  - confidence
+  - rationale

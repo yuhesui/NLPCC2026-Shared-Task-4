@@ -1,2 +1,7 @@
-# Stage 2 decayed event memory configuration placeholder.
-
+name: decayed_event_memory
+stage: stage2_text_store
+decay_half_life_days: 5.0
+default_event_age_days: 0.0
+aggregation:
+  by_sector: true
+  by_event_type: true

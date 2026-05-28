@@ -1,2 +1,14 @@
-# Stage 1 sector impact configuration placeholder.
-
+name: sector_impact
+model: sector_impact_extractor
+aggregation: signed_intensity_confidence_average
+sectors:
+  - broad_equity
+  - technology
+  - healthcare
+  - consumer
+  - energy
+  - materials
+  - financials
+  - real_estate
+  - gold
+  - bonds

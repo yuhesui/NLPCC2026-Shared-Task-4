@@ -1,2 +1,20 @@
-# S1 sector system configuration placeholder.
-
+name: s1_sector
+agent: s1_quant_core
+track: sector
+description: Track 2 no-news sector trend benchmark.
+inverse_vol_weight: 0.35
+momentum_weight: 0.15
+sector_trend_weight: 0.50
+drawdown_penalty_weight: 0.35
+cash_reserve: 0.03
+max_weight: 0.35
+rebalance_threshold: 0.01
+stage3:
+  volatility_window: 20
+  momentum_windows:
+    - 3
+    - 5
+    - 20
+  sector_trend_window: 20
+  breadth_window: 20
+  shrinkage_alpha: 0.2

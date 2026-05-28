@@ -1,2 +1,6 @@
-# Stage 3 momentum configuration placeholder.
-
+name: momentum
+windows:
+  - 3
+  - 5
+  - 20
+positive_only: true

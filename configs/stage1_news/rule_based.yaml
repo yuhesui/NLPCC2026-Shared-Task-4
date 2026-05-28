@@ -1,2 +1,9 @@
-# Stage 1 rule-based extractor configuration placeholder.
-
+name: rule_based
+model: rule_based
+use_llm: false
+top_rank: 20
+min_relevance: 0.05
+fallback_confidence: 0.25
+notes:
+  - Deterministic keyword extractor.
+  - Safe fallback is neutral no-LLM output.

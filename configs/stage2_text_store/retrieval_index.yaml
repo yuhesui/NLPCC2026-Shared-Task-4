@@ -1,2 +1,4 @@
-# Stage 2 retrieval index configuration placeholder.
-
+name: retrieval_index
+stage: stage2_text_store
+status: deferred
+reason: Dense retrieval is not part of the Stage 2 MVP.

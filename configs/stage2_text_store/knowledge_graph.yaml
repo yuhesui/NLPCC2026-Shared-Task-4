@@ -1,2 +1,4 @@
-# Stage 2 knowledge graph configuration placeholder.
-
+name: knowledge_graph
+stage: stage2_text_store
+status: deferred
+reason: Knowledge graph construction is deferred until text-state schemas stabilize.

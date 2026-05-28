@@ -1,2 +1,4 @@
-# Stage 3 turnover configuration placeholder.
-
+name: turnover
+rebalance_threshold: 0.01
+same_day_sale_proceeds_available_for_buys: false
+commission_rate: 0.0001

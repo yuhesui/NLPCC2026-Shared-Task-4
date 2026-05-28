@@ -1,2 +1,8 @@
-# Stage 2 flat feature table configuration placeholder.
-
+name: flat_feature_table
+stage: stage2_text_store
+description: Deterministic scalar aggregation of Stage 1 news output.
+features:
+  include_news_counts: true
+  include_sentiment_counts: true
+  include_sector_impacts: true
+  include_bl_expected_returns: true
