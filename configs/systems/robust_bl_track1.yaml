@@ -1,2 +1,11 @@
-# Robust BL Track 1 system configuration placeholder.
-
+name: robust_bl_track1
+agent: robust_bl
+track: macro
+description: First serious Track 1 system using Stage 1/2 text views and Stage 3 risk state.
+fallback: s1_macro
+config: ../stage4_agent/robust_bl.yaml
+expected_outputs:
+  - target_weights
+  - official_trades
+  - bl_diagnostics
+  - fallback_reason

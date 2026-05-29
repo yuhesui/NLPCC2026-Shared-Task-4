@@ -1,2 +1,39 @@
-# Stage 4 OCO ensemble configuration placeholder.
-
+name: oco_ensemble
+agent: oco_ensemble
+track: macro
+uses_news: true
+description: OCO-style meta-allocator over S1, risk parity, robust BL, and conservative fallback experts.
+learning_rate: 0.8
+fallback_penalty: 0.5
+turnover_penalty: 0.2
+constraints:
+  max_weight: 0.35
+  cash_reserve: 0.03
+  max_turnover: 0.25
+  rebalance_threshold: 0.01
+fallback_policy:
+  max_allowed_turnover: 0.60
+  fallback_agent_name: conservative_ensemble
+  required_dependencies: []
+  constraints:
+    max_weight: 0.35
+    cash_reserve: 0.03
+    max_turnover: 0.25
+    rebalance_threshold: 0.01
+experts:
+  - name: s1_quant_core
+    prior_weight: 0.40
+    config:
+      track: macro
+  - name: risk_parity
+    prior_weight: 0.25
+    config:
+      track: macro
+  - name: robust_bl
+    prior_weight: 0.25
+    config:
+      track: macro
+  - name: conservative_ensemble
+    prior_weight: 0.10
+    config:
+      track: macro

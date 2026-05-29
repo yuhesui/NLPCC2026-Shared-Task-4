@@ -80,12 +80,33 @@ class DecayedEventMemory:
 
 
 @dataclass(frozen=True)
+class SectorImpactRow:
+    sector: str
+    direction: str
+    signed_intensity: float
+    confidence: float
+    evidence_count: int
+    etf_ids: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class SectorGraphEdge:
+    source: str
+    target: str
+    relation: str
+    weight: float
+    confidence: float
+
+
+@dataclass(frozen=True)
 class Stage2TextState:
     flat_features: tuple[FlatFeatureRow, ...]
     event_table: tuple[EventTableRow, ...]
     bl_views: tuple[BLViewRecord, ...]
     confidence_matrix: ConfidenceMatrix
     decayed_memory: DecayedEventMemory
+    sector_impact_panel: tuple[SectorImpactRow, ...] = ()
+    sector_graph_edges: tuple[SectorGraphEdge, ...] = ()
     diagnostics: dict[str, Any] = field(default_factory=dict)
 
     def as_dict(self) -> dict[str, Any]:

@@ -1,2 +1,13 @@
-# Conservative ensemble system configuration placeholder.
-
+name: conservative_ensemble
+agent: conservative_ensemble
+track: macro
+uses_news: false
+description: Conservative B-list fallback system using S1 plus risk parity and explicit decision traces.
+stage4_config: ../stage4_agent/conservative_ensemble.yaml
+fallback_policy:
+  missing_dependency: fallback_to_s1
+  module_exception: fallback_to_s1
+  invalid_weights: fallback_to_s1
+  high_turnover: fallback_to_s1
+  price_leakage: fallback_to_s1
+decision_trace: true

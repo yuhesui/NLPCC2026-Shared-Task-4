@@ -39,3 +39,13 @@ def extract_sector_impacts(events: tuple[EventTuple, ...]) -> tuple[SectorImpact
             )
         )
     return tuple(impacts)
+
+
+def sector_impact_score(impact: SectorImpact) -> float:
+    """Signed scalar impact used by Track 2 allocation modules."""
+
+    if impact.direction == "positive":
+        return impact.intensity * impact.confidence
+    if impact.direction == "negative":
+        return -impact.intensity * impact.confidence
+    return 0.0

@@ -11,6 +11,8 @@ from nlpcc.stage2_text_store.models.confidence_matrix import build_confidence_ma
 from nlpcc.stage2_text_store.models.decayed_event_memory import build_decayed_event_memory
 from nlpcc.stage2_text_store.models.event_table import build_event_table
 from nlpcc.stage2_text_store.models.flat_feature_table import build_flat_feature_table
+from nlpcc.stage2_text_store.models.knowledge_graph import build_sector_etf_graph
+from nlpcc.stage2_text_store.models.sector_impact_panel import build_sector_impact_panel
 from nlpcc.stage2_text_store.schema import ConfidenceMatrix, DecayedEventMemory, Stage2Config, Stage2TextState
 from nlpcc.stage2_text_store.validators import assert_valid_stage2_state
 
@@ -60,6 +62,8 @@ def empty_stage2_text_state(
             decay_half_life_days=decay_half_life_days,
             event_count=0,
         ),
+        sector_impact_panel=(),
+        sector_graph_edges=(),
         diagnostics=diagnostics or {},
     )
     assert_valid_stage2_state(state)
@@ -87,6 +91,8 @@ def build_stage2_text_state(
     event_table = build_event_table(stage1_output)
     flat_features = build_flat_feature_table(stage1_output, date_int=as_of_date_int)
     bl_views = build_bl_view_store(stage1_output)
+    sector_impact_panel = build_sector_impact_panel(stage1_output)
+    sector_graph_edges = build_sector_etf_graph(sector_impact_panel)
     confidence_matrix = build_confidence_matrix(
         bl_views,
         min_confidence=cfg.min_confidence,
@@ -110,6 +116,8 @@ def build_stage2_text_state(
         bl_views=bl_views,
         confidence_matrix=confidence_matrix,
         decayed_memory=decayed_memory,
+        sector_impact_panel=sector_impact_panel,
+        sector_graph_edges=sector_graph_edges,
         diagnostics=diagnostics,
     )
     assert_valid_stage2_state(state)

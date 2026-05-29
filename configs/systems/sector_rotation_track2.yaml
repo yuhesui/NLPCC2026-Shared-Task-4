@@ -1,2 +1,11 @@
-# Sector-rotation Track 2 system configuration placeholder.
-
+name: sector_rotation_track2
+agent: sector_rotation
+track: sector
+description: Track 2 system preserving S1 sector trend while adding sector-news and graph ablations.
+fallback: s1_sector
+config: ../stage4_agent/sector_rotation.yaml
+ablations:
+  - no_news
+  - trend_only
+  - no_graph
+  - equal_sector

@@ -52,6 +52,7 @@ class Stage3State:
     sector_trend_weight: dict[str, float]
     covariance: dict[str, dict[str, float]]
     shrinkage_covariance: dict[str, dict[str, float]]
+    correlation_graph: tuple[dict[str, float | str], ...] = ()
     diagnostics: dict[str, Any] = field(default_factory=dict)
 
     def available_funds(self) -> tuple[str, ...]:

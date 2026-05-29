@@ -1,0 +1,21 @@
+name: conservative_ensemble
+agent: conservative_ensemble
+track: macro
+uses_news: false
+description: Conservative deterministic blend of S1 and risk parity with S1 fallback.
+s1_weight: 0.65
+risk_parity_weight: 0.35
+constraints:
+  max_weight: 0.35
+  cash_reserve: 0.03
+  max_turnover: 0.25
+  rebalance_threshold: 0.01
+fallback_policy:
+  max_allowed_turnover: 0.60
+  fallback_agent_name: s1_quant_core
+  required_dependencies: []
+  constraints:
+    max_weight: 0.35
+    cash_reserve: 0.03
+    max_turnover: 0.25
+    rebalance_threshold: 0.01

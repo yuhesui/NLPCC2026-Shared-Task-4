@@ -71,11 +71,21 @@
     }
   ],
   "experiment": {
+    "ablation": "base",
     "agent_name": "s0_equal_weight",
+    "agent_params": {
+      "max_weight": 1.0
+    },
+    "config_hash": "3615dac93cc85304",
     "data_root": "data\\sample\\smoke_test",
+    "group": "default",
     "load_news": false,
     "lookback_days": 2,
+    "max_dates": null,
     "name": "prompt04_s0_macro",
+    "news_lookback_calendar_days": 1,
+    "notes": "",
+    "run_id": "prompt04_s0_macro_3615dac93cc85304",
     "track": "macro"
   },
   "final_value": 101911.576471,
@@ -120,6 +130,7 @@
       }
     }
   ],
+  "result_hash": "f2446efbb1225128",
   "selected_fund": "000300.SH",
   "status": "ok",
   "track": "macro",

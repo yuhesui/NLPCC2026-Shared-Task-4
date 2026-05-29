@@ -1,2 +1,15 @@
-# OCO fallback system configuration placeholder.
-
+name: oco_fallback
+agent: oco_ensemble
+track: macro
+uses_news: true
+description: Production safety system using OCO expert gates and conservative fallback recovery.
+stage4_config: ../stage4_agent/oco_ensemble.yaml
+fallback_policy:
+  missing_dependency: fallback_to_conservative_ensemble
+  module_exception: fallback_to_conservative_ensemble
+  invalid_text_state: fallback_to_conservative_ensemble
+  optimiser_infeasible: fallback_to_conservative_ensemble
+  high_turnover: fallback_to_conservative_ensemble
+  invalid_weights: fallback_to_conservative_ensemble
+  price_leakage: fallback_to_conservative_ensemble
+decision_trace: true

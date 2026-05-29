@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import csv
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 from pathlib import Path
 from typing import Any
@@ -31,6 +31,9 @@ class LocalSmokeBacktester:
     lookback_days: int = 2
     agent: Any = field(default_factory=SmokeOneUnitAgent)
     load_news: bool = True
+    news_lookback_calendar_days: int = 1
+    max_dates: int | None = None
+    _news_cache: list[tuple[Any, datetime, int, dict[str, Any]]] | None = field(default=None, init=False, repr=False)
 
     def run(self, output_path: Path | None = None) -> dict[str, Any]:
         official_pool = get_fund_pool(self.track)
@@ -40,6 +43,8 @@ class LocalSmokeBacktester:
         selected = fund_pool[0]
         price_rows_by_fund = {fund_id: self._load_price_rows(fund_id) for fund_id in fund_pool}
         date_count = min(len(rows) for rows in price_rows_by_fund.values())
+        if self.max_dates is not None:
+            date_count = min(date_count, max(1, int(self.max_dates)))
         if date_count <= 0:
             raise RuntimeError(f"Empty price rows for track {self.track} under {self.data_root}")
 
@@ -206,9 +211,25 @@ class LocalSmokeBacktester:
         return records
 
     def _load_news(self, current_date: str) -> list[dict[str, Any]]:
-        news_dir = self.data_root / "news_data"
         current_day = datetime.strptime(current_date, "%Y%m%d").date()
+        if self._news_cache is None:
+            self._news_cache = self._load_all_news_rows()
         records: list[dict[str, Any]] = []
+        earliest_news_day = current_day - timedelta(days=max(0, self.news_lookback_calendar_days - 1))
+        for news_day, published, ranking, row in self._news_cache:
+            if news_day > current_day or news_day < earliest_news_day:
+                continue
+            if news_day == current_day and published.hour >= NEWS_CUTOFF_HOUR:
+                continue
+            if ranking > 20:
+                continue
+            records.append(row)
+        records.sort(key=lambda item: int(item.get("RANKING", "999")))
+        return records
+
+    def _load_all_news_rows(self) -> list[tuple[Any, datetime, int, dict[str, Any]]]:
+        news_dir = self.data_root / "news_data"
+        rows: list[tuple[Any, datetime, int, dict[str, Any]]] = []
         for path in sorted(news_dir.glob("*_daily_dedup.csv")):
             with path.open("r", encoding="utf-8-sig", newline="") as handle:
                 for row in csv.DictReader(handle):
@@ -218,15 +239,8 @@ class LocalSmokeBacktester:
                         ranking = int(row.get("RANKING", "999"))
                     except (KeyError, ValueError):
                         continue
-                    if news_day > current_day:
-                        continue
-                    if news_day == current_day and published.hour >= NEWS_CUTOFF_HOUR:
-                        continue
-                    if ranking > 20:
-                        continue
-                    records.append(row)
-        records.sort(key=lambda item: int(item.get("RANKING", "999")))
-        return records
+                    rows.append((news_day, published, ranking, row))
+        return rows
 
 
 LocalBacktester = LocalSmokeBacktester
@@ -241,6 +255,8 @@ def run_local_backtest(
     lookback_days: int = 60,
     load_news: bool = False,
     initial_capital: float = 100000.0,
+    news_lookback_calendar_days: int = 1,
+    max_dates: int | None = None,
 ) -> dict[str, Any]:
     return LocalSmokeBacktester(
         data_root=data_root,
@@ -249,4 +265,6 @@ def run_local_backtest(
         lookback_days=lookback_days,
         load_news=load_news,
         initial_capital=initial_capital,
+        news_lookback_calendar_days=news_lookback_calendar_days,
+        max_dates=max_dates,
     ).run(output_path)

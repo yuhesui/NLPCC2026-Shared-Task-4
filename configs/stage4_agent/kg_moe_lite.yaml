@@ -1,0 +1,27 @@
+name: kg_moe_lite
+agent: kg_moe_lite
+track: sector
+description: Deterministic report-friendly mixture of equal, trend, sector-news, and correlation graph experts.
+news_tilt_strength: 1.25
+graph_smoothing_strength: 0.35
+use_news: true
+use_graph: true
+constraints:
+  max_weight: 0.25
+  cash_reserve: 0.03
+  max_turnover: 0.30
+  rebalance_threshold: 0.01
+stage1:
+  top_rank: 20
+  use_llm: false
+stage2:
+  decay_half_life_days: 5.0
+stage3:
+  volatility_window: 20
+  momentum_windows:
+    - 3
+    - 5
+    - 20
+  sector_trend_window: 20
+  breadth_window: 20
+  shrinkage_alpha: 0.2

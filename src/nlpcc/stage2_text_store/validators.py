@@ -10,6 +10,8 @@ from nlpcc.stage2_text_store.schema import (
     DecayedEventMemory,
     EventTableRow,
     FlatFeatureRow,
+    SectorGraphEdge,
+    SectorImpactRow,
     Stage2TextState,
 )
 
@@ -109,6 +111,34 @@ def validate_decayed_memory(memory: DecayedEventMemory, location: str = "decayed
     return issues
 
 
+def validate_sector_impact(row: SectorImpactRow, location: str) -> list[Stage2ValidationIssue]:
+    issues: list[Stage2ValidationIssue] = []
+    if not row.sector:
+        issues.append(Stage2ValidationIssue("missing_sector", "Sector impact row has no sector.", location))
+    if row.direction not in {"positive", "negative", "neutral"}:
+        issues.append(Stage2ValidationIssue("invalid_direction", "Sector impact direction is invalid.", location))
+    if not -1.0 <= row.signed_intensity <= 1.0:
+        issues.append(Stage2ValidationIssue("invalid_signed_intensity", "Sector signed intensity must be in [-1, 1].", location))
+    if not _bounded(row.confidence):
+        issues.append(Stage2ValidationIssue("invalid_confidence", "Sector impact confidence must be in [0, 1].", location))
+    if row.evidence_count < 0:
+        issues.append(Stage2ValidationIssue("invalid_evidence_count", "Evidence count must be non-negative.", location))
+    return issues
+
+
+def validate_sector_graph_edge(edge: SectorGraphEdge, location: str) -> list[Stage2ValidationIssue]:
+    issues: list[Stage2ValidationIssue] = []
+    if not edge.source or not edge.target:
+        issues.append(Stage2ValidationIssue("missing_graph_node", "Sector graph edge must have source and target.", location))
+    if not edge.relation:
+        issues.append(Stage2ValidationIssue("missing_relation", "Sector graph edge must have relation.", location))
+    if edge.weight < 0:
+        issues.append(Stage2ValidationIssue("invalid_weight", "Sector graph edge weight must be non-negative.", location))
+    if not _bounded(edge.confidence):
+        issues.append(Stage2ValidationIssue("invalid_confidence", "Sector graph edge confidence must be in [0, 1].", location))
+    return issues
+
+
 def find_stage2_state_issues(state: Stage2TextState) -> list[Stage2ValidationIssue]:
     issues: list[Stage2ValidationIssue] = []
     seen_event_ids: set[str] = set()
@@ -121,6 +151,10 @@ def find_stage2_state_issues(state: Stage2TextState) -> list[Stage2ValidationIss
         seen_event_ids.add(row.event_id)
     for index, row in enumerate(state.bl_views):
         issues.extend(validate_bl_view(row, f"bl_views[{index}]"))
+    for index, row in enumerate(state.sector_impact_panel):
+        issues.extend(validate_sector_impact(row, f"sector_impact_panel[{index}]"))
+    for index, edge in enumerate(state.sector_graph_edges):
+        issues.extend(validate_sector_graph_edge(edge, f"sector_graph_edges[{index}]"))
     issues.extend(validate_confidence_matrix(state.confidence_matrix))
     issues.extend(validate_decayed_memory(state.decayed_memory))
     return issues

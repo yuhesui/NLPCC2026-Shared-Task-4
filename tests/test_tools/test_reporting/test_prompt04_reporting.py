@@ -1,4 +1,5 @@
 from pathlib import Path
+from uuid import uuid4
 
 from tools.reporting.artifacts import write_json_artifact
 from tools.reporting.figures import sparkline, write_equity_sparkline
@@ -14,7 +15,7 @@ def test_reporting_helpers_write_artifacts() -> None:
         "metrics": {"cumulative_return": 0.01, "sharpe_ratio": 1.0, "max_drawdown": 0.0, "turnover": 0.1},
         "portfolio_history": [{"total_value": 100.0}, {"total_value": 101.0}],
     }
-    root = Path("outputs/test_tools_prompt04/reporting")
+    root = Path("outputs/test_tools_prompt04/reporting") / uuid4().hex
 
     row = flatten_result_row(result)
     table = markdown_table([row], ["name", "track", "final_value"])

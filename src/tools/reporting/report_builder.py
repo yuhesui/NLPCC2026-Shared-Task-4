@@ -5,14 +5,26 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from tools.reporting.tables import flatten_result_row, markdown_table
+from tools.reporting.tables import add_baseline_deltas, flatten_result_row, markdown_table
 
 
-DEFAULT_COLUMNS = ["name", "track", "final_value", "cumulative_return", "sharpe_ratio", "max_drawdown", "turnover"]
+DEFAULT_COLUMNS = [
+    "name",
+    "group",
+    "ablation",
+    "track",
+    "final_value",
+    "cumulative_return",
+    "sharpe_ratio",
+    "max_drawdown",
+    "turnover",
+    "delta_cumulative_return_vs_s1",
+    "delta_sharpe_vs_s1",
+]
 
 
 def build_markdown_report(results: list[dict[str, Any]], *, title: str = "Experiment Report") -> str:
-    rows = [flatten_result_row(result) for result in results]
+    rows = add_baseline_deltas([flatten_result_row(result) for result in results])
     return "\n\n".join(
         [
             f"# {title}",

@@ -1,2 +1,32 @@
-# Stage 4 sector rotation configuration placeholder.
-
+name: sector_rotation
+agent: sector_rotation
+track: sector
+description: Track 2 sector rotation with trend baseline, sector-news tilts, and optional correlation graph smoothing.
+trend_weight: 0.70
+news_weight: 0.20
+graph_weight: 0.10
+equal_weight: 0.0
+news_tilt_strength: 1.5
+graph_smoothing_strength: 0.25
+use_news: true
+use_graph: true
+use_trend: true
+constraints:
+  max_weight: 0.25
+  cash_reserve: 0.03
+  max_turnover: 0.30
+  rebalance_threshold: 0.01
+stage1:
+  top_rank: 20
+  use_llm: false
+stage2:
+  decay_half_life_days: 5.0
+stage3:
+  volatility_window: 20
+  momentum_windows:
+    - 3
+    - 5
+    - 20
+  sector_trend_window: 20
+  breadth_window: 20
+  shrinkage_alpha: 0.2

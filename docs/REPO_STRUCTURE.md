@@ -102,6 +102,7 @@ repo/
           correlation_graph.py
       stage4_agent/
         __init__.py
+        ensemble_utils.py
         schema.py
         pipeline.py
         registry.py
@@ -184,6 +185,7 @@ repo/
       reporting/
         __init__.py
         artifacts.py
+        experiment_report.py
         tables.py
         figures.py
         report_builder.py
@@ -211,6 +213,7 @@ repo/
     run_experiment.py
     run_optimiser.py
     generate_report.py
+    run_verification.py
     package_submission.py
 
   configs/
@@ -236,6 +239,8 @@ repo/
       flat_feature_table.yaml
       bl_view_store.yaml
       decayed_event_memory.yaml
+      sector_impact_panel.yaml
+      sector_etf_graph.yaml
       retrieval_index.yaml
       knowledge_graph.yaml
     stage3_trade/
@@ -246,13 +251,17 @@ repo/
       turnover.yaml
     stage4_agent/
       s1_quant_core.yaml
+      risk_parity.yaml
       robust_bl.yaml
       sector_rotation.yaml
+      kg_moe_lite.yaml
       oco_ensemble.yaml
+      conservative_ensemble.yaml
     tools/
       backtesting/
       optimiser/
       experiments/
+        prompt10_ablation_suite.json
       reporting/
 
   data/

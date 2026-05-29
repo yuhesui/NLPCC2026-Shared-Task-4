@@ -12,3 +12,5 @@ pytest-cache-files-*/
 outputs/pytest_tmp/
 outputs/pytest-cache-files-*/
 outputs/test_integration/
+/data/
+/outputs/

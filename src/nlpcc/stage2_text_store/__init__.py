@@ -7,6 +7,8 @@ from nlpcc.stage2_text_store.schema import (
     DecayedEventMemory,
     EventTableRow,
     FlatFeatureRow,
+    SectorGraphEdge,
+    SectorImpactRow,
     Stage2Config,
     Stage2TextState,
 )
@@ -17,6 +19,8 @@ __all__ = [
     "DecayedEventMemory",
     "EventTableRow",
     "FlatFeatureRow",
+    "SectorGraphEdge",
+    "SectorImpactRow",
     "Stage2Config",
     "Stage2TextState",
     "build_stage2_text_state",

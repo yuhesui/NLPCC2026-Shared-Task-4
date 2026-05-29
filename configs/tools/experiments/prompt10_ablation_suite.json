@@ -1,0 +1,274 @@
+{
+  "name": "prompt10_ablation_suite",
+  "report_dir": "outputs/reports/prompt10",
+  "defaults": {
+    "data_root": "data/train_2024",
+    "lookback_days": 60,
+    "max_dates": 30,
+    "output_dir": "outputs/experiments/prompt10",
+    "initial_capital": 100000.0,
+    "news_lookback_calendar_days": 1
+  },
+  "experiments": [
+    {
+      "name": "s0_macro",
+      "agent_name": "s0_equal_weight",
+      "track": "macro",
+      "ablation": "s0",
+      "group": "baseline",
+      "agent_params": {
+        "max_weight": 0.7
+      }
+    },
+    {
+      "name": "s1_macro",
+      "agent_name": "s1_quant_core",
+      "track": "macro",
+      "ablation": "s1",
+      "group": "baseline",
+      "agent_params": {
+        "track": "macro",
+        "max_weight": 0.7
+      }
+    },
+    {
+      "name": "robust_bl_macro",
+      "agent_name": "robust_bl",
+      "track": "macro",
+      "load_news": true,
+      "ablation": "base",
+      "group": "track1",
+      "agent_params": {
+        "track": "macro",
+        "constraints": {
+          "max_weight": 0.7,
+          "cash_reserve": 0.03,
+          "max_turnover": 0.6
+        }
+      }
+    },
+    {
+      "name": "robust_bl_no_news",
+      "agent_name": "robust_bl",
+      "track": "macro",
+      "load_news": false,
+      "ablation": "no-news",
+      "group": "track1",
+      "agent_params": {
+        "track": "macro",
+        "constraints": {
+          "max_weight": 0.7,
+          "cash_reserve": 0.03,
+          "max_turnover": 0.6
+        }
+      }
+    },
+    {
+      "name": "robust_bl_no_llm",
+      "agent_name": "robust_bl",
+      "track": "macro",
+      "load_news": true,
+      "ablation": "no-LLM",
+      "group": "track1",
+      "agent_params": {
+        "track": "macro",
+        "constraints": {
+          "max_weight": 0.7,
+          "cash_reserve": 0.03,
+          "max_turnover": 0.6
+        },
+        "stage1": {
+          "use_llm": false
+        }
+      }
+    },
+    {
+      "name": "robust_bl_no_text_store",
+      "agent_name": "s1_quant_core",
+      "track": "macro",
+      "load_news": false,
+      "ablation": "no-text-store",
+      "group": "track1",
+      "notes": "S1 control for robust BL with no text state.",
+      "agent_params": {
+        "track": "macro",
+        "max_weight": 0.7
+      }
+    },
+    {
+      "name": "robust_bl_no_turnover_control",
+      "agent_name": "robust_bl",
+      "track": "macro",
+      "load_news": true,
+      "ablation": "no-turnover-control",
+      "group": "track1",
+      "agent_params": {
+        "track": "macro",
+        "constraints": {
+          "max_weight": 0.7,
+          "cash_reserve": 0.03,
+          "max_turnover": 1.0,
+          "rebalance_threshold": 0.0
+        }
+      }
+    },
+    {
+      "name": "robust_bl_no_risk_control",
+      "agent_name": "robust_bl",
+      "track": "macro",
+      "load_news": true,
+      "ablation": "no-risk-control",
+      "group": "track1",
+      "agent_params": {
+        "track": "macro",
+        "constraints": {
+          "max_weight": 1.0,
+          "cash_reserve": 0.0,
+          "max_turnover": 1.0,
+          "rebalance_threshold": 0.0
+        }
+      }
+    },
+    {
+      "name": "robust_bl_without_confidence",
+      "agent_name": "robust_bl",
+      "track": "macro",
+      "load_news": true,
+      "ablation": "without-confidence",
+      "group": "track1",
+      "agent_params": {
+        "track": "macro",
+        "constraints": {
+          "max_weight": 0.7,
+          "cash_reserve": 0.03,
+          "max_turnover": 0.6
+        },
+        "min_view_confidence": 0.0,
+        "stage2": {
+          "min_confidence": 0.0,
+          "max_confidence": 1.0
+        }
+      }
+    },
+    {
+      "name": "sector_rotation_track2",
+      "agent_name": "sector_rotation",
+      "track": "sector",
+      "load_news": true,
+      "ablation": "base",
+      "group": "track2",
+      "agent_params": {
+        "track": "sector",
+        "constraints": {
+          "max_weight": 0.5,
+          "cash_reserve": 0.03,
+          "max_turnover": 0.6
+        }
+      }
+    },
+    {
+      "name": "sector_without_graph",
+      "agent_name": "sector_rotation",
+      "track": "sector",
+      "load_news": true,
+      "ablation": "sector-without-graph",
+      "group": "track2",
+      "agent_params": {
+        "track": "sector",
+        "use_graph": false,
+        "graph_weight": 0.0,
+        "constraints": {
+          "max_weight": 0.5,
+          "cash_reserve": 0.03,
+          "max_turnover": 0.6
+        }
+      }
+    },
+    {
+      "name": "sector_without_news",
+      "agent_name": "sector_rotation",
+      "track": "sector",
+      "load_news": false,
+      "ablation": "sector-without-news",
+      "group": "track2",
+      "agent_params": {
+        "track": "sector",
+        "use_news": false,
+        "news_weight": 0.0,
+        "trend_weight": 0.85,
+        "graph_weight": 0.15,
+        "constraints": {
+          "max_weight": 0.5,
+          "cash_reserve": 0.03,
+          "max_turnover": 0.6
+        }
+      }
+    },
+    {
+      "name": "oco_fallback_macro",
+      "agent_name": "oco_ensemble",
+      "track": "macro",
+      "load_news": true,
+      "ablation": "base",
+      "group": "fallback",
+      "agent_params": {
+        "track": "macro",
+        "constraints": {
+          "max_weight": 0.7,
+          "cash_reserve": 0.03,
+          "max_turnover": 0.6
+        }
+      }
+    },
+    {
+      "name": "oco_without_text",
+      "agent_name": "oco_ensemble",
+      "track": "macro",
+      "load_news": false,
+      "ablation": "oco-without-text",
+      "group": "fallback",
+      "agent_params": {
+        "track": "macro",
+        "constraints": {
+          "max_weight": 0.7,
+          "cash_reserve": 0.03,
+          "max_turnover": 0.6
+        },
+        "experts": [
+          {
+            "name": "s1_quant_core",
+            "prior_weight": 0.55,
+            "config": {
+              "track": "macro",
+              "max_weight": 0.7
+            }
+          },
+          {
+            "name": "risk_parity",
+            "prior_weight": 0.35,
+            "config": {
+              "track": "macro",
+              "constraints": {
+                "max_weight": 0.7,
+                "cash_reserve": 0.03,
+                "max_turnover": 0.6
+              }
+            }
+          },
+          {
+            "name": "conservative_ensemble",
+            "prior_weight": 0.1,
+            "config": {
+              "track": "macro",
+              "constraints": {
+                "max_weight": 0.7,
+                "cash_reserve": 0.03,
+                "max_turnover": 0.6
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

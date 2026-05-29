@@ -6,6 +6,7 @@ from typing import Any
 
 from nlpcc.stage3_trade.models.breadth import breadth_score
 from nlpcc.stage3_trade.models.covariance import sample_covariance
+from nlpcc.stage3_trade.models.correlation_graph import build_correlation_graph
 from nlpcc.stage3_trade.models.drawdown import max_drawdown_from_prices
 from nlpcc.stage3_trade.models.equal_weight_state import cap_and_redistribute, equal_weight
 from nlpcc.stage3_trade.models.inverse_volatility import inverse_volatility_weights, sample_volatility
@@ -101,10 +102,12 @@ def build_stage3_state(
     )
     covariance = sample_covariance({fund_id: list(values) for fund_id, values in returns_by_fund.items()})
     shrunk = shrink_covariance(covariance, alpha=cfg.shrinkage_alpha)
+    correlation_edges = build_correlation_graph(returns_by_fund)
     diagnostics = {
         "available_funds": list(available),
         "missing_funds": [fund_id for fund_id in pool if fund_id not in assets],
         "uses_current_day_fields": ["open"],
+        "correlation_edge_count": len(correlation_edges),
     }
     return Stage3State(
         decision_date=resolved_date,
@@ -116,5 +119,6 @@ def build_stage3_state(
         sector_trend_weight=sector,
         covariance=covariance,
         shrinkage_covariance=shrunk,
+        correlation_graph=tuple(edge.as_dict() for edge in correlation_edges),
         diagnostics=diagnostics,
     )

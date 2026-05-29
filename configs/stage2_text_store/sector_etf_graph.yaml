@@ -1,0 +1,5 @@
+name: sector_etf_graph
+stage: stage2_text_store
+status: lightweight_mvp
+description: Deterministic sector-to-ETF graph edges for KG-MoE-Lite reports.
+relation: sector_to_etf

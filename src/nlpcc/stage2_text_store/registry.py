@@ -9,6 +9,8 @@ from nlpcc.stage2_text_store.models.confidence_matrix import build_confidence_ma
 from nlpcc.stage2_text_store.models.decayed_event_memory import build_decayed_event_memory
 from nlpcc.stage2_text_store.models.event_table import build_event_table
 from nlpcc.stage2_text_store.models.flat_feature_table import build_flat_feature_table
+from nlpcc.stage2_text_store.models.knowledge_graph import build_sector_etf_graph
+from nlpcc.stage2_text_store.models.sector_impact_panel import build_sector_impact_panel
 
 
 STAGE2_MODEL_REGISTRY: dict[str, Callable[..., object]] = {
@@ -17,6 +19,8 @@ STAGE2_MODEL_REGISTRY: dict[str, Callable[..., object]] = {
     "bl_view_store": build_bl_view_store,
     "confidence_matrix": build_confidence_matrix,
     "decayed_event_memory": build_decayed_event_memory,
+    "sector_impact_panel": build_sector_impact_panel,
+    "sector_etf_graph": build_sector_etf_graph,
 }
 
 

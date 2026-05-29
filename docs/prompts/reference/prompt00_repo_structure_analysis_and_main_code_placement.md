@@ -192,7 +192,8 @@ Use this table:
 
 Rules:
 
-- Main reusable Python code should live under `src/`, preferably `src/nlpcc/`.
+- Reusable competition implementation should live under `src/nlpcc/`.
+- Local research/development tools should live under `src/tools/`.
 - Configuration should live under `configs/`.
 - Tests should live under `tests/`.
 - Generated outputs should live under `outputs/`.

@@ -1,2 +1,37 @@
-# Stage 4 robust BL configuration placeholder.
-
+name: robust_bl
+agent: robust_bl
+track: macro
+uses_news: true
+description: Robust Black-Litterman with risk-parity/S1 anchor, long-only caps, and turnover control.
+bl_tau: 0.05
+bl_risk_aversion: 2.5
+min_view_confidence: 0.05
+view_return_scale: 1.0
+s1_blend_weight: 0.35
+constraints:
+  max_weight: 0.35
+  cash_reserve: 0.03
+  max_turnover: 0.25
+  rebalance_threshold: 0.01
+optimizer:
+  risk_aversion: 4.0
+  anchor_penalty: 2.0
+  uncertainty_shrinkage: 0.35
+  max_iter: 300
+  step_size: 0.05
+stage1:
+  top_rank: 20
+  min_relevance: 0.05
+  fallback_confidence: 0.25
+  use_llm: false
+stage2:
+  decay_half_life_days: 5.0
+  min_confidence: 0.0
+  max_confidence: 1.0
+stage3:
+  volatility_window: 20
+  momentum_windows:
+    - 3
+    - 5
+    - 20
+  shrinkage_alpha: 0.2

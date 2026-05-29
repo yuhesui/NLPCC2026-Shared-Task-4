@@ -1,0 +1,10 @@
+name: sector_impact_panel
+stage: stage2_text_store
+description: Track 2 sector impact rows mapped to public ETF candidates.
+source: stage1_sector_impacts
+fields:
+  - sector
+  - signed_intensity
+  - confidence
+  - evidence_count
+  - etf_ids

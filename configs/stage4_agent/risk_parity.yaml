@@ -1,0 +1,17 @@
+name: risk_parity
+agent: risk_parity
+track: macro
+uses_news: false
+description: Long-only capped risk parity with turnover control.
+constraints:
+  max_weight: 0.35
+  cash_reserve: 0.03
+  max_turnover: 0.25
+  rebalance_threshold: 0.01
+stage3:
+  volatility_window: 20
+  momentum_windows:
+    - 3
+    - 5
+    - 20
+  shrinkage_alpha: 0.2

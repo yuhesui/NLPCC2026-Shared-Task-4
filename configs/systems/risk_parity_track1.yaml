@@ -1,0 +1,6 @@
+name: risk_parity_track1
+agent: risk_parity
+track: macro
+description: Track 1 risk-parity comparator and robust-BL anchor.
+fallback: s1_macro
+config: ../stage4_agent/risk_parity.yaml
