@@ -38,6 +38,20 @@ Local evaluation utilities should compare their outputs against official-server 
 
 The official environment uses buy-by-cash and sell-by-holding-percentage semantics. Same-day sell proceeds should not be assumed available for same-day buys. The adapter must validate cash feasibility before submitting orders.
 
+## Prompt14 Repair Status
+
+The root official-facing wrapper now lives at `NLPCC_tasks/agent_platform/agents/build_agent.py` and calls `src/nlpcc/runtime/system_runner.py`.
+
+Prompt14 made the portfolio semantics explicit:
+
+- official `holdings[fund].value` is monetary holding value and must not be treated as shares;
+- local share-like holdings are converted to value using current open only when needed;
+- target weights are converted to official trades through `src/nlpcc/execution/order_planner.py`;
+- buys use decision-time cash only, while same-day sell proceeds are excluded from the buy budget;
+- invalid official trade payloads are rejected by `src/nlpcc/execution/trade_validator.py` before submission.
+
+Read `outputs/reports/prompt14/official_local_parity_rerun_report.md` for current parity status. Local backtests and ablations remain local evidence unless explicitly marked as official-server parity runs.
+
 ## Dependency Policy
 
 Avoid runtime dependency on external LLM APIs for final B-list execution. If LLM extraction is used, provide cached/frozen/reproducible alternatives and no-LLM fallback.

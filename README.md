@@ -80,6 +80,14 @@ Stage 3: covariance + inverse-volatility + momentum/risk state
 Stage 4: robust Black-Litterman + risk parity + S1 fallback
 ```
 
+## Prompt14 Runtime Status
+
+- Official-facing wrapper path: `NLPCC_tasks/agent_platform/agents/build_agent.py`.
+- Track A / Macro default: `robust_bl_track1`; fallback: `s1_macro`.
+- Track B / Sector default: `s1_sector`; `sector_rotation_track2` remains experimental until it beats S1 sector on construction-period evidence.
+- Stage 1 default is deterministic rule-based extraction with no external API requirement. LLM and local Hugging Face model paths are optional and disabled by default.
+- Official/local parity must be read from the latest `outputs/reports/prompt14/official_local_parity_rerun_report.md`; older local backtests are local evidence, not official leaderboard facts.
+
 ## Documentation Map
 
 - `docs/REPO_STRUCTURE.md` - exact desired repository structure.

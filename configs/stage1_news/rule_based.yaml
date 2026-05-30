@@ -4,6 +4,14 @@ use_llm: false
 top_rank: 20
 min_relevance: 0.05
 fallback_confidence: 0.25
+text_model:
+  enabled: false
+  provider: local_huggingface
+  model_name: null
+  local_path: null
+  revision: null
+  offline_only: true
+  fallback: rule_based
 notes:
   - Deterministic keyword extractor.
   - Safe fallback is neutral no-LLM output.

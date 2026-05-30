@@ -22,17 +22,17 @@ At the current stage, preserve many plausible methods. Do not narrow prematurely
 | sector trend-following | Track 2 baseline / core comparator |
 | robust Black-Litterman | First serious Track 1 allocation engine |
 | risk parity | Robust allocation component and fallback |
-| belief-state risk parity | Secondary robust / report-friendly system |
-| HMM / Kalman / MPC | Secondary or report-centrepiece macro engine |
+| belief-state risk parity | Research stub / deferred |
+| HMM / Kalman / MPC | Research stub / deferred |
 | sector impact model | Core Track 2 information module |
-| KG-MoE / KG-MoE-Lite | Track 2 report / secondary build |
-| retrieval analogue memory | Secondary / OCO-meta support |
+| KG-MoE / KG-MoE-Lite | Lightweight prototype / ablation-only unless promoted by evidence |
+| retrieval analogue memory | Research stub / deferred |
 | transformer-style event memory | Deferred high-novelty method |
-| OCO / online mirror descent ensemble | Core fallback / meta-allocator |
-| learning-to-rank | Track 2 secondary build |
-| causal/invariant event-impact model | Report-centrepiece / secondary verification layer |
-| rule-based news extraction | Stage 1 fallback and no-LLM baseline |
-| LLM event extraction | Stage 1 structured extraction, not final allocator |
+| OCO / online mirror descent ensemble | OCO-inspired deterministic gating fallback; no persistent online state yet |
+| learning-to-rank | Research stub / deferred |
+| causal/invariant event-impact model | Research stub / deferred |
+| rule-based news extraction | Stage 1 default and no-LLM baseline |
+| LLM event extraction | Optional injected callable only; not default |
 | no-LLM fallback | Mandatory for B-list robustness |
 | generic RAG summariser | Weak baseline / ablation only |
 | pure LLM direct allocator | Rejected production design |
