@@ -10,8 +10,14 @@ from nlpcc.core.fund_universe import TrackName, get_fund_pool
 from nlpcc.execution.official_adapter import build_agent_input, normalize_track
 from nlpcc.execution.order_planner import OrderPlannerConfig, OrderPlan, plan_orders_from_target_weights
 from nlpcc.runtime.decision_trace import DecisionTrace, FallbackEvent
+from nlpcc.stage4_agent.models.armor_omd_agent import ARMOROMDAgent
+from nlpcc.stage4_agent.models.bsa_rp_agent import BSARPAgent
+from nlpcc.stage4_agent.models.ceva_kf_ciga_agent import CEVAKFCIGAAgent
 from nlpcc.stage4_agent.models.conservative_ensemble_agent import ConservativeEnsembleAgent
+from nlpcc.stage4_agent.models.dro_bl_rp_agent import DROBLRPAgent
+from nlpcc.stage4_agent.models.hgf_mpc_agent import HGFMPCAgent
 from nlpcc.stage4_agent.models.kg_moe_lite_agent import KGMoELiteAgent
+from nlpcc.stage4_agent.models.leeqa_rank_agent import LEEQARankAgent
 from nlpcc.stage4_agent.models.oco_ensemble_agent import OCOEnsembleAgent
 from nlpcc.stage4_agent.models.risk_parity_agent import RiskParityAgent
 from nlpcc.stage4_agent.models.robust_bl_agent import RobustBLAgent
@@ -28,8 +34,15 @@ SYSTEM_ALIASES: dict[str, str] = {
     "s1_track1": "s1_macro",
     "s1_track2": "s1_sector",
     "robust_bl": "robust_bl_track1",
+    "dro_bl_rp": "dro_bl_rp_track1",
     "sector_rotation": "sector_rotation_track2",
     "oco_fallback_macro": "oco_fallback",
+    "armor_omd_macro": "armor_omd_macro",
+    "armor_omd_sector": "armor_omd_sector",
+    "leeqa_rank": "leeqa_rank_track2",
+    "hgf_mpc": "hgf_mpc_track1",
+    "ceva_kf_ciga_macro": "ceva_kf_ciga_track1",
+    "ceva_kf_ciga_sector": "ceva_kf_ciga_track2",
 }
 
 
@@ -273,10 +286,22 @@ def _build_agent(config: Mapping[str, Any]) -> Any:
         return RiskParityAgent.from_config(params)
     if agent_name == "robust_bl":
         return RobustBLAgent.from_config(params)
+    if agent_name == "dro_bl_rp":
+        return DROBLRPAgent.from_config(params)
+    if agent_name == "bsa_rp":
+        return BSARPAgent.from_config(params)
+    if agent_name == "armor_omd":
+        return ARMOROMDAgent.from_config(params)
+    if agent_name == "leeqa_rank":
+        return LEEQARankAgent.from_config(params)
     if agent_name == "sector_rotation":
         return SectorRotationAgent.from_config(params)
     if agent_name == "kg_moe_lite":
         return KGMoELiteAgent.from_config(params)
+    if agent_name == "hgf_mpc":
+        return HGFMPCAgent.from_config(params)
+    if agent_name == "ceva_kf_ciga":
+        return CEVAKFCIGAAgent.from_config(params)
     if agent_name == "conservative_ensemble":
         return ConservativeEnsembleAgent.from_config(params)
     if agent_name == "oco_ensemble":

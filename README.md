@@ -88,6 +88,14 @@ Stage 4: robust Black-Litterman + risk parity + S1 fallback
 - Stage 1 default is deterministic rule-based extraction with no external API requirement. LLM and local Hugging Face model paths are optional and disabled by default.
 - Official/local parity must be read from the latest `outputs/reports/prompt14/official_local_parity_rerun_report.md`; older local backtests are local evidence, not official leaderboard facts.
 
+## Prompt15 Model Integration Status
+
+- Functional MVP code paths now exist for DRO-BL-RP, BSA-RP, ARMOR-OMD, LEEQA-Rank, KG-MoE-Lite, HGF-MPC, and CEVA-KF/CIGA.
+- Stage 1 supports rule-based extraction, no-LLM fallback, optional offline FinBERT Chinese sentiment, optional offline BGE-small Chinese embeddings, and a hybrid rule/BGE/FinBERT extractor.
+- Hugging Face models are never downloaded silently and are not required by default. The production-safe fallback remains deterministic rule-based extraction.
+- Prompt15 grid evidence in `outputs/reports/prompt15/` is a runtime-bounded construction sample, not final full-year evidence. Do not promote a Prompt15 MVP as a final default without full-year 2024, locked 2025, and wrapper/official parity checks.
+- Current default policy remains conservative: Track A uses `robust_bl_track1`/DRO-BL-RP-family evidence with `s1_macro` fallback; Track B remains `s1_sector` unless construction-period evidence promotes a sector method.
+
 ## Documentation Map
 
 - `docs/REPO_STRUCTURE.md` - exact desired repository structure.

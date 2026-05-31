@@ -55,3 +55,12 @@ Read `outputs/reports/prompt14/official_local_parity_rerun_report.md` for curren
 ## Dependency Policy
 
 Avoid runtime dependency on external LLM APIs for final B-list execution. If LLM extraction is used, provide cached/frozen/reproducible alternatives and no-LLM fallback.
+
+Prompt15 adds optional offline Hugging Face text models:
+
+- `BAAI/bge-small-zh-v1.5` for local embeddings;
+- `yiyanghkust/finbert-tone-chinese` for local Chinese financial sentiment.
+
+These models are discovered from explicit config paths, `NLPCC_HF_MODEL_DIR`, or the local Hugging Face cache. The code does not download them at runtime, and production configs keep `text_model.enabled: false` unless an experiment explicitly enables local inference.
+
+New Prompt15 candidate agents run through `SystemRunner`, but official parity is not automatically established by local-wrapper execution. S0/S1 parity is inherited from Prompt14; advanced candidates still require official-server reruns.

@@ -32,3 +32,10 @@
 - Track A default is `robust_bl_track1` with `s1_macro` fallback.
 - Track B default is `s1_sector`; `sector_rotation_track2` is ablation/experimental until construction-period evidence improves.
 - Remaining B-list blockers are wrapper-based full-year 2024/2025 validation, package dry-run from a clean extraction, and any organiser-required Docker/equivalent environment lock.
+
+## Prompt15 Current Status
+
+- DRO-BL-RP, BSA-RP, ARMOR-OMD, LEEQA-Rank, KG-MoE-Lite, HGF-MPC, and CEVA-KF/CIGA have functional MVP paths, configs, and focused tests.
+- Offline BGE-small Chinese embeddings and FinBERT Chinese tone extraction are wired into Stage 1, but final runtime does not depend on them by default.
+- Prompt15 grid results are construction-sample evidence because local text-model inference is expensive; full-year 2024 rerun remains required before final promotion.
+- Official parity remains proven only for S0/S1 paths inherited from Prompt14. New MVP candidates need official-server parity or an accepted wrapper dry-run before submission.

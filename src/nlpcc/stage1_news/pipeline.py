@@ -5,9 +5,18 @@ from __future__ import annotations
 from datetime import date, datetime, time
 from typing import Any
 
+from dataclasses import replace
+
 from nlpcc.stage1_news.models.no_llm_fallback import no_llm_fallback_output
+from nlpcc.stage1_news.models.bge_small_zh_extractor import BgeSmallZhEmbeddingExtractor, DEFAULT_BGE_MODEL
+from nlpcc.stage1_news.models.finbert_tone_chinese_extractor import (
+    DEFAULT_FINBERT_MODEL,
+    FinbertToneChineseSentimentExtractor,
+)
+from nlpcc.stage1_news.models.hybrid_local_text_extractor import HybridLocalTextExtractor
 from nlpcc.stage1_news.models.rule_based_extractor import RuleBasedNewsExtractor
 from nlpcc.stage1_news.schema import NormalizedNewsItem, Stage1Config, Stage1Output
+from nlpcc.stage1_news.text_model_config import TextModelConfig
 from nlpcc.stage1_news.validators import assert_valid_stage1_output
 
 
@@ -136,7 +145,105 @@ def run_stage1_news_pipeline(
         output.diagnostics.update(diagnostics)
         assert_valid_stage1_output(output)
         return output
-    output = RuleBasedNewsExtractor(cfg).extract(visible)
+    output = _extract_visible_news(visible, cfg)
     output.diagnostics.update(diagnostics)
     assert_valid_stage1_output(output)
     return output
+
+
+def _extract_visible_news(visible: tuple[NormalizedNewsItem, ...], cfg: Stage1Config) -> Stage1Output:
+    extractor = (cfg.extractor or "rule_based").lower()
+    if cfg.text_model.enabled and extractor == "rule_based":
+        model_name = (cfg.text_model.model_name or "").lower()
+        if "finbert" in model_name:
+            extractor = "finbert_tone_chinese"
+        elif "bge" in model_name:
+            extractor = "bge_small_zh"
+        else:
+            extractor = "hybrid_rule_bge_finbert"
+
+    if extractor == "no_llm_fallback":
+        return no_llm_fallback_output("configured_no_llm_fallback", cfg)
+    if extractor == "rule_based":
+        return RuleBasedNewsExtractor(cfg).extract(visible)
+    if extractor in {"finbert", "finbert_tone_chinese"}:
+        return _finbert_output(visible, cfg)
+    if extractor in {"bge", "bge_small_zh"}:
+        return _bge_output(visible, cfg)
+    if extractor in {"hybrid", "hybrid_rule_bge_finbert", "hybrid_local_text"}:
+        return HybridLocalTextExtractor(cfg).extract(visible)
+    fallback = RuleBasedNewsExtractor(cfg).extract(visible)
+    fallback.diagnostics["unknown_extractor_fallback"] = extractor
+    return fallback
+
+
+def _finbert_output(visible: tuple[NormalizedNewsItem, ...], cfg: Stage1Config) -> Stage1Output:
+    rule_output = RuleBasedNewsExtractor(cfg).extract(visible)
+    text_cfg = _model_config(cfg, DEFAULT_FINBERT_MODEL)
+    sentiments = FinbertToneChineseSentimentExtractor(text_cfg).classify_items(visible)
+    diagnostics = dict(rule_output.diagnostics)
+    diagnostics.update(
+        {
+            "model": "finbert_tone_chinese",
+            "sentiment_model": text_cfg.model_name,
+            "local_text_fallback_used": any(bool(item.model_metadata.get("fallback_used")) for item in sentiments),
+        }
+    )
+    return Stage1Output(
+        items=rule_output.items,
+        sentiments=sentiments,
+        events=rule_output.events,
+        sector_impacts=rule_output.sector_impacts,
+        bl_views=rule_output.bl_views,
+        fallback_used=rule_output.fallback_used,
+        diagnostics=diagnostics,
+    )
+
+
+def _bge_output(visible: tuple[NormalizedNewsItem, ...], cfg: Stage1Config) -> Stage1Output:
+    rule_output = RuleBasedNewsExtractor(cfg).extract(visible)
+    text_cfg = _model_config(cfg, DEFAULT_BGE_MODEL)
+    embeddings = BgeSmallZhEmbeddingExtractor(text_cfg).embed_items(visible)
+    by_news = {signal.news_id: signal for signal in embeddings}
+    events = tuple(
+        replace(
+            event,
+            relevance_score=round(float(by_news[event.news_id].relevance_score), 6) if event.news_id in by_news else 0.0,
+            embedding_ref=by_news[event.news_id].embedding_ref if event.news_id in by_news else None,
+            model_metadata={**event.model_metadata, "stage1_extractor": "bge_small_zh"},
+        )
+        for event in rule_output.events
+    )
+    diagnostics = dict(rule_output.diagnostics)
+    diagnostics.update(
+        {
+            "model": "bge_small_zh",
+            "embedding_model": text_cfg.model_name,
+            "embedding_count": len(embeddings),
+            "local_text_fallback_used": any(bool(signal.model_metadata.get("fallback_used")) for signal in embeddings),
+        }
+    )
+    return Stage1Output(
+        items=rule_output.items,
+        sentiments=rule_output.sentiments,
+        events=events,
+        sector_impacts=rule_output.sector_impacts,
+        bl_views=rule_output.bl_views,
+        fallback_used=rule_output.fallback_used,
+        diagnostics=diagnostics,
+    )
+
+
+def _model_config(cfg: Stage1Config, model_name: str) -> TextModelConfig:
+    base = cfg.text_model
+    return TextModelConfig(
+        enabled=True,
+        provider=base.provider,
+        model_name=base.model_name or model_name,
+        local_path=base.local_path,
+        revision=base.revision,
+        offline_only=base.offline_only,
+        fallback=base.fallback,
+        max_length=base.max_length,
+        embedding_dims=base.embedding_dims,
+    )

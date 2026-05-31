@@ -6,8 +6,14 @@ import json
 from pathlib import Path
 from typing import Any
 
+from nlpcc.stage4_agent.models.armor_omd_agent import ARMOROMDAgent
+from nlpcc.stage4_agent.models.bsa_rp_agent import BSARPAgent
+from nlpcc.stage4_agent.models.ceva_kf_ciga_agent import CEVAKFCIGAAgent
 from nlpcc.stage4_agent.models.conservative_ensemble_agent import ConservativeEnsembleAgent
+from nlpcc.stage4_agent.models.dro_bl_rp_agent import DROBLRPAgent
+from nlpcc.stage4_agent.models.hgf_mpc_agent import HGFMPCAgent
 from nlpcc.stage4_agent.models.kg_moe_lite_agent import KGMoELiteAgent
+from nlpcc.stage4_agent.models.leeqa_rank_agent import LEEQARankAgent
 from nlpcc.stage4_agent.models.oco_ensemble_agent import OCOEnsembleAgent
 from nlpcc.stage4_agent.models.risk_parity_agent import RiskParityAgent
 from nlpcc.stage4_agent.models.robust_bl_agent import RobustBLAgent
@@ -29,10 +35,22 @@ def build_agent(agent_name: str, params: dict[str, Any] | None = None) -> Any:
         return RiskParityAgent.from_config(params)
     if agent_name == "robust_bl":
         return RobustBLAgent.from_config(params)
+    if agent_name == "dro_bl_rp":
+        return DROBLRPAgent.from_config(params)
+    if agent_name == "bsa_rp":
+        return BSARPAgent.from_config(params)
+    if agent_name == "armor_omd":
+        return ARMOROMDAgent.from_config(params)
+    if agent_name == "leeqa_rank":
+        return LEEQARankAgent.from_config(params)
     if agent_name == "sector_rotation":
         return SectorRotationAgent.from_config(params)
     if agent_name == "kg_moe_lite":
         return KGMoELiteAgent.from_config(params)
+    if agent_name == "hgf_mpc":
+        return HGFMPCAgent.from_config(params)
+    if agent_name == "ceva_kf_ciga":
+        return CEVAKFCIGAAgent.from_config(params)
     if agent_name == "conservative_ensemble":
         return ConservativeEnsembleAgent.from_config(params)
     if agent_name == "oco_ensemble":

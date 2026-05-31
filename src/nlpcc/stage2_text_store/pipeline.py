@@ -7,11 +7,14 @@ from typing import Any
 
 from nlpcc.stage1_news.schema import Stage1Output
 from nlpcc.stage2_text_store.models.bl_view_store import build_bl_view_store
+from nlpcc.stage2_text_store.models.causal_event_graph import build_causal_event_graph
 from nlpcc.stage2_text_store.models.confidence_matrix import build_confidence_matrix
 from nlpcc.stage2_text_store.models.decayed_event_memory import build_decayed_event_memory
 from nlpcc.stage2_text_store.models.event_table import build_event_table
 from nlpcc.stage2_text_store.models.flat_feature_table import build_flat_feature_table
-from nlpcc.stage2_text_store.models.knowledge_graph import build_sector_etf_graph
+from nlpcc.stage2_text_store.models.knowledge_graph import build_knowledge_graph_lite, build_sector_etf_graph
+from nlpcc.stage2_text_store.models.rank_feature_panel import build_rank_feature_panel
+from nlpcc.stage2_text_store.models.retrieval_index import build_retrieval_analogue_index
 from nlpcc.stage2_text_store.models.sector_impact_panel import build_sector_impact_panel
 from nlpcc.stage2_text_store.schema import ConfidenceMatrix, DecayedEventMemory, Stage2Config, Stage2TextState
 from nlpcc.stage2_text_store.validators import assert_valid_stage2_state
@@ -93,6 +96,10 @@ def build_stage2_text_state(
     bl_views = build_bl_view_store(stage1_output)
     sector_impact_panel = build_sector_impact_panel(stage1_output)
     sector_graph_edges = build_sector_etf_graph(sector_impact_panel)
+    retrieval_index = build_retrieval_analogue_index(event_table)
+    knowledge_graph = build_knowledge_graph_lite(sector_impact_panel, event_table)
+    causal_graph = build_causal_event_graph(event_table)
+    rank_panel = build_rank_feature_panel(sector_impact_panel, knowledge_graph, retrieval_index)
     confidence_matrix = build_confidence_matrix(
         bl_views,
         min_confidence=cfg.min_confidence,
@@ -118,6 +125,10 @@ def build_stage2_text_state(
         decayed_memory=decayed_memory,
         sector_impact_panel=sector_impact_panel,
         sector_graph_edges=sector_graph_edges,
+        retrieval_analogue_index=retrieval_index,
+        knowledge_graph=knowledge_graph,
+        causal_event_graph=causal_graph,
+        rank_feature_panel=rank_panel,
         diagnostics=diagnostics,
     )
     assert_valid_stage2_state(state)

@@ -107,6 +107,10 @@ class Stage2TextState:
     decayed_memory: DecayedEventMemory
     sector_impact_panel: tuple[SectorImpactRow, ...] = ()
     sector_graph_edges: tuple[SectorGraphEdge, ...] = ()
+    retrieval_analogue_index: dict[str, Any] = field(default_factory=dict)
+    knowledge_graph: dict[str, Any] = field(default_factory=dict)
+    causal_event_graph: dict[str, Any] = field(default_factory=dict)
+    rank_feature_panel: tuple[dict[str, Any], ...] = ()
     diagnostics: dict[str, Any] = field(default_factory=dict)
 
     def as_dict(self) -> dict[str, Any]:
