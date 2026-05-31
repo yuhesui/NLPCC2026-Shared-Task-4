@@ -1,0 +1,5 @@
+name: kalman_drift_state
+component: kalman_drift
+status: functional_mvp
+process_variance: 0.00001
+observation_variance: 0.0002

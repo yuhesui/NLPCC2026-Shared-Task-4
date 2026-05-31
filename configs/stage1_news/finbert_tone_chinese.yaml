@@ -1,0 +1,16 @@
+name: finbert_tone_chinese
+extractor: finbert_tone_chinese
+top_rank: 20
+min_relevance: 0.05
+fallback_confidence: 0.25
+use_llm: false
+text_model:
+  enabled: true
+  provider: local_huggingface
+  model_name: yiyanghkust/finbert-tone-chinese
+  local_path: null
+  revision: null
+  offline_only: true
+  fallback: rule_based
+  max_length: 256
+  embedding_dims: 16

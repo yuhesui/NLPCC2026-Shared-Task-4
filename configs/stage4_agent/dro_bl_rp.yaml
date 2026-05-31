@@ -1,0 +1,37 @@
+name: dro_bl_rp
+agent: dro_bl_rp
+track: macro
+uses_news: true
+description: DRO-BL-RP MVP using robust BL posterior with risk-parity/S1 anchor.
+bl_tau: 0.05
+bl_risk_aversion: 2.5
+min_view_confidence: 0.05
+view_return_scale: 1.0
+s1_blend_weight: 0.35
+constraints:
+  max_weight: 0.35
+  cash_reserve: 0.03
+  max_turnover: 0.25
+  rebalance_threshold: 0.01
+optimizer:
+  risk_aversion: 4.0
+  anchor_penalty: 2.0
+  uncertainty_shrinkage: 0.35
+  max_iter: 300
+  step_size: 0.05
+stage1:
+  extractor: rule_based
+  top_rank: 20
+  use_llm: false
+  text_model:
+    enabled: false
+    fallback: rule_based
+stage2:
+  decay_half_life_days: 5.0
+stage3:
+  volatility_window: 20
+  momentum_windows:
+    - 3
+    - 5
+    - 20
+  shrinkage_alpha: 0.2

@@ -1,0 +1,6 @@
+name: armor_omd_macro
+agent: armor_omd
+track: macro
+description: Track A ARMOR-OMD fallback/candidate MVP.
+fallback: s1_macro
+config: ../stage4_agent/armor_omd.yaml

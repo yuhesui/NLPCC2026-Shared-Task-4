@@ -1,0 +1,7 @@
+name: belief_state
+component: belief_state
+requires:
+  - flat_feature_table
+  - bl_view_store
+  - decayed_event_memory
+status: functional_mvp

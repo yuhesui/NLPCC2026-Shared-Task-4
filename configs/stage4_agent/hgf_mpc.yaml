@@ -1,0 +1,20 @@
+name: hgf_mpc
+agent: hgf_mpc
+track: macro
+uses_news: false
+description: HGF-MPC one-step constrained controller MVP.
+drift_weight: 0.70
+risk_weight: 0.30
+risk_off_scale: 0.70
+constraints:
+  max_weight: 0.35
+  cash_reserve: 0.03
+  max_turnover: 0.25
+  rebalance_threshold: 0.01
+stage3:
+  volatility_window: 20
+  momentum_windows:
+    - 3
+    - 5
+    - 20
+  shrinkage_alpha: 0.2

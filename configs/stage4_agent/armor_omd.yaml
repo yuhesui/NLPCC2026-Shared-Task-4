@@ -1,0 +1,13 @@
+name: armor_omd
+agent: armor_omd
+track: macro
+uses_news: true
+description: ARMOR-OMD exponentiated-weight MVP over base allocators.
+learning_rate: 4.0
+turnover_penalty: 0.15
+state_path: null
+constraints:
+  max_weight: 0.35
+  cash_reserve: 0.03
+  max_turnover: 0.25
+  rebalance_threshold: 0.01

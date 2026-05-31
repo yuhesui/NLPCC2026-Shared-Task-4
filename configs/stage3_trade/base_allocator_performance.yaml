@@ -1,0 +1,4 @@
+name: base_allocator_performance
+component: base_allocator_performance
+status: functional_mvp
+uses_future_returns: false

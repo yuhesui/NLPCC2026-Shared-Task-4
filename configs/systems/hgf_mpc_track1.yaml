@@ -1,0 +1,6 @@
+name: hgf_mpc_track1
+agent: hgf_mpc
+track: macro
+description: Track A HGF-MPC one-step controller MVP candidate.
+fallback: s1_macro
+config: ../stage4_agent/hgf_mpc.yaml

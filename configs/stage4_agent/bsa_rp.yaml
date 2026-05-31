@@ -1,0 +1,28 @@
+name: bsa_rp
+agent: bsa_rp
+track: macro
+uses_news: true
+description: Belief-state adaptive risk parity MVP.
+belief_tilt_strength: 0.35
+drawdown_guard: 0.60
+constraints:
+  max_weight: 0.35
+  cash_reserve: 0.03
+  max_turnover: 0.25
+  rebalance_threshold: 0.01
+stage1:
+  extractor: rule_based
+  top_rank: 20
+  use_llm: false
+  text_model:
+    enabled: false
+    fallback: rule_based
+stage2:
+  decay_half_life_days: 5.0
+stage3:
+  volatility_window: 20
+  momentum_windows:
+    - 3
+    - 5
+    - 20
+  shrinkage_alpha: 0.2

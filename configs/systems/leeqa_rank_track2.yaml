@@ -1,0 +1,6 @@
+name: leeqa_rank_track2
+agent: leeqa_rank
+track: sector
+description: Track B LEEQA-Rank deterministic ranker MVP candidate.
+fallback: s1_sector
+config: ../stage4_agent/leeqa_rank.yaml

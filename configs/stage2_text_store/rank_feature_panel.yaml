@@ -1,0 +1,7 @@
+name: rank_feature_panel
+component: rank_feature_panel
+requires:
+  - sector_impact_panel
+  - knowledge_graph
+  - retrieval_analogue_index
+status: functional_mvp

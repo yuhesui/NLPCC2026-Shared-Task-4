@@ -1,0 +1,28 @@
+name: ceva_kf_ciga
+agent: ceva_kf_ciga
+track: macro
+uses_news: true
+description: CEVA-KF/CIGA stable event-impact overlay MVP.
+overlay_strength: 0.20
+kalman_strength: 0.10
+constraints:
+  max_weight: 0.35
+  cash_reserve: 0.03
+  max_turnover: 0.25
+  rebalance_threshold: 0.01
+stage1:
+  extractor: rule_based
+  top_rank: 20
+  use_llm: false
+  text_model:
+    enabled: false
+    fallback: rule_based
+stage2:
+  decay_half_life_days: 5.0
+stage3:
+  volatility_window: 20
+  momentum_windows:
+    - 3
+    - 5
+    - 20
+  shrinkage_alpha: 0.2

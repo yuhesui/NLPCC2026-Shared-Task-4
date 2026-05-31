@@ -1,0 +1,5 @@
+name: price_hmm_state
+component: price_hmm_state
+status: functional_mvp
+risk_off_drawdown: 0.12
+high_volatility: 0.025

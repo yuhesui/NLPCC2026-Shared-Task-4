@@ -1,0 +1,6 @@
+name: bsa_rp_track1
+agent: bsa_rp
+track: macro
+description: Track A belief-state adaptive risk parity MVP candidate.
+fallback: s1_macro
+config: ../stage4_agent/bsa_rp.yaml
