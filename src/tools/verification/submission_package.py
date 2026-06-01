@@ -26,6 +26,7 @@ DEFAULT_INCLUDE_PATHS = (
     Path("scripts/generate_target_tensors.py"),
     Path("scripts/run_optimisation.py"),
     Path("scripts/run_prompt17_overnight_search.py"),
+    Path("scripts/run_prompt17b_validation.py"),
     Path("scripts/package_submission.py"),
     Path("NLPCC_tasks/agent_platform/agents/build_agent.py"),
     Path("README.md"),

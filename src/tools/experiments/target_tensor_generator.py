@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+import hashlib
+import json
 from pathlib import Path
 from time import perf_counter
 from typing import Any, Mapping
@@ -74,6 +76,7 @@ def generate_target_tensor(request: TargetTensorGenerationRequest) -> TargetTens
     cache_payload = {
         "track": request.track,
         "data_root": str(request.data_root),
+        "data_version": _data_version_fingerprint(request.data_root),
         "start_date": request.start_date,
         "end_date": request.end_date,
         "max_dates": request.max_dates,
@@ -118,6 +121,10 @@ def generate_target_tensor(request: TargetTensorGenerationRequest) -> TargetTens
     target_tensor = np.zeros((len(request.candidates), len(arrays.dates), len(arrays.assets)), dtype=float)
     candidate_diagnostics: list[dict[str, Any]] = []
     leakage_checks: list[dict[str, Any]] = []
+    trace_sample_path = request.output_root / "target_tensors" / "decision_traces" / request.track / f"{cache_key}.jsonl"
+    trace_sample_path.parent.mkdir(parents=True, exist_ok=True)
+    trace_samples: list[dict[str, Any]] = []
+    sample_date_indices = {0, max(0, len(arrays.dates) - 1)}
 
     for candidate_index, candidate in enumerate(request.candidates):
         runner = SystemRunner.for_track(
@@ -157,9 +164,33 @@ def generate_target_tensor(request: TargetTensorGenerationRequest) -> TargetTens
                     [max(0.0, float(decision.target_weights.get(asset, 0.0))) for asset in arrays.assets],
                     dtype=float,
                 )
+                if date_index in sample_date_indices:
+                    trace_samples.append(
+                        {
+                            "candidate": candidate.name,
+                            "track": request.track,
+                            "date": decision_date,
+                            "fallback_status": decision.fallback_status,
+                            "decision_trace": decision.decision_trace,
+                            "stage_outputs_summary": decision.stage_outputs_summary,
+                            "target_weight_sum": float(target_row.sum()),
+                        }
+                    )
             except Exception:
                 failed_days += 1
                 target_row = np.zeros((len(arrays.assets),), dtype=float)
+                if date_index in sample_date_indices:
+                    trace_samples.append(
+                        {
+                            "candidate": candidate.name,
+                            "track": request.track,
+                            "date": decision_date,
+                            "fallback_status": {"fallback_used": True, "reason": "target_generation_exception"},
+                            "decision_trace": {"runner": "SystemRunner_target_tensor_generator", "exception": True},
+                            "stage_outputs_summary": {},
+                            "target_weight_sum": 0.0,
+                        }
+                    )
             target_tensor[candidate_index, date_index, :] = target_row
             cash, holdings = _advance_official_portfolio(
                 cash=cash,
@@ -198,12 +229,19 @@ def generate_target_tensor(request: TargetTensorGenerationRequest) -> TargetTens
             "candidate_diagnostics": candidate_diagnostics,
             "leakage_summary": _leakage_summary(leakage_checks),
             "tensor_shape": list(target_tensor.shape),
+            "target_weight_axis_order": ["candidate", "date", "asset"],
             "tensor_fingerprint": "",
+            "decision_trace_sample_path": str(trace_sample_path),
+            "decision_trace_sample_count": len(trace_samples),
             "elapsed_seconds": round(perf_counter() - started, 6),
             "engine": "SystemRunner_target_tensor_generator",
         },
     )
     bundle.metadata["tensor_fingerprint"] = tensor_fingerprint(bundle)
+    trace_sample_path.write_text(
+        "".join(json.dumps(sample, ensure_ascii=False, sort_keys=True, default=str) + "\n" for sample in trace_samples),
+        encoding="utf-8",
+    )
     npz_path, metadata_path = cache.save(cache_key, bundle)
     return TargetTensorGenerationResult(
         bundle=bundle,
@@ -280,6 +318,25 @@ def _leakage_summary(checks: list[dict[str, Any]]) -> dict[str, Any]:
         "news_cutoff_hour": NEWS_CUTOFF_HOUR,
         "forbidden_current_fields": ("close", "high", "low", "change", "pct_change"),
     }
+
+
+def _data_version_fingerprint(data_root: Path) -> dict[str, Any]:
+    digest = hashlib.sha256()
+    sources: list[dict[str, Any]] = []
+    manifest_candidates = [data_root / "manifest.json", *(data_root / "manifests").glob("*.json")]
+    for path in sorted((candidate for candidate in manifest_candidates if candidate.exists()), key=lambda item: item.as_posix()):
+        relative = path.relative_to(data_root).as_posix()
+        payload = path.read_bytes()
+        digest.update(relative.encode("utf-8"))
+        digest.update(payload)
+        sources.append({"path": relative, "sha256": hashlib.sha256(payload).hexdigest(), "bytes": path.stat().st_size})
+    if not sources:
+        for child in sorted(data_root.glob("*")):
+            digest.update(child.name.encode("utf-8"))
+            digest.update(str(child.stat().st_mtime_ns).encode("utf-8"))
+            digest.update(str(child.stat().st_size).encode("utf-8") if child.is_file() else b"directory")
+        sources.append({"path": str(data_root), "mode": "directory_stat_fallback"})
+    return {"sha256": digest.hexdigest(), "sources": sources}
 
 
 NEWS_CUTOFF_HOUR = 15
