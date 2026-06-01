@@ -1,0 +1,11 @@
+name: prompt16_five_fold_2024_2025
+label: research cross-validation / robustness analysis
+date_roots:
+  - data/train_2024
+  - data/public_a_2025
+fold_count: 5
+validation_fraction: 0.20
+policy:
+  tune_final_parameters_on_2025: false
+  use_2025_as_research_cv_only: true
+  final_2025_evaluation_policy: locked_no_tuning

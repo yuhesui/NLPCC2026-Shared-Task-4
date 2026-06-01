@@ -14,6 +14,7 @@ from typing import Iterable
 
 DEFAULT_INCLUDE_PATHS = (
     Path("src/nlpcc"),
+    Path("src/tools"),
     Path("configs"),
     Path("scripts/create_implementation_log.py"),
     Path("scripts/run_local_smoke.py"),
@@ -21,6 +22,10 @@ DEFAULT_INCLUDE_PATHS = (
     Path("scripts/run_experiment.py"),
     Path("scripts/generate_report.py"),
     Path("scripts/run_verification.py"),
+    Path("scripts/build_text_feature_cache.py"),
+    Path("scripts/generate_target_tensors.py"),
+    Path("scripts/run_optimisation.py"),
+    Path("scripts/run_prompt17_overnight_search.py"),
     Path("scripts/package_submission.py"),
     Path("NLPCC_tasks/agent_platform/agents/build_agent.py"),
     Path("README.md"),

@@ -133,9 +133,26 @@ def run_stage1_news_pipeline(
     config: Stage1Config | dict[str, Any] | None = None,
 ) -> Stage1Output:
     cfg = config if isinstance(config, Stage1Config) else Stage1Config.from_mapping(config)
+    cache_store = None
+    cache_key = None
+    if cfg.cache_path and cfg.cache_mode in {"read", "read_write", "write"}:
+        from nlpcc.stage1_news.text_feature_store import TextFeatureStore
+
+        cache_store = TextFeatureStore(cfg.cache_path)
+        cache_key = cache_store.key_for(raw_news or (), decision_date=decision_date, config=cfg)
+        if cfg.cache_mode in {"read", "read_write"}:
+            cached = cache_store.read(cache_key)
+            if cached is not None:
+                cached.diagnostics["cache_hit"] = True
+                cached.diagnostics["cache_key"] = cache_key
+                return cached
     if not raw_news:
         output = no_llm_fallback_output("missing_news", cfg)
         assert_valid_stage1_output(output)
+        if cache_store is not None and cache_key is not None and cfg.cache_mode in {"write", "read_write"}:
+            output.diagnostics["cache_hit"] = False
+            output.diagnostics["cache_key"] = cache_key
+            cache_store.write(cache_key, output, metadata={"decision_date": str(decision_date), "extractor": cfg.extractor})
         return output
 
     normalized = normalize_news_items(tuple(raw_news))
@@ -144,10 +161,18 @@ def run_stage1_news_pipeline(
         output = no_llm_fallback_output("no_visible_valid_news", cfg)
         output.diagnostics.update(diagnostics)
         assert_valid_stage1_output(output)
+        if cache_store is not None and cache_key is not None and cfg.cache_mode in {"write", "read_write"}:
+            output.diagnostics["cache_hit"] = False
+            output.diagnostics["cache_key"] = cache_key
+            cache_store.write(cache_key, output, metadata={"decision_date": str(decision_date), "extractor": cfg.extractor})
         return output
     output = _extract_visible_news(visible, cfg)
     output.diagnostics.update(diagnostics)
     assert_valid_stage1_output(output)
+    if cache_store is not None and cache_key is not None and cfg.cache_mode in {"write", "read_write"}:
+        output.diagnostics["cache_hit"] = False
+        output.diagnostics["cache_key"] = cache_key
+        cache_store.write(cache_key, output, metadata={"decision_date": str(decision_date), "extractor": cfg.extractor})
     return output
 
 

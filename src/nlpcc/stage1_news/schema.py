@@ -21,6 +21,10 @@ class Stage1Config:
     use_llm: bool = False
     extractor: str = "rule_based"
     text_model: TextModelConfig = field(default_factory=TextModelConfig)
+    cache_path: str | None = None
+    cache_mode: str = "off"
+    cache_namespace: str = "default"
+    cache_version: str = "stage1_v1"
 
     @classmethod
     def from_mapping(cls, values: dict[str, Any] | None) -> "Stage1Config":
