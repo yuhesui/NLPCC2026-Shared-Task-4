@@ -28,6 +28,7 @@ class BatchedOfficialSemanticsInput:
     initial_capital: float = 100000.0
     commission_rate: float = 0.0001
     planner_config: OrderPlannerConfig = OrderPlannerConfig()
+    planner_configs: tuple[OrderPlannerConfig, ...] | None = None
     emulate_official_finish_update: bool = True
 
 
@@ -85,6 +86,10 @@ def run_batched_official_semantics(
     selected_backend = backend.lower()
     if selected_backend not in {"auto", "torch", "numpy"}:
         raise ValueError("backend must be one of: auto, torch, numpy.")
+    if data.planner_configs is not None and not _planner_configs_uniform(data):
+        if selected_backend == "torch":
+            raise ValueError("per-candidate planner_configs require numpy backend.")
+        selected_backend = "numpy"
     if selected_backend in {"auto", "torch"} and importlib.util.find_spec("torch") is not None:
         try:
             return _run_torch(data, prefer_cuda=prefer_cuda and selected_backend != "numpy")
@@ -108,6 +113,8 @@ def _validate_batched_input(data: BatchedOfficialSemanticsInput) -> None:
         raise ValueError("At least one candidate, date, and asset are required.")
     if data.candidate_names is not None and len(data.candidate_names) != data.target_weights.shape[0]:
         raise ValueError("candidate_names length must match candidate count.")
+    if data.planner_configs is not None and len(data.planner_configs) != data.target_weights.shape[0]:
+        raise ValueError("planner_configs length must match candidate count.")
     if not np.isfinite(data.open_prices).all() or (data.open_prices <= 0).any():
         raise ValueError("open_prices must be finite positive values.")
     if not np.isfinite(data.pct_changes).all() or not np.isfinite(data.target_weights).all():
@@ -119,6 +126,9 @@ def _validate_batched_input(data: BatchedOfficialSemanticsInput) -> None:
 def _run_torch(data: BatchedOfficialSemanticsInput, *, prefer_cuda: bool) -> BatchedOfficialSemanticsResult:
     import torch  # type: ignore
 
+    if data.planner_configs is not None and not _planner_configs_uniform(data):
+        raise ValueError("per-candidate planner_configs require numpy backend.")
+    cfg = data.planner_configs[0] if data.planner_configs else data.planner_config
     device = torch.device("cuda" if prefer_cuda and torch.cuda.is_available() else "cpu")
     dtype = torch.float64
     target = torch.as_tensor(data.target_weights, dtype=dtype, device=device)
@@ -129,7 +139,6 @@ def _run_torch(data: BatchedOfficialSemanticsInput, *, prefer_cuda: bool) -> Bat
     values_history: list[np.ndarray] = []
     weights_history: list[np.ndarray] = []
     last_trade_success = torch.zeros((target.shape[0],), dtype=torch.bool, device=device)
-    cfg = data.planner_config
 
     for date_index in range(target.shape[1]):
         total = cash + holdings.sum(dim=1)
@@ -194,40 +203,43 @@ def _run_torch(data: BatchedOfficialSemanticsInput, *, prefer_cuda: bool) -> Bat
 def _run_numpy(data: BatchedOfficialSemanticsInput) -> BatchedOfficialSemanticsResult:
     target = data.target_weights.astype(float, copy=False)
     pct = data.pct_changes.astype(float, copy=False) / 100.0
+    cfg = _planner_config_arrays(data)
     cash = np.full(target.shape[0], float(data.initial_capital), dtype=float)
     holdings = np.zeros((target.shape[0], target.shape[2]), dtype=float)
     values_history: list[np.ndarray] = []
     weights_history: list[np.ndarray] = []
     last_trade_success = np.zeros(target.shape[0], dtype=bool)
-    cfg = data.planner_config
 
     for date_index in range(target.shape[1]):
         total = cash + holdings.sum(axis=1)
         current_weights = np.divide(holdings, total[:, None], out=np.zeros_like(holdings), where=total[:, None] > 0)
         clean = np.clip(target[:, date_index, :], 0.0, None)
-        if cfg.max_weight is not None:
-            clean = np.clip(clean, 0.0, float(cfg.max_weight))
-        if cfg.max_turnover is not None:
-            turnover = 0.5 * np.abs(clean - current_weights).sum(axis=1)
-            blend = np.where(turnover > float(cfg.max_turnover), float(cfg.max_turnover) / np.maximum(turnover, 1e-18), 1.0)
-            clean = current_weights + blend[:, None] * (clean - current_weights)
+        clean = np.minimum(clean, cfg["max_weight"][:, None])
+        turnover = 0.5 * np.abs(clean - current_weights).sum(axis=1)
+        finite_turnover = np.isfinite(cfg["max_turnover"])
+        blend = np.where(
+            finite_turnover & (turnover > cfg["max_turnover"]),
+            cfg["max_turnover"] / np.maximum(turnover, 1e-18),
+            1.0,
+        )
+        clean = current_weights + blend[:, None] * (clean - current_weights)
 
         diff = clean - current_weights
-        active = np.abs(diff) >= float(cfg.rebalance_threshold)
+        active = np.abs(diff) >= cfg["rebalance_threshold"][:, None]
         sell_pct = np.where(
             (diff < 0) & active & (current_weights > 0),
             np.minimum(1.0, np.abs(diff) / np.maximum(current_weights, 1e-18)),
             0.0,
         )
         sell_pct = np.round(sell_pct, 6)
-        sell_pct = np.where(sell_pct >= float(cfg.min_sell_percentage), sell_pct, 0.0)
+        sell_pct = np.where(sell_pct >= cfg["min_sell_percentage"][:, None], sell_pct, 0.0)
 
         buy_needs = np.where((diff > 0) & active, diff * total[:, None], 0.0)
-        buy_budget = np.maximum(0.0, cash - float(cfg.cash_reserve) * total)
+        buy_budget = np.maximum(0.0, cash - cfg["cash_reserve"] * total)
         total_needed = buy_needs.sum(axis=1)
         scale = np.where(total_needed > 0, np.minimum(1.0, buy_budget / np.maximum(total_needed, 1e-18)), 0.0)
         buy_amounts = np.round(buy_needs * scale[:, None], 6)
-        buy_amounts = np.where(buy_amounts >= float(cfg.min_trade_amount), buy_amounts, 0.0)
+        buy_amounts = np.where(buy_amounts >= cfg["min_trade_amount"][:, None], buy_amounts, 0.0)
 
         holdings = holdings * (1.0 + pct[date_index, :][None, :])
         buy_totals = buy_amounts.sum(axis=1)
@@ -293,6 +305,8 @@ def _build_result(
     diagnostics = {
         "semantics": "batched_official_value_holdings_buy_first_sell_second",
         "planner_config": asdict(data.planner_config),
+        "planner_config_mode": "per_candidate" if data.planner_configs is not None else "single",
+        "candidate_planner_configs": [asdict(config) for config in data.planner_configs] if data.planner_configs is not None else [],
         "same_day_sell_proceeds_for_buys": False,
         "torch_cuda_requested": backend == "torch" and device == "cuda",
     }
@@ -311,6 +325,31 @@ def _torch_round6(value: Any) -> Any:
     import torch  # type: ignore
 
     return torch.round(value * 1_000_000.0) / 1_000_000.0
+
+
+def _planner_configs_uniform(data: BatchedOfficialSemanticsInput) -> bool:
+    if not data.planner_configs:
+        return True
+    first = asdict(data.planner_configs[0])
+    return all(asdict(config) == first for config in data.planner_configs)
+
+
+def _planner_config_arrays(data: BatchedOfficialSemanticsInput) -> dict[str, np.ndarray]:
+    configs = data.planner_configs or tuple(data.planner_config for _ in range(data.target_weights.shape[0]))
+    return {
+        "rebalance_threshold": np.asarray([float(config.rebalance_threshold) for config in configs], dtype=float),
+        "cash_reserve": np.asarray([float(config.cash_reserve) for config in configs], dtype=float),
+        "max_weight": np.asarray(
+            [float(config.max_weight) if config.max_weight is not None else np.inf for config in configs],
+            dtype=float,
+        ),
+        "max_turnover": np.asarray(
+            [float(config.max_turnover) if config.max_turnover is not None else np.inf for config in configs],
+            dtype=float,
+        ),
+        "min_trade_amount": np.asarray([float(config.min_trade_amount) for config in configs], dtype=float),
+        "min_sell_percentage": np.asarray([float(config.min_sell_percentage) for config in configs], dtype=float),
+    }
 
 
 def _weight_row(assets: tuple[str, ...], weights: np.ndarray) -> dict[str, float]:

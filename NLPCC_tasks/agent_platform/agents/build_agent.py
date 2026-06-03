@@ -7,6 +7,7 @@ and delegates reusable logic to ``src/nlpcc``.
 from __future__ import annotations
 
 import asyncio
+import os
 from pathlib import Path
 import sys
 from typing import Any
@@ -30,16 +31,23 @@ class OfficialNLPCCAgent:
         track: str = "macro",
         strategy: str | None = None,
         fallback_strategy: str | None = None,
+        config_root: str | Path | None = None,
         trace_dir: str | Path | None = None,
     ) -> None:
         self.track = normalize_track(track)
-        self.strategy = strategy
+        env_strategy_key = "NLPCC_TRACK_B_STRATEGY" if self.track == "sector" else "NLPCC_TRACK_A_STRATEGY"
+        env_fallback_key = "NLPCC_TRACK_B_FALLBACK" if self.track == "sector" else "NLPCC_TRACK_A_FALLBACK"
+        env_config_root = os.environ.get("NLPCC_CONFIG_ROOT")
+        self.strategy = strategy or os.environ.get(env_strategy_key)
+        self.config_root = Path(config_root or env_config_root) if config_root or env_config_root else None
         self.fallback_strategy = fallback_strategy
+        self.fallback_strategy = fallback_strategy or os.environ.get(env_fallback_key)
         self.trace_dir = Path(trace_dir) if trace_dir is not None else REPO_ROOT / "outputs" / "logs" / "decision_traces"
         self.runner = SystemRunner.for_track(
             self.track,
-            strategy=strategy,
-            fallback_strategy=fallback_strategy,
+            strategy=self.strategy,
+            fallback_strategy=self.fallback_strategy,
+            config_root=self.config_root,
             trace_dir=self.trace_dir,
         )
 
@@ -92,6 +100,7 @@ def build_agent(
     track: str = "macro",
     strategy: str | None = None,
     fallback_strategy: str | None = None,
+    config_root: str | Path | None = None,
     trace_dir: str | Path | None = None,
     **_: Any,
 ) -> OfficialNLPCCAgent:
@@ -99,6 +108,7 @@ def build_agent(
         track=track,
         strategy=strategy,
         fallback_strategy=fallback_strategy,
+        config_root=config_root,
         trace_dir=trace_dir,
     )
 

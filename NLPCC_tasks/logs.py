@@ -24,13 +24,14 @@ def setup_logger():
     # Configure file logging for the server
     log_dir = LOGGING["LOG_DIR"]
     os.makedirs(log_dir, exist_ok=True)
+    enqueue_logs = os.environ.get("NLPCC_LOGURU_ENQUEUE", "0").lower() in {"1", "true", "yes"}
     server_log_path = log_dir / LOGGING["SERVER_LOG_FILE"]
     logger.add(
         server_log_path,
         level=LOGGING["LEVEL"],
         # rotation=LOGGING["ROTATION"],  # 不要rotation啊我干
         # retention=LOGGING["RETENTION"],
-        enqueue=True,
+        enqueue=enqueue_logs,
         backtrace=True,
         diagnose=True,
         format="{time} {level} {message}",
@@ -44,7 +45,7 @@ def setup_logger():
         level=LOGGING["LEVEL"],
         # rotation=LOGGING["ROTATION"],
         # retention=LOGGING["RETENTION"],
-        enqueue=True,
+        enqueue=enqueue_logs,
         backtrace=True,
         diagnose=True,
         format="{time} {level} {message}",

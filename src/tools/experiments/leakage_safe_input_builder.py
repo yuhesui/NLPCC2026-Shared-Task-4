@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import csv
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -50,14 +50,18 @@ class LeakageSafeInputBuilder:
         lookback_days: int = 60,
         news_lookback_calendar_days: int = 1,
         top_news_rank: int = 20,
+        news_sources: tuple[str, ...] | None = None,
     ) -> None:
         self.data_root = Path(data_root)
         self.track = track
         self.lookback_days = max(1, int(lookback_days))
         self.news_lookback_calendar_days = max(1, int(news_lookback_calendar_days))
         self.top_news_rank = max(1, int(top_news_rank))
+        self.news_sources = tuple(news_sources or ("caixin", "tiantian", "sinafinance", "tencent"))
+        self.price_data_dir = _resolve_data_dir(self.data_root, "price_data")
+        self.news_data_dir = _resolve_data_dir(self.data_root, "news_data")
         self.assets = tuple(
-            fund_id for fund_id in get_fund_pool(track) if (self.data_root / "price_data" / f"{fund_id}.csv").exists()
+            fund_id for fund_id in get_fund_pool(track) if (self.price_data_dir / f"{fund_id}.csv").exists()
         )
         if not self.assets:
             raise RuntimeError(f"No price files for {track} under {self.data_root}")
@@ -144,7 +148,7 @@ class LeakageSafeInputBuilder:
         current_day = datetime.strptime(decision_date, "%Y%m%d").date()
         if self._news_cache is None:
             self._news_cache = self._load_all_news_rows()
-        earliest_news_day = current_day - timedelta(days=self.news_lookback_calendar_days - 1)
+        earliest_news_day = self._previous_trading_news_start(decision_date)
         records: list[dict[str, Any]] = []
         for news_day, published, ranking, row in self._news_cache:
             if news_day < earliest_news_day or news_day > current_day:
@@ -156,6 +160,14 @@ class LeakageSafeInputBuilder:
             records.append(row)
         records.sort(key=lambda item: int(item.get("RANKING", item.get("ranking", "999")) or 999))
         return records
+
+    def _previous_trading_news_start(self, decision_date: str) -> Any:
+        try:
+            current_index = self._common_dates.index(decision_date)
+        except ValueError:
+            current_index = 0
+        start_index = max(0, current_index - self.news_lookback_calendar_days)
+        return datetime.strptime(self._common_dates[start_index], "%Y%m%d").date()
 
     def _safe_price_window(self, asset: str, decision_date: str) -> list[dict[str, Any]]:
         rows = self._price_rows[asset]
@@ -179,7 +191,7 @@ class LeakageSafeInputBuilder:
         return output
 
     def _load_price_rows(self, fund_id: str) -> list[dict[str, str]]:
-        path = self.data_root / "price_data" / f"{fund_id}.csv"
+        path = self.price_data_dir / f"{fund_id}.csv"
         with path.open("r", encoding="utf-8-sig", newline="") as handle:
             rows = list(csv.DictReader(handle))
         if not rows:
@@ -187,11 +199,16 @@ class LeakageSafeInputBuilder:
         return rows
 
     def _load_all_news_rows(self) -> list[tuple[Any, datetime, int, dict[str, Any]]]:
-        news_dir = self.data_root / "news_data"
         rows: list[tuple[Any, datetime, int, dict[str, Any]]] = []
-        if not news_dir.exists():
+        if not self.news_data_dir.exists():
             return rows
-        for path in sorted(news_dir.glob("*_daily_dedup.csv")):
+        news_columns = ("APP_TYPE", "LIST_TYPE", "THEDATE", "TITLE", "RANKING", "CONTENT_ID", "PUBLISH_TIME", "CONTENT")
+        paths: list[Path] = []
+        for source in self.news_sources:
+            matches = sorted(self.news_data_dir.glob(f"{source.lower()}_daily_dedup*.csv"))
+            if matches:
+                paths.append(matches[0])
+        for path in paths:
             with path.open("r", encoding="utf-8-sig", newline="") as handle:
                 for row in csv.DictReader(handle):
                     try:
@@ -200,7 +217,7 @@ class LeakageSafeInputBuilder:
                         ranking = int(row.get("RANKING", "999") or 999)
                     except ValueError:
                         continue
-                    rows.append((news_day, published, ranking, row))
+                    rows.append((news_day, published, ranking, {key: row.get(key) for key in news_columns}))
         return rows
 
 
@@ -236,3 +253,11 @@ def _full_price_row(row: Mapping[str, str]) -> dict[str, Any]:
 def _date_int(value: str) -> int:
     digits = "".join(char for char in str(value) if char.isdigit())
     return int(digits[:8])
+
+
+def _resolve_data_dir(data_root: Path, name: str) -> Path:
+    base = data_root / name
+    export_data = base / "export_data"
+    if export_data.exists():
+        return export_data
+    return base

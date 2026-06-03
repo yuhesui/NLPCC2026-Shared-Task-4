@@ -1,0 +1,13 @@
+{
+  "created_at_utc": "2026-06-01T21:40:21.557855+00:00",
+  "source_candidates": {
+    "prompt18_track_a_fallback": "p18_rp_macro_w40_s5",
+    "prompt18_track_a_primary": "p18_rp_macro_w10_s5",
+    "prompt18_track_b_fallback": "p18_s1_sector_t35_v30_w20",
+    "prompt18_track_b_primary": "p18_leeqa_sector_k5_temp35"
+  },
+  "track_a_fallback": "prompt18_track_a_fallback",
+  "track_a_primary": "prompt18_track_a_primary",
+  "track_b_fallback": "prompt18_track_b_fallback",
+  "track_b_primary": "prompt18_track_b_primary"
+}

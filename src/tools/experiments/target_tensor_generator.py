@@ -13,7 +13,7 @@ import numpy as np
 
 from nlpcc.core.fund_universe import TrackName
 from nlpcc.execution.order_planner import OrderPlannerConfig, plan_orders_from_target_weights
-from nlpcc.runtime.system_runner import SystemRunner
+from nlpcc.runtime.system_runner import SystemRunner, _planner_config_from_system_config
 from tools.experiments.candidate_factory import CandidateSpec
 from tools.experiments.leakage_safe_input_builder import (
     LeakageSafeInputBuilder,
@@ -84,10 +84,12 @@ def generate_target_tensor(request: TargetTensorGenerationRequest) -> TargetTens
         "news_lookback_calendar_days": request.news_lookback_calendar_days,
         "initial_capital": request.initial_capital,
         "commission_rate": request.commission_rate,
+        "generation_semantics_version": "candidate_planner_trades_official_news_v4",
         "candidates": [
             {
                 "name": candidate.name,
                 "system_name": candidate.system_name,
+                "family": candidate.family,
                 "config_hash": candidate.config_hash,
                 "text_mode": candidate.text_mode,
             }
@@ -118,6 +120,7 @@ def generate_target_tensor(request: TargetTensorGenerationRequest) -> TargetTens
     )
     arrays = builder.market_arrays(start_date=request.start_date, end_date=request.end_date, max_dates=request.max_dates)
     planner_config = planner_config_for_track(request.track)
+    candidate_planner_configs = [_planner_config_from_system_config(candidate.config) for candidate in request.candidates]
     target_tensor = np.zeros((len(request.candidates), len(arrays.dates), len(arrays.assets)), dtype=float)
     candidate_diagnostics: list[dict[str, Any]] = []
     leakage_checks: list[dict[str, Any]] = []
@@ -140,6 +143,7 @@ def generate_target_tensor(request: TargetTensorGenerationRequest) -> TargetTens
         failed_days = 0
         for date_index, decision_date in enumerate(arrays.dates):
             open_row = arrays.open_prices[date_index]
+            planned_trades: tuple[dict[str, float | str], ...] = ()
             day_input = builder.build_day(
                 decision_date=decision_date,
                 current_portfolio=portfolio_payload(cash, holdings, arrays.assets, open_row),
@@ -160,6 +164,7 @@ def generate_target_tensor(request: TargetTensorGenerationRequest) -> TargetTens
                     fallback_days += 1
                 if (decision.raw_decision.get("metadata", {}) or {}).get("fallback_used"):
                     raw_fallback_days += 1
+                planned_trades = decision.official_trades
                 target_row = np.asarray(
                     [max(0.0, float(decision.target_weights.get(asset, 0.0))) for asset in arrays.assets],
                     dtype=float,
@@ -199,7 +204,8 @@ def generate_target_tensor(request: TargetTensorGenerationRequest) -> TargetTens
                 open_row=open_row,
                 pct_row=arrays.pct_changes[date_index],
                 target_weights=target_row,
-                planner_config=planner_config,
+                planner_config=candidate_planner_configs[candidate_index],
+                planned_trades=planned_trades,
                 commission_rate=request.commission_rate,
             )
         candidate_diagnostics.append(
@@ -225,6 +231,8 @@ def generate_target_tensor(request: TargetTensorGenerationRequest) -> TargetTens
         metadata={
             "cache_payload": cache_payload,
             "planner_config": asdict(planner_config),
+            "planner_config_mode": "candidate_config_planned_trades",
+            "candidate_planner_configs": [asdict(config) for config in candidate_planner_configs],
             "candidate_metadata": [candidate.as_dict() for candidate in request.candidates],
             "candidate_diagnostics": candidate_diagnostics,
             "leakage_summary": _leakage_summary(leakage_checks),
@@ -273,22 +281,27 @@ def _advance_official_portfolio(
     pct_row: np.ndarray,
     target_weights: np.ndarray,
     planner_config: OrderPlannerConfig,
+    planned_trades: tuple[dict[str, float | str], ...] | list[dict[str, float | str]] | None = None,
     commission_rate: float,
 ) -> tuple[float, dict[str, float]]:
     holdings_out = {asset: float(holdings.get(asset, 0.0)) for asset in assets}
-    portfolio = portfolio_payload(cash, holdings_out, assets, open_row)
-    targets = {asset: float(target_weights[index]) for index, asset in enumerate(assets)}
-    plan = plan_orders_from_target_weights(
-        targets,
-        current_portfolio=portfolio,
-        current_open_by_fund=open_payload(assets, open_row),
-        fund_pool=assets,
-        config=planner_config,
-    )
+    if planned_trades is None:
+        portfolio = portfolio_payload(cash, holdings_out, assets, open_row)
+        targets = {asset: float(target_weights[index]) for index, asset in enumerate(assets)}
+        plan = plan_orders_from_target_weights(
+            targets,
+            current_portfolio=portfolio,
+            current_open_by_fund=open_payload(assets, open_row),
+            fund_pool=assets,
+            config=planner_config,
+        )
+        trades = list(plan.trades)
+    else:
+        trades = list(planned_trades)
     for index, asset in enumerate(assets):
         if holdings_out.get(asset, 0.0) > 0:
             holdings_out[asset] *= 1.0 + float(pct_row[index]) / 100.0
-    for trade in list(plan.trades):
+    for trade in trades:
         asset = str(trade.get("fund_id"))
         if asset not in holdings_out:
             continue
