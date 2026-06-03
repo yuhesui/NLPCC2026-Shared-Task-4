@@ -18,5 +18,9 @@
   "prompt01_smoke": {
     "password": "$2b$12$hHXqzvQpDgqKIuSktnl3hObyEClw958z.i84uRMn3pohfiLVene.m",
     "created_at": "2025-01-01"
+  },
+  "llm_agent": {
+    "password": "$2b$12$GmD0WkK/GD2Sv/beJbgVCu8oYUL3ADp51cbVff7IpV3jq9Hviw/Qm",
+    "created_at": "2025-01-01"
   }
 }
