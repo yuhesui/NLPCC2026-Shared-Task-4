@@ -1,0 +1,29 @@
+name: p18_rp_macro_w10_s5
+agent: risk_parity
+track: macro
+uses_news: false
+description: Track 1 risk-parity comparator and robust-BL anchor.
+constraints:
+  max_weight: 0.325
+  cash_reserve: 0.021
+  max_turnover: 0.25
+  rebalance_threshold: 0.01
+stage3:
+  volatility_window: 10
+  momentum_windows:
+  - 3
+  - 5
+  - 20
+  shrinkage_alpha: 0.05
+fallback: s1_macro
+stage1:
+  extractor: no_llm_fallback
+  top_rank: 20
+  use_llm: false
+  text_model:
+    enabled: false
+    fallback: rule_based
+prompt17_family: risk_parity
+prompt17_text_mode: no_news
+preserved_candidate: true
+preserved_official_runtime_candidate: true

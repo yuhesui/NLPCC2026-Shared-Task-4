@@ -1,0 +1,38 @@
+name: p18_leeqa_sector_k3_temp20
+agent: leeqa_rank
+track: sector
+uses_news: true
+description: Track B LEEQA-Rank deterministic ranker MVP candidate.
+top_k: 3
+momentum_weight: 0.43999999999999995
+inverse_vol_weight: 0.25
+sentiment_weight: 0.12000000000000001
+graph_weight: 0.1
+analogue_weight: 0.05
+temperature: 0.2
+constraints:
+  max_weight: 0.25
+  cash_reserve: 0.03
+  max_turnover: 0.22
+  rebalance_threshold: 0.01
+stage1:
+  extractor: rule_based
+  top_rank: 20
+  use_llm: false
+  text_model:
+    enabled: false
+    fallback: rule_based
+stage2:
+  decay_half_life_days: 5.0
+stage3:
+  volatility_window: 20
+  momentum_windows:
+  - 3
+  - 5
+  - 20
+  shrinkage_alpha: 0.2
+fallback: s1_sector
+prompt17_family: leeqa_rank
+prompt17_text_mode: rule_based
+preserved_candidate: true
+preserved_official_runtime_candidate: false

@@ -1,0 +1,33 @@
+name: p18_bsa_macro_t10_g65
+agent: bsa_rp
+track: macro
+uses_news: true
+description: Track A belief-state adaptive risk parity MVP candidate.
+belief_tilt_strength: 0.1
+drawdown_guard: 0.65
+constraints:
+  max_weight: 0.35
+  cash_reserve: 0.03
+  max_turnover: 0.19999999999999998
+  rebalance_threshold: 0.01
+stage1:
+  extractor: rule_based
+  top_rank: 20
+  use_llm: false
+  text_model:
+    enabled: false
+    fallback: rule_based
+stage2:
+  decay_half_life_days: 3.5
+stage3:
+  volatility_window: 20
+  momentum_windows:
+  - 3
+  - 5
+  - 20
+  shrinkage_alpha: 0.2
+fallback: s1_macro
+prompt17_family: bsa_rp
+prompt17_text_mode: rule_based
+preserved_candidate: true
+preserved_official_runtime_candidate: false
