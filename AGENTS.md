@@ -42,6 +42,30 @@ src/nlpcc/stageX_*/
 - Prefer official DataLoader semantics for date slicing and current-day masking.
 - Do not introduce post-2025 / 2026 data, models, or knowledge into training, retrieval, prompts, or caches.
 
+## 4A. News Overlay Transformer-First Rule
+
+The Prompt1-x News Overlay stage is a research extension and must not silently
+replace the frozen official runtime. The preserved official runtime remains:
+
+- Track A primary: `p18_rp_macro_w10_s5`
+- Track A fallback: `p18_rp_macro_w40_s5`
+- Track B primary: `p18_leeqa_sector_k5_temp35`
+- Track B fallback: `p18_s1_sector_t35_v30_w20`
+
+For News Overlay work, deterministic news rules are required only as safety
+fallbacks, lexical baselines, sanity controls, ablation comparators, and
+official-runtime compatibility guards. They are not sufficient as the main
+Section 1 target. Section 1 prompts must implement transformer/attention
+interfaces and tests for BGE-style bi-encoder relevance, frozen FinBERT-style
+aspect tone, label-attention event tagging, sector-query attention pooling,
+cross-encoder reranking where feasible, temporal attention, and hybrid lexical
+plus transformer fallback paths.
+
+No prompt may silently download model files or add online API dependencies.
+If local transformer assets are unavailable, keep the method interface, config
+flags, cache manifest rows, unavailable-state handling, deterministic fallback,
+and status rows marked `blocked_missing_local_model`.
+
 ## 5. Implementation Log Rule
 
 Every prompt execution must write an implementation log using `create_implementation_log`.

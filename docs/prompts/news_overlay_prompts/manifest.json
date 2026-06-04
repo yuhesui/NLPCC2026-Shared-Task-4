@@ -1,0 +1,22 @@
+{
+  "created_at": "2026-06-04T07:49:30",
+  "contains_only_prompt_package": true,
+  "mode_recommendations_location": "README.md only",
+  "files": [
+    "README.md",
+    "prompt01_setup_transformer_first_docs.md",
+    "prompt02_transformer_pipeline_scaffold.md",
+    "prompt03_transformer_news_architectures.md",
+    "prompt04_transformer_impact_architectures.md",
+    "prompt05_sensitivity_overlay_transformer_integration.md",
+    "prompt06_pipeline_integration_gpu_cache_trace.md",
+    "prompt07_transformer_grid_search_and_test_runs.md",
+    "prompt08_ablation_dependency_promotion_audit.md",
+    "prompt09_verify_fix_transformer_errors.md",
+    "prompt10_external_cross_check.md",
+    "prompt11_restart_context_compression.md"
+  ],
+  "updated_at": "2026-06-04T07:54:02",
+  "package": "news_overlay_prompts_prompt01_numbering",
+  "numbering_scheme": "prompt01, prompt02, ..., prompt11"
+}

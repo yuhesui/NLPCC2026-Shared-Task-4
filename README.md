@@ -96,6 +96,30 @@ Stage 4: robust Black-Litterman + risk parity + S1 fallback
 - Prompt15 grid evidence in `outputs/reports/prompt15/` is a runtime-bounded construction sample, not final full-year evidence. Do not promote a Prompt15 MVP as a final default without full-year 2024, locked 2025, and wrapper/official parity checks.
 - Current default policy remains conservative: Track A uses `robust_bl_track1`/DRO-BL-RP-family evidence with `s1_macro` fallback; Track B remains `s1_sector` unless construction-period evidence promotes a sector method.
 
+## News Overlay Transformer-First Policy
+
+Prompt20 froze the official runtime as:
+
+- Track A primary: `p18_rp_macro_w10_s5`
+- Track A fallback: `p18_rp_macro_w40_s5`
+- Track B primary: `p18_leeqa_sector_k5_temp35`
+- Track B fallback: `p18_s1_sector_t35_v30_w20`
+
+The Prompt1-x News Overlay phase is a research extension on top of that frozen
+runtime. It must not automatically replace any official runtime config.
+
+For this phase, deterministic lexical news rules are fallback and comparison
+tools only. The main Section 1 implementation target is transformer/attention
+news processing: BGE-style or sentence-transformer relevance caches,
+cross-encoder reranking where feasible, frozen FinBERT-style aspect tone,
+label-attention event tagging, sector-query attention pooling, temporal
+lagged-news attention, and hybrid lexical plus transformer fallback paths.
+
+No News Overlay prompt may use online APIs, silent model downloads, unpinned
+transformer dependencies, post-2025 knowledge, hidden 2026 data, or 2025
+tuning. Missing local model assets must be reported as
+`blocked_missing_local_model` with deterministic fallback enabled, not omitted.
+
 ## Documentation Map
 
 - `docs/REPO_STRUCTURE.md` - exact desired repository structure.
@@ -103,6 +127,7 @@ Stage 4: robust Black-Litterman + risk parity + S1 fallback
 - `docs/prompts/execution/` - executable prompts for coding agents.
 - `docs/architecture/` - architecture, official compatibility, repo policy, track design.
 - `docs/strategy/` - methodology, ablation, B-list hardening, implementation plan.
+- `docs/news_overlay/` - transformer-first News Overlay policy, method tables, grid table, and restart context.
 - `docs/context/` - main conversation context and current decisions.
 - `docs/research/` - prior deep research reports.
 - `docs/implementation_logs/` - logs created by `create_implementation_log`.

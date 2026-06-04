@@ -10,6 +10,7 @@ This folder is the documentation control centre for the NLPCC 2026 Shared Task 4
 - `context/` - main project context and decisions.
 - `architecture/` - architecture, repo policy, official compatibility, track design.
 - `strategy/` - methodology, ablation, B-list hardening, and implementation plan.
+- `news_overlay/` - transformer-first News Overlay policy, method tables, grid table, and restart context.
 - `research/` - prior deep research reports.
 - `implementation_logs/` - logs created by `create_implementation_log`.
 
