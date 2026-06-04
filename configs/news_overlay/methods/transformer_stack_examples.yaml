@@ -1,0 +1,56 @@
+# Transformer-first News Overlay stack examples.
+#
+# These examples are research pipeline configs only. They do not replace the
+# frozen official runtime and do not include model binaries or online APIs.
+
+defaults:
+  offline: true
+  device: auto
+  batch_size: 16
+  cache_dir: .var/news_overlay_prompt01_11/cache
+  trace_dir: .var/news_overlay_prompt01_11/logs
+  preprocessing_version: news_overlay_v1
+  feature_schema_version: news_overlay_schema_v4
+
+stacks:
+  track_a_embedding_macro_gate:
+    track: A
+    n_method: N2
+    i_method: I2
+    s_method: S3
+    base_config: p18_rp_macro_w10_s5
+
+  track_a_aspect_macro_sensitivity:
+    track: A
+    n_method: N13
+    i_method: I6
+    s_method: S13
+    base_config: p18_rp_macro_w10_s5
+
+  track_a_full_transformer_macro_gate:
+    track: A
+    n_method: N2345
+    i_method: I256
+    s_method: S13
+    base_config: p18_rp_macro_w10_s5
+
+  track_b_embedding_rank_ic:
+    track: B
+    n_method: N2
+    i_method: I2
+    s_method: S2
+    base_config: p18_leeqa_sector_k5_temp35
+
+  track_b_hybrid_event_study:
+    track: B
+    n_method: N12
+    i_method: I23
+    s_method: S12
+    base_config: p18_leeqa_sector_k5_temp35
+
+  track_b_full_transformer_attention_gate:
+    track: B
+    n_method: N2345
+    i_method: I256
+    s_method: S126
+    base_config: p18_leeqa_sector_k5_temp35

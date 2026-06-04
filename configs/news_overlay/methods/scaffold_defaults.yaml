@@ -1,0 +1,14 @@
+# Minimal News Overlay scaffold defaults.
+
+track: A
+n_method: N1
+i_method: I1
+s_method: S3
+offline: true
+device: auto
+batch_size: 16
+cache_dir: .var/news_overlay_prompt01_11/cache
+trace_dir: .var/news_overlay_prompt01_11/logs
+preprocessing_version: news_overlay_v1
+feature_schema_version: news_overlay_schema_v4
+disabled_methods: []

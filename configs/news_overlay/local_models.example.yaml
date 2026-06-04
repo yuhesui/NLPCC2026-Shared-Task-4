@@ -1,0 +1,19 @@
+# Example local-only model paths for News Overlay transformer methods.
+#
+# These are placeholders. Do not add model binaries to the official runtime
+# package unless a later human-approved prompt explicitly permits it.
+
+offline: true
+device: auto
+batch_size: 16
+local_model_paths:
+  N2: ${NEWS_OVERLAY_MODEL_ROOT}/bge-style-bi-encoder
+  N3: ${NEWS_OVERLAY_MODEL_ROOT}/finbert-style-aspect-tone
+  N4: ${NEWS_OVERLAY_MODEL_ROOT}/label-attention-event-tagger
+  N5: ${NEWS_OVERLAY_MODEL_ROOT}/sector-query-attention
+  N6: ${NEWS_OVERLAY_MODEL_ROOT}/cross-encoder-sector-reranker
+  N7: ${NEWS_OVERLAY_MODEL_ROOT}/temporal-lagged-news-attention
+  I5: ${NEWS_OVERLAY_MODEL_ROOT}/impact-gated-attention
+  I6: ${NEWS_OVERLAY_MODEL_ROOT}/aspect-impact-aggregator
+  S6: ${NEWS_OVERLAY_MODEL_ROOT}/attention-weighted-sensitivity
+  S7: ${NEWS_OVERLAY_MODEL_ROOT}/score-to-tilt-gate
