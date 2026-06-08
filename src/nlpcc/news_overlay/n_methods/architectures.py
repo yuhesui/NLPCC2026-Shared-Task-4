@@ -21,7 +21,12 @@ from nlpcc.news_overlay.base import (
     NewsAnalysisMethod,
 )
 from nlpcc.news_overlay.cache import build_cache_key
-from nlpcc.news_overlay.model_availability import check_model_availability
+from nlpcc.news_overlay.model_availability import (
+    check_model_availability,
+    composite_asset_status,
+    is_proxy_report,
+    model_ref_for_cache,
+)
 from nlpcc.stage1_news.pipeline import filter_visible_news, normalize_news_items
 from nlpcc.stage1_news.schema import NormalizedNewsItem
 
@@ -164,7 +169,7 @@ def _parse_cutoff(value: str) -> time:
 def _method_cache_key(spec: MethodSpec, context: MethodRunContext, bundle: VisibleNewsBundle) -> str:
     texts = tuple(item.text for item in bundle.items)
     sources = tuple(item.source for item in bundle.items)
-    local_path = context.local_model_paths.get(spec.code) or context.local_model_paths.get(spec.model_identifier or "")
+    local_path = model_ref_for_cache(spec, context)
     return build_cache_key(
         method_code=spec.code,
         model_identifier=spec.model_identifier,
@@ -273,30 +278,49 @@ def _run_n2(
             availability=report.as_dict(),
             extra_outputs={"daily_features": _daily_summary(rows), "embedding_backend": "fallback_lexical"},
         )
-    try:
-        embeddings = _encode_with_local_transformer(tuple(item.text for item in bundle.items), context, report.local_path)
-        sector_names = tuple(SECTOR_PROTOTYPES)
-        sector_texts = tuple(" ".join(SECTOR_PROTOTYPES[sector]) for sector in sector_names)
-        sector_embeddings = _encode_with_local_transformer(sector_texts, context, report.local_path)
-    except LocalTransformerLoadError as exc:
-        failed_report = _load_failure_report(report, exc)
-        rows = _fallback_rows(spec, context, bundle, cache_key, "N1")
-        return _result(
-            spec,
-            failed_report.status,
-            context,
-            bundle,
-            cache_key,
-            feature_rows=rows,
-            fallback_code="N1",
-            availability=failed_report.as_dict(),
-            extra_outputs={"daily_features": _daily_summary(rows), "embedding_backend": "fallback_lexical", "model_error": str(exc)},
-        )
-    sector_vectors = dict(zip(sector_names, sector_embeddings))
+    if is_proxy_report(report):
+        embeddings = [_hash_vector(item.text) for item in bundle.items]
+        sector_embeddings = _hash_sector_vectors(32)
+        embedding_backend = "proxy_hash_biencoder"
+        row_warning = ("proxy_hash_biencoder",)
+    else:
+        try:
+            embeddings = _encode_with_local_transformer(tuple(item.text for item in bundle.items), context, report.local_path)
+            sector_names = tuple(SECTOR_PROTOTYPES)
+            sector_texts = tuple(" ".join(SECTOR_PROTOTYPES[sector]) for sector in sector_names)
+            encoded_sectors = _encode_with_local_transformer(sector_texts, context, report.local_path)
+            sector_embeddings = dict(zip(sector_names, encoded_sectors))
+            embedding_backend = "local_transformer_biencoder"
+            row_warning = ("local_transformer_biencoder",)
+        except LocalTransformerLoadError as exc:
+            failed_report = _load_failure_report(report, exc)
+            rows = _fallback_rows(spec, context, bundle, cache_key, "N1")
+            return _result(
+                spec,
+                failed_report.status,
+                context,
+                bundle,
+                cache_key,
+                feature_rows=rows,
+                fallback_code="N1",
+                availability=failed_report.as_dict(),
+                extra_outputs={"daily_features": _daily_summary(rows), "embedding_backend": "fallback_lexical", "model_error": str(exc)},
+            )
     rows = []
     for item, vector in zip(bundle.items, embeddings):
-        relevance = {sector: _cosine(vector, sector_vector) for sector, sector_vector in sector_vectors.items()}
-        rows.append(_row_with_scores(spec, context, bundle, item, cache_key, relevance_by_sector=_top_scores(relevance)))
+        relevance = {sector: _cosine(vector, sector_vector) for sector, sector_vector in sector_embeddings.items()}
+        rows.append(
+            _row_with_scores(
+                spec,
+                context,
+                bundle,
+                item,
+                cache_key,
+                relevance_by_sector=_top_scores(relevance),
+                warnings=row_warning,
+                extra={"embedding_backend": embedding_backend},
+            )
+        )
     return _result(
         spec,
         AvailabilityStatus.AVAILABLE,
@@ -305,7 +329,7 @@ def _run_n2(
         cache_key,
         feature_rows=rows,
         availability=report.as_dict(),
-        extra_outputs={"daily_features": _daily_summary(rows), "embedding_backend": "local_transformer_biencoder"},
+        extra_outputs={"daily_features": _daily_summary(rows), "embedding_backend": embedding_backend},
     )
 
 
@@ -321,8 +345,12 @@ def _run_n3(
     transformer_vectors: tuple[list[list[float]], dict[str, list[float]]] | None = None
     if report.status == AvailabilityStatus.AVAILABLE:
         try:
-            text_vectors = _encode_with_local_transformer(tuple(item.text for item in bundle.items), context, report.local_path)
-            aspect_vectors = _encode_with_local_transformer(tuple(_aspect_description(aspect) for aspect in ASPECTS), context, report.local_path)
+            if is_proxy_report(report):
+                text_vectors = [_hash_vector(item.text) for item in bundle.items]
+                aspect_vectors = [_hash_vector(_aspect_description(aspect)) for aspect in ASPECTS]
+            else:
+                text_vectors = _encode_with_local_transformer(tuple(item.text for item in bundle.items), context, report.local_path)
+                aspect_vectors = _encode_with_local_transformer(tuple(_aspect_description(aspect) for aspect in ASPECTS), context, report.local_path)
             transformer_vectors = (text_vectors, dict(zip(ASPECTS, aspect_vectors)))
         except LocalTransformerLoadError as exc:
             report = _load_failure_report(report, exc)
@@ -335,8 +363,13 @@ def _run_n3(
             text_vector = transformer_vectors[0][len(rows)]
             aspect_strength = {aspect: _cosine(text_vector, transformer_vectors[1][aspect]) for aspect in ASPECTS}
             aspect_tone = _scale_aspect_tone(aspect_tone, aspect_strength)
-            warnings = ("local_finbert_style_similarity",)
-            extra = {"aspect_probabilities": _softmax_scores(aspect_strength), "aspect_tone_backend": "local_transformer_similarity"}
+            if is_proxy_report(report):
+                warnings = ("proxy_finbert_style_aspect_similarity",)
+                backend = "proxy_hash_aspect_similarity"
+            else:
+                warnings = ("local_finbert_style_similarity",)
+                backend = "local_transformer_similarity"
+            extra = {"aspect_probabilities": _softmax_scores(aspect_strength), "aspect_tone_backend": backend}
         rows.append(
             _row_with_scores(
                 spec,
@@ -375,9 +408,13 @@ def _run_n4(
     label_vectors: dict[str, list[float]] | None = None
     if report.status == AvailabilityStatus.AVAILABLE:
         try:
-            text_vectors = _encode_with_local_transformer(tuple(item.text for item in bundle.items), context, report.local_path)
             labels = tuple(EVENT_LABELS)
-            encoded_labels = _encode_with_local_transformer(tuple(f"{label}: {EVENT_LABELS[label]}" for label in labels), context, report.local_path)
+            if is_proxy_report(report):
+                text_vectors = [_hash_vector(item.text) for item in bundle.items]
+                encoded_labels = [_hash_vector(f"{label}: {EVENT_LABELS[label]}") for label in labels]
+            else:
+                text_vectors = _encode_with_local_transformer(tuple(item.text for item in bundle.items), context, report.local_path)
+                encoded_labels = _encode_with_local_transformer(tuple(f"{label}: {EVENT_LABELS[label]}" for label in labels), context, report.local_path)
             label_vectors = dict(zip(labels, encoded_labels))
         except LocalTransformerLoadError as exc:
             report = _load_failure_report(report, exc)
@@ -388,8 +425,12 @@ def _run_n4(
         if text_vectors and label_vectors and report.status == AvailabilityStatus.AVAILABLE:
             raw_scores = {label: _cosine(text_vectors[len(rows)], vector) for label, vector in label_vectors.items()}
             label_scores = _softmax_scores(raw_scores)
-            warnings = ("local_label_attention_similarity",)
-            backend = "local_transformer_similarity"
+            if is_proxy_report(report):
+                warnings = ("proxy_label_attention_similarity",)
+                backend = "proxy_hash_label_attention"
+            else:
+                warnings = ("local_label_attention_similarity",)
+                backend = "local_transformer_similarity"
         else:
             label_scores = _label_scores(item.text, EVENT_LABELS)
             warnings = ("label_attention_fallback_used",)
@@ -434,9 +475,15 @@ def _run_n5(
     base_rows = []
     if report.status == AvailabilityStatus.AVAILABLE:
         try:
-            text_vectors = _encode_with_local_transformer(tuple(item.text for item in bundle.items), context, report.local_path)
             sector_names = tuple(SECTOR_PROTOTYPES)
-            sector_vectors = _encode_with_local_transformer(tuple(_sector_query_description(sector) for sector in sector_names), context, report.local_path)
+            if is_proxy_report(report):
+                text_vectors = [_hash_vector(item.text) for item in bundle.items]
+                sector_vectors = [_hash_vector(_sector_query_description(sector)) for sector in sector_names]
+                row_warning = ("proxy_sector_query_attention",)
+            else:
+                text_vectors = _encode_with_local_transformer(tuple(item.text for item in bundle.items), context, report.local_path)
+                sector_vectors = _encode_with_local_transformer(tuple(_sector_query_description(sector) for sector in sector_names), context, report.local_path)
+                row_warning = ("local_sector_query_attention",)
             query_vectors = dict(zip(sector_names, sector_vectors))
             for item, vector in zip(bundle.items, text_vectors):
                 relevance = {sector: _cosine(vector, query_vector) for sector, query_vector in query_vectors.items()}
@@ -448,7 +495,7 @@ def _run_n5(
                         item,
                         cache_key,
                         relevance_by_sector=_top_scores(relevance),
-                        warnings=("local_sector_query_attention",),
+                        warnings=row_warning,
                     )
                 )
         except LocalTransformerLoadError as exc:
@@ -484,7 +531,9 @@ def _run_n5(
         extra_outputs={
             "daily_features": _daily_summary(rows),
             "sector_attention": attention,
-            "attention_backend": "local_transformer_query_key" if report.status == AvailabilityStatus.AVAILABLE else "fallback_lexical_softmax",
+            "attention_backend": "proxy_hash_query_key"
+            if is_proxy_report(report)
+            else ("local_transformer_query_key" if report.status == AvailabilityStatus.AVAILABLE else "fallback_lexical_softmax"),
         },
     )
 
@@ -498,6 +547,36 @@ def _run_unavailable_interface(
     fallback_code: str,
 ) -> MethodRunResult:
     report = check_model_availability(spec, context)
+    if report.status == AvailabilityStatus.AVAILABLE and is_proxy_report(report):
+        sector_vectors = _hash_sector_vectors(32)
+        rows = []
+        cross_scores: dict[str, dict[str, float]] = {}
+        for item in bundle.items:
+            text_vector = _hash_vector(f"cross:{item.text}")
+            relevance = _top_scores({sector: _cosine(text_vector, vector) for sector, vector in sector_vectors.items()})
+            cross_scores[item.news_id] = relevance
+            rows.append(
+                _row_with_scores(
+                    spec,
+                    context,
+                    bundle,
+                    item,
+                    cache_key,
+                    relevance_by_sector=relevance,
+                    warnings=("proxy_cross_encoder_reranker_via_shared_encoder",),
+                    extra={"cross_encoder_scores": relevance, "reranker_backend": "proxy_shared_hash_encoder"},
+                )
+            )
+        return _result(
+            spec,
+            AvailabilityStatus.AVAILABLE,
+            context,
+            bundle,
+            cache_key,
+            feature_rows=rows,
+            availability=report.as_dict(),
+            extra_outputs={"daily_features": _daily_summary(rows), "cross_encoder_scores": cross_scores, "interface_only": False},
+        )
     rows = _fallback_rows(spec, context, bundle, cache_key, fallback_code)
     rows = [{**row, "warnings": tuple(sorted(set(row["warnings"]) | {"interface_only_unavailable"}))} for row in rows]
     return _result(
@@ -522,8 +601,19 @@ def _run_n7(
 ) -> MethodRunResult:
     report = check_model_availability(spec, context)
     history = _history_items(payload)
+    sector_vectors = _hash_sector_vectors(32) if is_proxy_report(report) and report.status == AvailabilityStatus.AVAILABLE else {}
     rows = []
     for item in bundle.items:
+        if sector_vectors:
+            text_vector = _hash_vector(f"temporal:{item.text}:{'|'.join(history[-5:])}")
+            relevance = _top_scores({sector: _cosine(text_vector, vector) for sector, vector in sector_vectors.items()})
+            base_warning = "proxy_temporal_lagged_attention"
+        else:
+            relevance = _lexical_relevance(item.text)
+            base_warning = "temporal_attention_fallback_used"
+        warnings = [base_warning]
+        if len(history) < 2:
+            warnings.append("short_history")
         rows.append(
             _row_with_scores(
                 spec,
@@ -531,9 +621,12 @@ def _run_n7(
                 bundle,
                 item,
                 cache_key,
-                relevance_by_sector=_lexical_relevance(item.text),
-                warnings=("short_history",) if len(history) < 2 else ("temporal_attention_fallback_used",),
-                extra={"temporal_attention": _temporal_attention(item.text, history)},
+                relevance_by_sector=relevance,
+                warnings=tuple(warnings),
+                extra={
+                    "temporal_attention": _temporal_attention(item.text, history),
+                    "temporal_backend": "proxy_hash_temporal_attention" if sector_vectors else "fallback_temporal_overlap",
+                },
             )
         )
     return _result(
@@ -562,6 +655,12 @@ def _run_n8(
     for item in bundle.items:
         entities = _extract_entities(item.text)
         propagated = _graph_propagation(entities)
+        if report.status == AvailabilityStatus.AVAILABLE and is_proxy_report(report):
+            warning = ("proxy_static_graph_attention",)
+            backend = "proxy_entity_sector_graph_attention"
+        else:
+            warning = ("graph_attention_fallback_static_edges",)
+            backend = "fallback_static_entity_sector_edges"
         rows.append(
             _row_with_scores(
                 spec,
@@ -571,8 +670,8 @@ def _run_n8(
                 cache_key,
                 relevance_by_sector=propagated,
                 entities=entities,
-                warnings=("graph_attention_fallback_static_edges",),
-                extra={"graph_propagation": propagated},
+                warnings=warning,
+                extra={"graph_propagation": propagated, "graph_backend": backend},
             )
         )
     return _result(
@@ -602,6 +701,7 @@ def _run_composite(
     status = AvailabilityStatus.AVAILABLE
     if any(result.status != AvailabilityStatus.AVAILABLE for result in component_results):
         status = AvailabilityStatus.BLOCKED_MISSING_LOCAL_MODEL
+    availability = _composite_availability(spec, context, status, component_results)
     return _result(
         spec,
         status,
@@ -610,6 +710,7 @@ def _run_composite(
         cache_key,
         feature_rows=merged,
         fallback_code=spec.fallback_code if status != AvailabilityStatus.AVAILABLE else None,
+        availability=availability,
         extra_outputs={"daily_features": _daily_summary(merged), "component_traces": [result.as_dict() for result in component_results]},
     )
 
@@ -696,13 +797,25 @@ def _result(
     availability: dict[str, Any] | None = None,
     extra_outputs: dict[str, Any] | None = None,
 ) -> MethodRunResult:
-    rows = [{**row, "model_status": status.value, "fallback_flag": bool(row.get("fallback_flag") or fallback_code)} for row in feature_rows]
+    availability_data = availability or {"method_code": spec.code, "status": status.value, "network_attempted": False}
+    asset_status = str(availability_data.get("asset_status") or availability_data.get("status") or status.value)
+    proxy_flag = bool(availability_data.get("proxy") or asset_status in {"available_proxy_only", "available_via_shared_encoder"})
+    rows = [
+        {
+            **row,
+            "model_status": status.value,
+            "asset_status": asset_status,
+            "proxy_flag": proxy_flag,
+            "fallback_flag": bool(row.get("fallback_flag") or fallback_code),
+        }
+        for row in feature_rows
+    ]
     diagnostics = {
         "cache_key": cache_key,
         "cache_hit": False,
         "visible_news_count": len(bundle.items),
         "filter_diagnostics": bundle.diagnostics,
-        "availability": availability or {"method_code": spec.code, "status": status.value, "network_attempted": False},
+        "availability": availability_data,
     }
     outputs = {
         "feature_rows": rows,
@@ -715,11 +828,17 @@ def _result(
             "sector_query_attention_weights",
             "cache_key",
             "model_status",
+            "asset_status",
             "device",
             "fallback_flag",
+            "proxy_flag",
             "method_code",
             "warnings",
         ),
+        "cache_key": cache_key,
+        "model_status": status.value,
+        "asset_status": asset_status,
+        "proxy_flag": proxy_flag,
     }
     if extra_outputs:
         outputs.update(extra_outputs)
@@ -755,6 +874,37 @@ def _fallback_rows(spec: MethodSpec, context: MethodRunContext, bundle: VisibleN
     ]
 
 
+def _composite_availability(
+    spec: MethodSpec,
+    context: MethodRunContext,
+    status: AvailabilityStatus,
+    component_results: list[MethodRunResult],
+) -> dict[str, Any]:
+    asset_status = composite_asset_status(component_results)
+    metadata = context.local_model_metadata.get(spec.code) or context.local_model_metadata.get(spec.model_identifier or "") or {}
+    return {
+        "method_code": spec.code,
+        "status": status.value,
+        "asset_status": asset_status,
+        "model_identifier": spec.model_identifier,
+        "hf_model_id": metadata.get("hf_model_id"),
+        "local_path": model_ref_for_cache(spec, context),
+        "revision": metadata.get("revision_or_commit") or metadata.get("revision"),
+        "fallback_code": spec.fallback_code,
+        "network_attempted": False,
+        "local_files_only": True,
+        "reason": "composite_component_status",
+        "device": context.device,
+        "proxy": asset_status in {"available_proxy_only", "available_via_shared_encoder"},
+        "transformer_execution": bool(spec.transformer_used and asset_status == "available"),
+        "component_asset_status": {
+            result.method_code: (result.diagnostics.get("availability") or {}).get("asset_status")
+            or (result.diagnostics.get("availability") or {}).get("status")
+            for result in component_results
+        },
+    }
+
+
 def _load_failure_report(report: ModelAvailabilityReport, exc: LocalTransformerLoadError) -> ModelAvailabilityReport:
     reason = str(exc)
     status = AvailabilityStatus.BLOCKED_MISSING_DEPENDENCY if reason.startswith("missing_dependency:") else AvailabilityStatus.BLOCKED_MISSING_LOCAL_MODEL
@@ -762,13 +912,16 @@ def _load_failure_report(report: ModelAvailabilityReport, exc: LocalTransformerL
         method_code=report.method_code,
         status=status,
         model_identifier=report.model_identifier,
+        hf_model_id=report.hf_model_id,
         local_path=report.local_path,
         revision=report.revision,
         dependency=report.dependency,
         fallback_code=report.fallback_code,
         network_attempted=False,
+        local_files_only=True,
         reason=reason,
         device=report.device,
+        asset_status=status.value,
     )
 
 

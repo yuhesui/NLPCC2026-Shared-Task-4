@@ -26,6 +26,80 @@ must update this table and the CSV mirror under
 | G22B | ablation | B | N7 | I7 | S6 | p18_leeqa_sector_k5_temp35 | yes | depends | yes | temporal narrative attention ablation | pipeline_integrated_local_model_blocked | prompt06_grid_runner_blocked_missing_local_model | pending | pending | 0 | 0 |  |  |  |  | pending | pending | pending_vs_G01B | ablation_only | S6 attention pooling integrated with `blocked_missing_local_model` fallback state. |
 | G23B | ablation | B | N8 | I2 | S6 | p18_leeqa_sector_k5_temp35 | yes | optional | yes | graph-attention relevance ablation | pipeline_integrated_local_model_blocked | prompt06_grid_runner_blocked_missing_local_model | pending | pending | 0 | 0 |  |  |  |  | pending | pending | pending_vs_G01B | ablation_only | S6 can consume graph/attention impact rows; local assets still missing. |
 
+## Prompt07 Bounded Grid Evidence
+
+Prompt07 added a bounded dated evaluator that runs the News Overlay N/I/S
+pipeline against local 2024/2025 news and price slices, then replays emitted
+target weights through `reference_official_semantics`.
+
+- Stage 0 2024 controls (`G00A/G00B/G01A/G01B`) passed on 10 bounded dates.
+- No-proxy 2024 mandatory grid rows kept missing local models explicit:
+  controls passed, 11 rows were `partial_blocked`, and 2 rows were
+  `blocked_missing_local_model`.
+- Proxy-mode 2024 mandatory grid passed all 17 rows as research-only
+  interface/cache evidence; these rows are not real local transformer
+  inference and cannot be promoted.
+- 2025 evaluation was controls-only because no real transformer candidate was
+  selected from 2024. A 2025 calibration-row attempt was refused by the
+  2024-only S2 guard, then the runner was fixed to suppress calibration rows
+  outside 2024 construction periods.
+
+Latest CSV mirror:
+`outputs/reports/news_overlay/prompt01_11/reference/grid_search_status_table.csv`.
+
+## Prompt08 Audit Verdict
+
+Prompt08 classified all News Overlay transformer candidates as
+`no_promotion` for the current repository state.
+
+- Real local transformer inference remains `blocked_missing_local_model`.
+- Proxy-mode rows are useful interface/cache and ablation evidence only.
+- Shuffled-news evidence is mixed and several required ablation toggles or
+  sweeps are still missing.
+- 2025 evaluation was controls-only because no real 2024-selected transformer
+  candidate exists.
+- Official-server parity and human approval remain mandatory before any later
+  promotion.
+
+Audit artifacts:
+`outputs/reports/news_overlay/prompt01_11/reference/prompt08_promotion_gate_audit.csv`
+and
+`outputs/reports/news_overlay/prompt01_11/reference/prompt08_ablation_audit.csv`.
+
+## Prompt09 Verification Note
+
+Prompt09 fixed a bounded grid-evaluator alignment risk and updated the CSV
+mirror with Prompt09 verification columns. No grid row was promoted.
+
+- `G10B` was rerun as a two-date 2024 proxy smoke with shuffled-news enabled
+  and passed as research-only proxy evidence.
+- `N3` was corrected in the method-status table as component-level proxy
+  evidence through `N13` and `N2345`; this does not change its
+  `blocked_missing_local_model` real-asset status.
+- Real local transformer assets, full ablation sweeps, frozen 2025
+  transformer evaluation, and official-server parity remain open blockers.
+
+Prompt09 artifacts:
+`outputs/reports/news_overlay/prompt01_11/reference/prompt09_error_inventory.csv`
+and
+`outputs/reports/news_overlay/prompt01_11/reference/prompt09_rerun_status.csv`.
+
+## Prompt20 Local-Only Transformer Asset Smoke
+
+Prompt20 replaced the asset-smoke grid with no-proxy local-only rows backed by
+the pinned `BAAI/bge-small-zh-v1.5` snapshot. The latest CSV mirror is
+`outputs/reports/news_overlay/prompt01_11/reference/grid_search_status_table.csv`.
+
+- 9 of 10 Prompt20 asset-smoke rows passed as `real_model_executed`.
+- `P20N6B` remained `blocked_missing_model` because the true cross-encoder
+  reranker path is still unimplemented and no reranker snapshot is enabled.
+- `network_attempted=false` for all local-only check/run/grid rows after the
+  explicit download step.
+- The grid cache report recorded 30 cacheable method rows and 9 cache hits,
+  confirming real-model cache identity and repeated-run behavior.
+- No Prompt20 grid row changes the frozen official runtime or promotes a News
+  Overlay candidate.
+
 ## Required Comparison Rule
 
 Transformer candidates must be compared against their lexical-control

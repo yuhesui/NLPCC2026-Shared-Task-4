@@ -33,7 +33,9 @@ class NewsOverlayConfig:
     preprocessing_version: str = "news_overlay_v1"
     feature_schema_version: str = "news_overlay_schema_v4"
     batch_size: int = 16
+    proxy_mode: bool = False
     local_model_paths: dict[str, str] = field(default_factory=dict)
+    local_model_metadata: dict[str, dict[str, str]] = field(default_factory=dict)
     disabled_methods: frozenset[str] = field(default_factory=frozenset)
 
     @classmethod
@@ -47,6 +49,8 @@ class NewsOverlayConfig:
             data["disabled_methods"] = frozenset(str(item) for item in data["disabled_methods"])
         if "batch_size" in data:
             data["batch_size"] = max(1, int(data["batch_size"]))
+        if "proxy_mode" in data:
+            data["proxy_mode"] = _truthy(data["proxy_mode"])
         accepted = {key: value for key, value in data.items() if key in cls.__dataclass_fields__}
         return cls(**accepted)
 
@@ -57,3 +61,9 @@ class NewsOverlayConfig:
     @property
     def trace_path(self) -> Path:
         return Path(self.trace_dir)
+
+
+def _truthy(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() in {"1", "true", "yes", "y", "on"}

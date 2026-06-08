@@ -1,0 +1,69 @@
+# Prompt20 approved Hugging Face download-once model list.
+#
+# This file records metadata and download intent only. It must not contain
+# model binaries. Downloads must go through:
+#   python -m nlpcc.news_overlay.cli download-models --approved-models configs/news_overlay/approved_hf_models.yaml --download-user-approved
+
+policy:
+  download_once: true
+  silent_download: false
+  runtime_api_dependency: false
+  local_only_after_download: true
+  default_hf_hub_cache: "C:\\Users\\jeanna\\.cache\\huggingface\\hub"
+
+models:
+  embedding_encoder:
+    hf_model_id: "BAAI/bge-small-zh-v1.5"
+    revision: "e534609e6b53ac54bd42d8e87995d21a73b90bad"
+    enabled: true
+    download_approved: true
+    purpose: "N2 embedding relevance, N3 real-encoder aspect similarity, N4 event-label attention, N5 sector-query attention, N2345, and downstream I/S transformer-aware stacks"
+    license: "mit"
+    expected_size: "24M params; about 95.8 MB model files"
+    dependency_requirements: "torch; transformers; huggingface_hub"
+    method_codes:
+      - N2
+      - N3
+      - N4
+      - N5
+      - N7
+      - N8
+      - N12
+      - N13
+      - N2345
+      - I5
+      - I6
+      - I7
+      - I256
+      - S6
+      - S7
+      - S126
+    notes: "Small Chinese BGE encoder; used as the real local encoder for Prompt20 smoke evidence."
+
+  aspect_tone_encoder:
+    hf_model_id: "yiyanghkust/finbert-tone-chinese"
+    revision: "68214af0b980bb968e6186ad879b82ba7da7421c"
+    enabled: false
+    download_approved: false
+    purpose: "Optional true Chinese FinBERT-style sentiment classifier for later N3 classifier integration."
+    license: "apache-2.0"
+    expected_size: "about 409 MB model files"
+    dependency_requirements: "torch; transformers; huggingface_hub"
+    method_codes:
+      - N3
+      - N13
+      - I6
+    notes: "Recorded as approved candidate metadata only; not downloaded by default because current N3 uses encoder-style aspect similarity rather than sequence-classifier logits."
+
+  reranker:
+    hf_model_id: "BAAI/bge-reranker-base"
+    revision: "580465186bcc87f862a9b2f9003d720af2377980"
+    enabled: false
+    download_approved: false
+    purpose: "Optional N6 true cross-encoder reranker candidate for a later implementation."
+    license: "mit"
+    expected_size: "278M params; about 1.11 GB core model file"
+    dependency_requirements: "torch; transformers; huggingface_hub"
+    method_codes:
+      - N6
+    notes: "Kept disabled for Prompt20 because N6 true cross-encoder scoring is not implemented in the current News Overlay method."

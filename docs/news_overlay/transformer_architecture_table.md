@@ -72,3 +72,20 @@
   applicable.
 - Human-readable reports must store scalar summaries only; large embeddings
   belong under cache paths, not Markdown reports.
+
+## Prompt20 Download-Once / Local-Only Status
+
+Prompt20 selected and recorded approved Hugging Face models in
+`configs/news_overlay/approved_hf_models.yaml`. The enabled model is
+`BAAI/bge-small-zh-v1.5` pinned to
+`e534609e6b53ac54bd42d8e87995d21a73b90bad`, downloaded once to
+`C:\Users\jeanna\.cache\huggingface\hub`, and loaded afterward with
+`local_files_only=True`.
+
+The BGE snapshot is used as the shared real encoder for BGE-style relevance,
+aspect-label similarity, event-label attention, sector-query attention, and the
+downstream transformer-aware I/S stacks. The optional
+`yiyanghkust/finbert-tone-chinese` classifier and `BAAI/bge-reranker-base`
+cross-encoder are recorded as disabled approved candidates; they were not
+downloaded by Prompt20. Therefore `N3` is real-encoder aspect evidence rather
+than true classifier logits, and `N6` remains blocked.

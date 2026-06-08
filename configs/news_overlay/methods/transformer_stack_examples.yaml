@@ -7,6 +7,7 @@ defaults:
   offline: true
   device: auto
   batch_size: 16
+  proxy_mode: false
   cache_dir: .var/news_overlay_prompt01_11/cache
   trace_dir: .var/news_overlay_prompt01_11/logs
   preprocessing_version: news_overlay_v1
@@ -54,3 +55,9 @@ stacks:
     i_method: I256
     s_method: S126
     base_config: p18_leeqa_sector_k5_temp35
+
+proxy_asset_smoke:
+  description: deterministic proxy paths for interface/cache smoke only; not real transformer inference
+  proxy_mode: true
+  cache_dir: outputs/reports/news_overlay/prompt01_11/progress/prompt06_5_asset_cache
+  grid: configs/news_overlay/grids/transformer_asset_smoke_grid.csv

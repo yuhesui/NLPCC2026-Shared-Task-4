@@ -27,10 +27,12 @@ class ScaffoldNewsOverlayPipeline:
             device=resolve_device(self.config.device),
             cache_dir=self.config.cache_dir,
             local_model_paths=dict(self.config.local_model_paths),
+            local_model_metadata=dict(self.config.local_model_metadata),
             disabled_methods=self.config.disabled_methods,
             preprocessing_version=self.config.preprocessing_version,
             feature_schema_version=self.config.feature_schema_version,
             batch_size=self.config.batch_size,
+            proxy_mode=self.config.proxy_mode,
         )
 
     def run(self, payload: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -94,6 +96,7 @@ def _config_summary(config: NewsOverlayConfig, context: MethodRunContext) -> dic
         "cache_dir": config.cache_dir,
         "trace_dir": config.trace_dir,
         "batch_size": context.batch_size,
+        "proxy_mode": context.proxy_mode,
         "preprocessing_version": config.preprocessing_version,
         "feature_schema_version": config.feature_schema_version,
         "disabled_methods": tuple(sorted(config.disabled_methods)),
@@ -107,6 +110,7 @@ def _runtime_report(method_runtime: dict[str, float], elapsed: float, context: M
         "device": context.device,
         "batch_size": context.batch_size,
         "offline": context.offline,
+        "proxy_mode": context.proxy_mode,
     }
 
 
@@ -140,20 +144,30 @@ def _model_status(results: list[MethodRunResult], context: MethodRunContext) -> 
             {
                 "method_code": result.method_code,
                 "status": result.status.value,
+                "asset_status": availability.get("asset_status") or result.outputs.get("asset_status") or result.status.value,
                 "fallback_code": result.fallback_code,
                 "transformer_used": result.transformer_used,
                 "model_identifier": availability.get("model_identifier"),
+                "hf_model_id": availability.get("hf_model_id"),
                 "local_model_path": availability.get("local_path"),
+                "revision_or_commit": availability.get("revision"),
                 "dependency": availability.get("dependency"),
                 "reason": availability.get("reason"),
                 "network_attempted": result.network_attempted or bool(availability.get("network_attempted")),
+                "local_files_only": availability.get("local_files_only", True),
                 "device": availability.get("device") or context.device,
+                "cache_key": result.diagnostics.get("cache_key") or result.outputs.get("cache_key"),
+                "cache_hit": bool(result.diagnostics.get("cache_hit", False)),
+                "proxy": bool(availability.get("proxy") or result.outputs.get("proxy_flag")),
+                "transformer_execution": bool(availability.get("transformer_execution")),
+                "component_asset_status": availability.get("component_asset_status"),
             }
         )
     return {
         "rows": rows,
         "network_attempted": any(row["network_attempted"] for row in rows),
         "blocked_methods": tuple(row["method_code"] for row in rows if str(row["status"]).startswith("blocked_")),
+        "asset_status_counts": _counts(row["asset_status"] for row in rows),
     }
 
 
@@ -311,3 +325,11 @@ def _top_scores(scores: dict[str, float], limit: int = 8) -> dict[str, float]:
         for key, value in sorted(scores.items(), key=lambda item: (-abs(float(item[1])), item[0]))[:limit]
         if abs(float(value)) > 1e-12
     }
+
+
+def _counts(values: Any) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for value in values:
+        key = str(value)
+        counts[key] = counts.get(key, 0) + 1
+    return counts

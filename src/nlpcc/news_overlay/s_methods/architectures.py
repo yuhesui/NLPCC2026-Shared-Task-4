@@ -18,7 +18,12 @@ from nlpcc.news_overlay.base import (
     NewsSensitivityMethod,
 )
 from nlpcc.news_overlay.cache import build_cache_key
-from nlpcc.news_overlay.model_availability import check_model_availability
+from nlpcc.news_overlay.model_availability import (
+    check_model_availability,
+    composite_asset_status,
+    is_proxy_report,
+    model_ref_for_cache,
+)
 
 
 MAX_ABS_TILT = 0.05
@@ -352,9 +357,13 @@ def _run_s6(
             "final_weight_constraints": constraints,
         },
         extra_outputs={
-            "overlay_backend": "attention_weighted_sensitivity_pooling"
-            if report.status == AvailabilityStatus.AVAILABLE
-            else "fallback_attention_weighted_sensitivity_pooling",
+            "overlay_backend": "proxy_attention_weighted_sensitivity_pooling"
+            if is_proxy_report(report)
+            else (
+                "attention_weighted_sensitivity_pooling"
+                if report.status == AvailabilityStatus.AVAILABLE
+                else "fallback_attention_weighted_sensitivity_pooling"
+            ),
             "transformer_controls": controls,
         },
     )
@@ -391,9 +400,9 @@ def _run_s7(
             "final_weight_constraints": constraints,
         },
         extra_outputs={
-            "overlay_backend": "cross_sectional_transformer_score_to_tilt"
-            if report.status == AvailabilityStatus.AVAILABLE
-            else "fallback_score_to_tilt_proxy"
+            "overlay_backend": "proxy_cross_sectional_score_to_tilt"
+            if is_proxy_report(report)
+            else ("cross_sectional_transformer_score_to_tilt" if report.status == AvailabilityStatus.AVAILABLE else "fallback_score_to_tilt_proxy")
         },
     )
 
@@ -417,6 +426,7 @@ def _run_composite(
         if result.status != AvailabilityStatus.AVAILABLE:
             status = result.status
             break
+    availability = _composite_availability(spec, context, status, component_results)
     sensitivity_rows = [
         {"method_code": spec.code, "asset": asset, "overlay": value, "trace": {"source": "composite", "components": components}}
         for asset, value in sorted(merged_overlay.items())
@@ -432,6 +442,7 @@ def _run_composite(
         overlay_by_asset=merged_overlay,
         adjusted_weights=adjusted,
         fallback_code=spec.fallback_code if status != AvailabilityStatus.AVAILABLE else None,
+        availability=availability,
         gate_diagnostics={"components": components, "final_weight_constraints": constraints},
         extra_outputs={"component_traces": [result.as_dict() for result in component_results], "overlay_backend": "composite"},
     )
@@ -465,6 +476,8 @@ def _method_cache_key(spec: MethodSpec, context: MethodRunContext, data: dict[st
             "regression_rows": data.get("regression_rows") or data.get("sensitivity_regression_rows") or (),
             "volatility_by_asset": data.get("volatility_by_asset") or {},
             "max_abs_tilt": data.get("max_abs_tilt"),
+            "shuffle_news": bool(data.get("shuffle_news") or data.get("shuffled_news")),
+            "random_feature_seed": data.get("random_feature_seed"),
         },
         ensure_ascii=False,
         sort_keys=True,
@@ -472,7 +485,7 @@ def _method_cache_key(spec: MethodSpec, context: MethodRunContext, data: dict[st
     return build_cache_key(
         method_code=spec.code,
         model_identifier=spec.model_identifier,
-        local_path_or_revision=context.local_model_paths.get(spec.code) or context.local_model_paths.get(spec.model_identifier or ""),
+        local_path_or_revision=model_ref_for_cache(spec, context),
         preprocessing_version=context.preprocessing_version,
         texts=payload,
         date=date,
@@ -522,6 +535,9 @@ def _result(
     availability: dict[str, Any] | None = None,
     extra_outputs: dict[str, Any] | None = None,
 ) -> MethodRunResult:
+    availability_data = availability or {"method_code": spec.code, "status": status.value, "network_attempted": False}
+    asset_status = str(availability_data.get("asset_status") or availability_data.get("status") or status.value)
+    proxy_flag = bool(availability_data.get("proxy") or asset_status in {"available_proxy_only", "available_via_shared_encoder"})
     warnings = tuple(sorted(_warnings_from_rows(sensitivity_rows) | set(data.get("warnings", ()) or ())))
     outputs = {
         "sensitivity_rows": sensitivity_rows,
@@ -539,11 +555,15 @@ def _result(
             "gate_diagnostics",
             "cache_key",
             "model_status",
+            "asset_status",
             "fallback_flag",
+            "proxy_flag",
             "warnings",
         ),
         "cache_key": cache_key,
         "model_status": status.value,
+        "asset_status": asset_status,
+        "proxy_flag": proxy_flag,
         "fallback_flag": bool(fallback_code),
         "warnings": warnings,
     }
@@ -552,7 +572,7 @@ def _result(
     diagnostics = {
         "cache_key": cache_key,
         "cache_hit": False,
-        "availability": availability or {"method_code": spec.code, "status": status.value, "network_attempted": False},
+        "availability": availability_data,
         "leakage_checks": {
             "calibration_period": "2024_only_or_precomputed",
             "uses_current_day_market_return": False,
@@ -577,6 +597,37 @@ def _sensitivity_calibration_rows(data: dict[str, Any]) -> list[dict[str, Any]]:
     rows = [dict(row) for row in (data.get("sensitivity_rows") or data.get("sensitivity_calibration_rows") or ())]
     _validate_2024_rows(rows, "S1 sensitivity calibration")
     return rows
+
+
+def _composite_availability(
+    spec: MethodSpec,
+    context: MethodRunContext,
+    status: AvailabilityStatus,
+    component_results: list[MethodRunResult],
+) -> dict[str, Any]:
+    asset_status = composite_asset_status(component_results)
+    metadata = context.local_model_metadata.get(spec.code) or context.local_model_metadata.get(spec.model_identifier or "") or {}
+    return {
+        "method_code": spec.code,
+        "status": status.value,
+        "asset_status": asset_status,
+        "model_identifier": spec.model_identifier,
+        "hf_model_id": metadata.get("hf_model_id"),
+        "local_path": model_ref_for_cache(spec, context),
+        "revision": metadata.get("revision_or_commit") or metadata.get("revision"),
+        "fallback_code": spec.fallback_code,
+        "network_attempted": False,
+        "local_files_only": True,
+        "reason": "composite_component_status",
+        "device": context.device,
+        "proxy": asset_status in {"available_proxy_only", "available_via_shared_encoder"},
+        "transformer_execution": bool(spec.transformer_used and asset_status == "available"),
+        "component_asset_status": {
+            result.method_code: (result.diagnostics.get("availability") or {}).get("asset_status")
+            or (result.diagnostics.get("availability") or {}).get("status")
+            for result in component_results
+        },
+    }
 
 
 def _rank_ic_rows(data: dict[str, Any]) -> list[dict[str, Any]]:

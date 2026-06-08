@@ -19,7 +19,12 @@ from nlpcc.news_overlay.base import (
     NewsImpactMethod,
 )
 from nlpcc.news_overlay.cache import build_cache_key
-from nlpcc.news_overlay.model_availability import check_model_availability
+from nlpcc.news_overlay.model_availability import (
+    check_model_availability,
+    composite_asset_status,
+    is_proxy_report,
+    model_ref_for_cache,
+)
 
 
 ASPECTS = ("policy", "regulation", "demand", "liquidity", "earnings", "geopolitics", "risk")
@@ -333,7 +338,9 @@ def _run_i5(
         availability=report.as_dict(),
         extra_outputs={
             "attention_by_sector": attention,
-            "impact_backend": "impact_gated_attention_pooling" if report.status == AvailabilityStatus.AVAILABLE else "fallback_impact_attention",
+            "impact_backend": "proxy_impact_gated_attention_pooling"
+            if is_proxy_report(report)
+            else ("impact_gated_attention_pooling" if report.status == AvailabilityStatus.AVAILABLE else "fallback_impact_attention"),
         },
     )
 
@@ -382,7 +389,9 @@ def _run_i6(
         extra_outputs={
             "aspect_impact_by_sector": _aggregate_rows(rows),
             "aspect_weight_table": SECTOR_ASPECT_WEIGHTS,
-            "impact_backend": "transformer_aspect_impact" if report.status == AvailabilityStatus.AVAILABLE else "fallback_aspect_impact_from_n_features",
+            "impact_backend": "proxy_aspect_impact_from_transformer_features"
+            if is_proxy_report(report)
+            else ("transformer_aspect_impact" if report.status == AvailabilityStatus.AVAILABLE else "fallback_aspect_impact_from_n_features"),
         },
     )
 
@@ -425,7 +434,9 @@ def _run_i7(
         extra_outputs={
             "narrative_impact_by_sector": combined,
             "persistence_diagnostics": {"history_count": len(history), "warnings": warnings},
-            "impact_backend": "temporal_narrative_encoder" if report.status == AvailabilityStatus.AVAILABLE else "fallback_temporal_overlap",
+            "impact_backend": "proxy_temporal_narrative_encoder"
+            if is_proxy_report(report)
+            else ("temporal_narrative_encoder" if report.status == AvailabilityStatus.AVAILABLE else "fallback_temporal_overlap"),
         },
     )
 
@@ -445,6 +456,7 @@ def _run_composite(
     status = AvailabilityStatus.AVAILABLE
     if any(result.status != AvailabilityStatus.AVAILABLE for result in component_results):
         status = AvailabilityStatus.BLOCKED_MISSING_LOCAL_MODEL
+    availability = _composite_availability(spec, context, status, component_results)
     return _result(
         spec,
         status,
@@ -457,6 +469,7 @@ def _run_composite(
         ],
         impact_by_sector=merged,
         fallback_code=spec.fallback_code if status != AvailabilityStatus.AVAILABLE else None,
+        availability=availability,
         extra_outputs={"component_traces": [result.as_dict() for result in component_results], "impact_backend": "composite"},
     )
 
@@ -482,6 +495,9 @@ def _method_cache_key(spec: MethodSpec, context: MethodRunContext, data: dict[st
             "n_rows": n_rows,
             "calibration_rows": data.get("calibration_rows") or data.get("event_study_rows") or (),
             "history": data.get("impact_history") or data.get("nai_history") or data.get("event_history") or (),
+            "shuffle_news": bool(data.get("shuffle_news") or data.get("shuffled_news")),
+            "random_label_seed": data.get("random_label_seed"),
+            "permutation_seed": data.get("permutation_seed"),
         },
         ensure_ascii=False,
         sort_keys=True,
@@ -490,7 +506,7 @@ def _method_cache_key(spec: MethodSpec, context: MethodRunContext, data: dict[st
     return build_cache_key(
         method_code=spec.code,
         model_identifier=spec.model_identifier,
-        local_path_or_revision=context.local_model_paths.get(spec.code) or context.local_model_paths.get(spec.model_identifier or ""),
+        local_path_or_revision=model_ref_for_cache(spec, context),
         preprocessing_version=context.preprocessing_version,
         texts=key_payload,
         date=date,
@@ -537,6 +553,9 @@ def _result(
     availability: dict[str, Any] | None = None,
     extra_outputs: dict[str, Any] | None = None,
 ) -> MethodRunResult:
+    availability_data = availability or {"method_code": spec.code, "status": status.value, "network_attempted": False}
+    asset_status = str(availability_data.get("asset_status") or availability_data.get("status") or status.value)
+    proxy_flag = bool(availability_data.get("proxy") or asset_status in {"available_proxy_only", "available_via_shared_encoder"})
     outputs = {
         "impact_rows": impact_rows,
         "impact_by_sector": _top_scores(impact_by_sector),
@@ -546,11 +565,15 @@ def _result(
             "impact_by_sector",
             "cache_key",
             "model_status",
+            "asset_status",
             "fallback_flag",
+            "proxy_flag",
             "warnings",
         ),
         "cache_key": cache_key,
         "model_status": status.value,
+        "asset_status": asset_status,
+        "proxy_flag": proxy_flag,
         "fallback_flag": bool(fallback_code),
         "warnings": _warnings_from_rows(impact_rows),
     }
@@ -560,7 +583,7 @@ def _result(
         "cache_key": cache_key,
         "cache_hit": False,
         "n_feature_row_count": len(n_rows),
-        "availability": availability or {"method_code": spec.code, "status": status.value, "network_attempted": False},
+        "availability": availability_data,
         "leakage_checks": {
             "uses_current_day_market_return": False,
             "calibration_period": "2024_only_or_precomputed",
@@ -588,6 +611,37 @@ def _zero_impact_row(method_code: str, feature: dict[str, Any], sector: str, cac
         "impact_score": 0.0,
         "cache_key": cache_key,
         "trace": {"source": "zero_impact_control"},
+    }
+
+
+def _composite_availability(
+    spec: MethodSpec,
+    context: MethodRunContext,
+    status: AvailabilityStatus,
+    component_results: list[MethodRunResult],
+) -> dict[str, Any]:
+    asset_status = composite_asset_status(component_results)
+    metadata = context.local_model_metadata.get(spec.code) or context.local_model_metadata.get(spec.model_identifier or "") or {}
+    return {
+        "method_code": spec.code,
+        "status": status.value,
+        "asset_status": asset_status,
+        "model_identifier": spec.model_identifier,
+        "hf_model_id": metadata.get("hf_model_id"),
+        "local_path": model_ref_for_cache(spec, context),
+        "revision": metadata.get("revision_or_commit") or metadata.get("revision"),
+        "fallback_code": spec.fallback_code,
+        "network_attempted": False,
+        "local_files_only": True,
+        "reason": "composite_component_status",
+        "device": context.device,
+        "proxy": asset_status in {"available_proxy_only", "available_via_shared_encoder"},
+        "transformer_execution": bool(spec.transformer_used and asset_status == "available"),
+        "component_asset_status": {
+            result.method_code: (result.diagnostics.get("availability") or {}).get("asset_status")
+            or (result.diagnostics.get("availability") or {}).get("status")
+            for result in component_results
+        },
     }
 
 

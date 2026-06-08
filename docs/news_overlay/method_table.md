@@ -60,3 +60,23 @@
 | S12 | S1 + S2 event-study sensitivity + Rank-IC | required | Track B first robust gate | no | no | yes | implemented_cache_backed | Composite merges S1/S2 bounded overlays and component traces. |
 | S13 | S1 + S3 event-study sensitivity + macro risk | required | Track A first robust gate | no | no | yes | implemented_cache_backed | Composite merges S1/S3 bounded overlays and component traces. |
 | S126 | S1 + S2 + S6 sensitivity stack | required | transformer-aware Track B gate | yes | depends_on_S6 | yes | implemented_cache_backed | Composite remains visible and blocked when S6 local assets are unavailable; S12 fallback is explicit. |
+
+## Prompt09 Verification Note
+
+Prompt09 corrected the reference status table so `N3` is explicitly recorded as
+component-level proxy evidence through `N13` and `N2345` component traces. This
+does not promote `N3`: real local FinBERT/aspect-tone assets are still missing,
+and the method remains `blocked_missing_local_model` outside proxy mode.
+
+## Prompt20 Local Transformer Revalidation Note
+
+Prompt20 added explicit Hugging Face download-once mode and downloaded the
+approved pinned `BAAI/bge-small-zh-v1.5` snapshot to the user's Hugging Face
+cache. Local-only, no-proxy smokes now report `real_model_executed` for `N2`,
+`N3` real-encoder aspect similarity, `N4`, `N5`, `N12`, `N13`, `N2345`, `I5`,
+`I6`, `I256`, `S6`, and `S126`, with `network_attempted=false` and
+`local_files_only=True` after download. `N6` remains
+`blocked_missing_local_model` because no true cross-encoder implementation or
+enabled reranker snapshot is present. The optional FinBERT-style classifier is
+recorded as approved metadata but remains disabled; `N3` should be described as
+real BGE encoder evidence, not true FinBERT classifier execution.

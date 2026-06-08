@@ -411,9 +411,16 @@ def method_status_rows(context: MethodRunContext) -> list[dict[str, object]]:
         row.update(
             {
                 "status": report.status.value,
+                "asset_status": report.asset_status or report.status.value,
                 "fallback_code": spec.fallback_code,
+                "hf_model_id": report.hf_model_id,
+                "local_model_path": report.local_path,
+                "revision_or_commit": report.revision,
                 "network_attempted": report.network_attempted,
+                "local_files_only": report.local_files_only,
                 "availability_reason": report.reason,
+                "proxy": report.proxy,
+                "transformer_execution": report.transformer_execution,
             }
         )
         rows.append(row)

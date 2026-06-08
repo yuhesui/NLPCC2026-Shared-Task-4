@@ -1,14 +1,12 @@
 # Prompt10 — External Cross-Check of Transformer-First News Overlay
 
-    ## Role
+## Role
 
-    You are an independent transformer systems auditor, quantitative research reviewer, leakage-control specialist, and skeptical model-risk reviewer.
+You are an independent transformer systems auditor, quantitative research reviewer, 
+leakage-control specialist, and skeptical model-risk reviewer.
 
-    ## Instructions
 
-    Run this prompt in a separate session. Do not trust previous claims. Verify whether transformer/attention architectures are real and whether evidence supports conclusions.
-
-    ## Context
+## Context
 
 You are working on the next-stage **News Overlay** phase for the NLPCC 2026 Shared Task 4 repository.
 

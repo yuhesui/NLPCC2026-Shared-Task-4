@@ -24,6 +24,19 @@ class AvailabilityStatus(str, Enum):
     FALLBACK_USED = "fallback_used"
 
 
+PROMPT_ASSET_STATUSES = frozenset(
+    {
+        "available",
+        "available_via_shared_encoder",
+        "available_proxy_only",
+        "blocked_missing_local_model",
+        "blocked_missing_dependency",
+        "disabled_by_config",
+        "not_applicable",
+    }
+)
+
+
 @dataclass(frozen=True)
 class ModelRequirement:
     """Local model/dependency requirement for a method."""
@@ -42,17 +55,24 @@ class ModelAvailabilityReport:
     method_code: str
     status: AvailabilityStatus
     model_identifier: str | None = None
+    hf_model_id: str | None = None
     local_path: str | None = None
     revision: str | None = None
     dependency: str | None = None
     fallback_code: str | None = None
     network_attempted: bool = False
+    local_files_only: bool = True
     reason: str | None = None
     device: str = "cpu"
+    asset_status: str | None = None
+    proxy: bool = False
+    transformer_execution: bool = False
 
     def as_dict(self) -> dict[str, Any]:
         data = asdict(self)
         data["status"] = self.status.value
+        if self.asset_status is None:
+            data["asset_status"] = self.status.value
         return data
 
 
@@ -95,10 +115,12 @@ class MethodRunContext:
     device: str = "cpu"
     cache_dir: str = ".var/news_overlay_prompt01_11/cache"
     local_model_paths: dict[str, str] = field(default_factory=dict)
+    local_model_metadata: dict[str, dict[str, str]] = field(default_factory=dict)
     disabled_methods: frozenset[str] = field(default_factory=frozenset)
     preprocessing_version: str = "news_overlay_v1"
     feature_schema_version: str = "news_overlay_schema_v4"
     batch_size: int = 16
+    proxy_mode: bool = False
 
 
 @dataclass(frozen=True)

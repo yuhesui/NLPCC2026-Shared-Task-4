@@ -12,9 +12,17 @@ from nlpcc.news_overlay.base import MethodRunContext
 from nlpcc.news_overlay.cache import CsvCacheManifestWriter, build_cache_key
 from nlpcc.news_overlay.config import NewsOverlayConfig, normalize_track
 from nlpcc.news_overlay.gpu import resolve_device
+from nlpcc.news_overlay.hf_models import (
+    PROMPT20_REFERENCE_DIR,
+    detect_hf_environment,
+    download_approved_models,
+    expected_hf_cache_path,
+    resolve_local_model_context,
+    write_csv,
+)
 from nlpcc.news_overlay.model_availability import check_model_availability
 from nlpcc.news_overlay.pipeline import ScaffoldNewsOverlayPipeline
-from nlpcc.news_overlay.registry import get_method_spec, list_method_specs, method_status_rows, validate_track_compatibility
+from nlpcc.news_overlay.registry import get_method_spec, instantiate_method, list_method_specs, method_status_rows, validate_track_compatibility
 from nlpcc.news_overlay.traces import JsonTraceWriter
 
 
@@ -24,18 +32,40 @@ def build_parser() -> argparse.ArgumentParser:
 
     subparsers.add_parser("list-methods", help="List registered N/I/S methods")
 
+    download = subparsers.add_parser("download-models", help="Explicitly download approved Hugging Face models once")
+    download.add_argument("--approved-models", required=True)
+    download.add_argument("--model-id", default=None)
+    download.add_argument("--cache-root", default=None)
+    download.add_argument("--report-dir", default=str(PROMPT20_REFERENCE_DIR))
+    download.add_argument("--include-disabled", action="store_true", default=False)
+    download.add_argument("--download-user-approved", action="store_true", default=False)
+    download.add_argument("--device", default="auto")
+
     check = subparsers.add_parser("check-models", help="Check offline model availability")
     check.add_argument("--offline", action="store_true", default=False)
     check.add_argument("--device", default="auto")
     check.add_argument("--batch-size", type=int, default=16)
+    check.add_argument("--proxy-mode", action="store_true", default=False)
+    check.add_argument("--approved-models", default=None)
+    check.add_argument("--local-models", default=None)
+    check.add_argument("--cache-root", default=None)
+    check.add_argument("--local-only", action="store_true", default=False)
+    check.add_argument("--report-dir", default=None)
 
     build = subparsers.add_parser("build-cache", help="Build cache manifest scaffold for one method")
     build.add_argument("--method", required=True)
+    build.add_argument("--track", default="B")
     build.add_argument("--cache-dir", default=".var/news_overlay_prompt01_11/cache")
     build.add_argument("--date", default="2024-01-01")
     build.add_argument("--text", default="smoke news")
     build.add_argument("--source", default="smoke")
     build.add_argument("--local-path-or-revision", default=None)
+    build.add_argument("--approved-models", default=None)
+    build.add_argument("--local-models", default=None)
+    build.add_argument("--cache-root", default=None)
+    build.add_argument("--local-only", action="store_true", default=False)
+    build.add_argument("--device", default="auto")
+    build.add_argument("--batch-size", type=int, default=16)
 
     run = subparsers.add_parser("run", help="Run one N/I/S scaffold composition")
     run.add_argument("--track", required=True)
@@ -47,6 +77,11 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--batch-size", type=int, default=16)
     run.add_argument("--cache-dir", default=".var/news_overlay_prompt01_11/cache")
     run.add_argument("--trace-dir", default=".var/news_overlay_prompt01_11/logs")
+    run.add_argument("--proxy-mode", action="store_true", default=False)
+    run.add_argument("--approved-models", default=None)
+    run.add_argument("--local-models", default=None)
+    run.add_argument("--cache-root", default=None)
+    run.add_argument("--local-only", action="store_true", default=False)
 
     grid = subparsers.add_parser("run-grid", help="Run a smoke grid CSV with run_id,track,n_method,i_method,s_method")
     grid.add_argument("--grid", required=True)
@@ -56,6 +91,11 @@ def build_parser() -> argparse.ArgumentParser:
     grid.add_argument("--batch-size", type=int, default=16)
     grid.add_argument("--cache-dir", default=".var/news_overlay_prompt01_11/cache")
     grid.add_argument("--trace-dir", default=".var/news_overlay_prompt01_11/grid_runs")
+    grid.add_argument("--proxy-mode", action="store_true", default=False)
+    grid.add_argument("--approved-models", default=None)
+    grid.add_argument("--local-models", default=None)
+    grid.add_argument("--cache-root", default=None)
+    grid.add_argument("--local-only", action="store_true", default=False)
     return parser
 
 
@@ -65,13 +105,71 @@ def main(argv: list[str] | None = None) -> int:
         for spec in list_method_specs():
             print(json.dumps(spec.as_dict(), sort_keys=True))
         return 0
+    if args.command == "download-models":
+        paths = download_approved_models(
+            approved_models_path=args.approved_models,
+            cache_root=args.cache_root,
+            report_dir=args.report_dir,
+            model_id=args.model_id,
+            include_disabled=bool(args.include_disabled),
+            download_user_approved=bool(args.download_user_approved),
+            device=resolve_device(args.device),
+        )
+        print(json.dumps({key: str(value) for key, value in paths.items()}, sort_keys=True))
+        return 0
     if args.command == "check-models":
-        context = MethodRunContext(track="A", offline=bool(args.offline), device=resolve_device(args.device), batch_size=max(1, int(args.batch_size)))
-        for row in method_status_rows(context):
+        local_paths, local_metadata, model_rows = _resolve_model_args(args)
+        context = MethodRunContext(
+            track="A",
+            offline=True if args.local_only else bool(args.offline),
+            device=resolve_device(args.device),
+            batch_size=max(1, int(args.batch_size)),
+            proxy_mode=False if args.local_only else bool(args.proxy_mode),
+            local_model_paths=local_paths,
+            local_model_metadata=local_metadata,
+        )
+        rows = method_status_rows(context)
+        if args.report_dir:
+            report_dir = Path(args.report_dir)
+            write_csv(rows, report_dir / "model_availability_report.csv")
+            _write_error_log(report_dir / "error_log.md", rows, model_rows)
+        for row in rows:
             print(json.dumps(row, sort_keys=True))
         return 0
     if args.command == "build-cache":
         spec = get_method_spec(args.method)
+        if args.local_only:
+            local_paths, local_metadata, _ = _resolve_model_args(args)
+            context = MethodRunContext(
+                track=normalize_track(args.track),
+                offline=True,
+                device=resolve_device(args.device),
+                cache_dir=args.cache_dir,
+                local_model_paths=local_paths,
+                local_model_metadata=local_metadata,
+                preprocessing_version="news_overlay_v1",
+                feature_schema_version="news_overlay_schema_v4",
+                batch_size=max(1, int(args.batch_size)),
+                proxy_mode=False,
+            )
+            result = instantiate_method(spec.code).run(context, _smoke_payload(args.date, args.text, args.source))
+            manifest_row = {
+                "method_code": spec.code,
+                "cache_key": result.diagnostics.get("cache_key") or result.outputs.get("cache_key"),
+                "cache_hit": bool(result.diagnostics.get("cache_hit", False)),
+                "status": result.status.value,
+                "asset_status": (result.diagnostics.get("availability") or {}).get("asset_status") or result.outputs.get("asset_status"),
+                "hf_model_id": (result.diagnostics.get("availability") or {}).get("hf_model_id"),
+                "revision_or_commit": (result.diagnostics.get("availability") or {}).get("revision"),
+                "local_model_path": (result.diagnostics.get("availability") or {}).get("local_path"),
+                "local_only": True,
+                "local_files_only": (result.diagnostics.get("availability") or {}).get("local_files_only", True),
+                "proxy_mode": False,
+            }
+            path = Path(args.cache_dir) / "cache_manifest.csv"
+            CsvCacheManifestWriter().write_manifest([manifest_row], path)
+            print(str(path))
+            return 0
         key = build_cache_key(
             method_code=spec.code,
             model_identifier=spec.model_identifier,
@@ -87,16 +185,20 @@ def main(argv: list[str] | None = None) -> int:
         print(str(path))
         return 0
     if args.command == "run":
+        local_paths, local_metadata, _ = _resolve_model_args(args)
         cfg = NewsOverlayConfig(
             track=normalize_track(args.track),
             n_method=args.n_method.upper(),
             i_method=args.i_method.upper(),
             s_method=args.s_method.upper(),
-            offline=bool(args.offline),
+            offline=True if args.local_only else bool(args.offline),
             device=args.device,
             batch_size=max(1, int(args.batch_size)),
             cache_dir=args.cache_dir,
             trace_dir=args.trace_dir,
+            proxy_mode=False if args.local_only else bool(args.proxy_mode),
+            local_model_paths=local_paths,
+            local_model_metadata=local_metadata,
         )
         trace = ScaffoldNewsOverlayPipeline(cfg).run()
         path = JsonTraceWriter().write_trace(trace, Path(cfg.trace_dir) / f"{trace['trace_id']}.json")
@@ -105,6 +207,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "run-grid":
         rows = _read_grid(Path(args.grid))
+        local_paths, local_metadata, _ = _resolve_model_args(args)
         out_dir = Path(args.trace_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
         status_rows: list[dict[str, Any]] = []
@@ -114,16 +217,20 @@ def main(argv: list[str] | None = None) -> int:
             track = normalize_track(row["track"])
             codes = (_row_method(row, "n_method", "N").upper(), _row_method(row, "i_method", "I").upper(), _row_method(row, "s_method", "S").upper())
             validate_track_compatibility(track, codes)
+            proxy_mode = False if args.local_only else (bool(args.proxy_mode) or _row_bool(row, "proxy_mode"))
             cfg = NewsOverlayConfig(
                 track=track,
                 n_method=codes[0],
                 i_method=codes[1],
                 s_method=codes[2],
-                offline=bool(args.offline),
+                offline=True if args.local_only else bool(args.offline),
                 device=args.device,
                 batch_size=max(1, int(args.batch_size)),
                 cache_dir=args.cache_dir,
                 trace_dir=str(out_dir),
+                proxy_mode=proxy_mode,
+                local_model_paths=local_paths,
+                local_model_metadata=local_metadata,
             )
             trace = ScaffoldNewsOverlayPipeline(cfg).run()
             JsonTraceWriter().write_trace(trace, out_dir / f"{row.get('run_id', trace['trace_id'])}.json")
@@ -157,6 +264,11 @@ def _row_method(row: dict[str, str], snake_key: str, short_key: str) -> str:
     return value
 
 
+def _row_bool(row: dict[str, str], key: str) -> bool:
+    value = row.get(key, "")
+    return str(value).strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
 def _write_trace_sidecars(trace: dict[str, Any], out_dir: Path, trace_id: str) -> None:
     CsvCacheManifestWriter().write_manifest(_trace_cache_rows(trace_id, trace), out_dir / f"{trace_id}_cache_manifest.csv")
     (out_dir / f"{trace_id}_cache_report.json").write_text(json.dumps(trace.get("cache_report", {}), indent=2, sort_keys=True), encoding="utf-8")
@@ -183,6 +295,8 @@ def _grid_status_row(run_id: str, row: dict[str, str], trace: dict[str, Any]) ->
     statuses = [str(result.get("status")) for result in trace.get("results", ())]
     blocked = [status for status in statuses if status.startswith("blocked_")]
     decision_status = blocked[0] if blocked else "pass"
+    model_rows = (trace.get("model_status") or {}).get("rows", ())
+    execution_status = _execution_status(model_rows)
     return {
         "run_id": run_id,
         "section": row.get("section", ""),
@@ -192,6 +306,22 @@ def _grid_status_row(run_id: str, row: dict[str, str], trace: dict[str, Any]) ->
         "s_method": trace.get("s_method"),
         "base_config": row.get("base_config", ""),
         "grid_smoke_status": decision_status,
+        "asset_status_counts": json.dumps((trace.get("model_status") or {}).get("asset_status_counts", {}), sort_keys=True),
+        "model_statuses": json.dumps(
+            {item.get("method_code"): item.get("asset_status") for item in (trace.get("model_status") or {}).get("rows", ())},
+            sort_keys=True,
+        ),
+        "network_attempted": (trace.get("model_status") or {}).get("network_attempted", False),
+        "proxy_mode": (trace.get("config") or {}).get("proxy_mode", False),
+        "local_only": bool((trace.get("runtime_report") or {}).get("offline", True)) and not bool((trace.get("config") or {}).get("proxy_mode", False)),
+        "execution_status": execution_status,
+        "real_model_methods": ";".join(
+            row.get("method_code", "")
+            for row in model_rows
+            if row.get("transformer_used") and row.get("transformer_execution") and not row.get("proxy")
+        ),
+        "proxy_only_methods": ";".join(row.get("method_code", "") for row in model_rows if row.get("proxy")),
+        "blocked_methods": ";".join(row.get("method_code", "") for row in model_rows if str(row.get("status", "")).startswith("blocked_")),
         "cache_hit_rate": (trace.get("cache_report") or {}).get("cache_hit_rate", 0.0),
         "runtime_seconds": (trace.get("runtime_report") or {}).get("total_runtime_seconds", 0.0),
         "warnings": ";".join(trace.get("warnings") or ()),
@@ -229,6 +359,80 @@ def _counts(values: Any) -> dict[str, int]:
         key = str(value)
         counts[key] = counts.get(key, 0) + 1
     return counts
+
+
+def _execution_status(model_rows: Any) -> str:
+    rows = list(model_rows or ())
+    if any(str(row.get("status", "")).startswith("blocked_") for row in rows):
+        if any(row.get("transformer_used") and row.get("transformer_execution") and not row.get("proxy") for row in rows):
+            return "mixed_real_blocked"
+        return "blocked_missing_model"
+    if any(row.get("proxy") for row in rows):
+        return "proxy_only"
+    if any(row.get("transformer_used") and row.get("transformer_execution") for row in rows):
+        return "real_model_executed"
+    return "no_model_required"
+
+
+def _resolve_model_args(args: Any) -> tuple[dict[str, str], dict[str, dict[str, str]], list[dict[str, Any]]]:
+    approved = getattr(args, "approved_models", None)
+    local_models = getattr(args, "local_models", None)
+    cache_root = getattr(args, "cache_root", None)
+    require_local = bool(getattr(args, "local_only", False) and approved)
+    return resolve_local_model_context(
+        approved_models_path=approved,
+        local_models_path=local_models,
+        cache_root=cache_root,
+        require_local=require_local,
+    )
+
+
+def _smoke_payload(date: str, text: str, source: str) -> dict[str, Any]:
+    return {
+        "decision_date": date,
+        "news": [
+            {
+                "SOURCE": source,
+                "TITLE": text,
+                "CONTENT": text,
+                "RANKING": 1,
+                "THEDATE": date,
+                "PUBLISH_TIME": f"{date} 14:20:00",
+            }
+        ],
+    }
+
+
+def _write_error_log(path: Path, rows: list[dict[str, Any]], model_rows: list[dict[str, Any]]) -> Path:
+    blocked = [row for row in rows if str(row.get("asset_status")).startswith("blocked_")]
+    env = detect_hf_environment()
+    lines = [
+        "# Prompt20 News Overlay Error Log",
+        "",
+        f"Default cache path: `{expected_hf_cache_path()}`",
+        "",
+        "## Environment Overrides",
+        "",
+    ]
+    if env:
+        lines.extend(f"- `{key}` = `{value}`" for key, value in sorted(env.items()))
+    else:
+        lines.append("- none detected")
+    lines.extend(["", "## Approved Model Local Checks", ""])
+    if model_rows:
+        for row in model_rows:
+            lines.append(f"- `{row.get('model_role')}` `{row.get('hf_model_id')}`: {row.get('load_status')} at `{row.get('local_cache_path')}`")
+    else:
+        lines.append("- no approved model config supplied")
+    lines.extend(["", "## Blocked Method Rows", ""])
+    if blocked:
+        for row in blocked:
+            lines.append(f"- `{row.get('code')}`: {row.get('asset_status')} ({row.get('availability_reason')})")
+    else:
+        lines.append("- none")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return path
 
 
 def check_one_model(method_code: str, *, offline: bool = True) -> dict[str, Any]:

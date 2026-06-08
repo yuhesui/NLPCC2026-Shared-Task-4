@@ -1,0 +1,36 @@
+# Local override template for News Overlay model assets.
+#
+# Copy this to local_models.local.yaml for a workstation-specific experiment.
+# Keep real machine paths out of committed configs. `proxy_mode: true` runs
+# deterministic hash/attention proxies and must not be reported as real
+# transformer inference.
+
+offline: true
+local_only: true
+device: auto
+batch_size: 16
+proxy_mode: false
+cache_dir: .var/news_overlay_prompt01_11/cache
+trace_dir: .var/news_overlay_prompt01_11/logs
+
+default_hf_hub_cache: "C:\\Users\\jeanna\\.cache\\huggingface\\hub"
+approved_models: configs/news_overlay/approved_hf_models.yaml
+
+local_model_paths:
+  N2: ${BGE_MODEL_PATH}
+  N3: ${BGE_MODEL_PATH}
+  N4: ${BGE_MODEL_PATH}
+  N5: ${BGE_MODEL_PATH}
+  N7: ${BGE_MODEL_PATH}
+  N8: ${BGE_MODEL_PATH}
+  N12: ${BGE_MODEL_PATH}
+  N13: ${BGE_MODEL_PATH}
+  N2345: ${BGE_MODEL_PATH}
+  I5: ${BGE_MODEL_PATH}
+  I6: ${BGE_MODEL_PATH}
+  I7: ${BGE_MODEL_PATH}
+  I256: ${BGE_MODEL_PATH}
+  S6: ${BGE_MODEL_PATH}
+  S7: ${BGE_MODEL_PATH}
+  S126: ${BGE_MODEL_PATH}
+  N6: ${RERANKER_MODEL_PATH}
