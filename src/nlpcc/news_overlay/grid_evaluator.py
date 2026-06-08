@@ -19,6 +19,7 @@ from typing import Any
 import numpy as np
 
 from nlpcc.news_overlay.config import NewsOverlayConfig, normalize_track
+from nlpcc.news_overlay.hf_models import resolve_local_model_context
 from nlpcc.news_overlay.pipeline import ScaffoldNewsOverlayPipeline
 from nlpcc.news_overlay.registry import validate_track_compatibility
 from nlpcc.news_overlay.traces import JsonTraceWriter
@@ -87,6 +88,10 @@ class GridEvaluationConfig:
     run_ids: tuple[str, ...] = ()
     include_shuffled: bool = False
     shuffle_news: bool = False
+    approved_models_path: Path | None = None
+    local_models_path: Path | None = None
+    cache_root: Path | None = None
+    resume: bool = True
 
 
 def run_grid_evaluation(config: GridEvaluationConfig) -> dict[str, Any]:
@@ -114,9 +119,22 @@ def run_grid_evaluation(config: GridEvaluationConfig) -> dict[str, Any]:
     cache_manifest_rows: list[dict[str, Any]] = []
     target_weights_by_run: dict[str, np.ndarray] = {}
     row_context: dict[str, dict[str, Any]] = {}
+    local_model_paths, local_model_metadata, _model_rows = resolve_local_model_context(
+        approved_models_path=config.approved_models_path,
+        local_models_path=config.local_models_path,
+        cache_root=config.cache_root,
+        require_local=bool(config.approved_models_path),
+    )
+
+    checkpoint_dir = config.output_dir / "checkpoints"
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
     for row in rows:
-        run_result = _evaluate_one_run(row, config, selected_dates, news_by_track)
+        run_id = str(row.get("run_id") or f"{row.get('n_method')}_{row.get('i_method')}_{row.get('s_method')}")
+        run_result = _load_checkpoint(checkpoint_dir, config.period, run_id, config) if config.resume else None
+        if run_result is None:
+            run_result = _evaluate_one_run(row, config, selected_dates, news_by_track, local_model_paths, local_model_metadata)
+            _write_checkpoint(checkpoint_dir, config.period, run_id, run_result, config)
         result_rows.append(run_result["summary"])
         trace_summary_rows.extend(run_result["trace_rows"])
         cache_manifest_rows.extend(run_result["cache_rows"])
@@ -159,6 +177,8 @@ def _evaluate_one_run(
     config: GridEvaluationConfig,
     selected_dates: dict[str, tuple[str, ...]],
     news_by_track: dict[str, dict[str, list[dict[str, str]]]],
+    local_model_paths: dict[str, str] | None = None,
+    local_model_metadata: dict[str, dict[str, str]] | None = None,
 ) -> dict[str, Any]:
     run_id = str(row.get("run_id") or f"{row.get('n_method')}_{row.get('i_method')}_{row.get('s_method')}")
     track = normalize_track(str(row.get("track")))
@@ -220,6 +240,8 @@ def _evaluate_one_run(
             trace_dir=str(config.trace_dir / run_id),
             proxy_mode=config.proxy_mode or _row_bool(row, "proxy_mode"),
             feature_schema_version=f"news_overlay_schema_v4_prompt07_{config.period}",
+            local_model_paths=dict(local_model_paths or {}),
+            local_model_metadata=dict(local_model_metadata or {}),
         )
         trace = ScaffoldNewsOverlayPipeline(cfg).run(payload)
         trace_path = JsonTraceWriter().write_trace(trace, config.trace_dir / run_id / f"{date}.json")
@@ -504,7 +526,20 @@ def _attach_shuffled_results(
             include_shuffled=False,
             shuffle_news=True,
         )
-        shuffled = _evaluate_one_run(grid_row, shuffled_config, selected_dates, news_by_track)["summary"]
+        local_model_paths, local_model_metadata, _model_rows = resolve_local_model_context(
+            approved_models_path=config.approved_models_path,
+            local_models_path=config.local_models_path,
+            cache_root=config.cache_root,
+            require_local=bool(config.approved_models_path),
+        )
+        shuffled = _evaluate_one_run(
+            grid_row,
+            shuffled_config,
+            selected_dates,
+            news_by_track,
+            local_model_paths,
+            local_model_metadata,
+        )["summary"]
         if _is_number(shuffled.get("sharpe")) and _is_number(by_run[run_id].get("sharpe")):
             delta = round(float(shuffled["sharpe"]) - float(by_run[run_id]["sharpe"]), 6)
             by_run[run_id]["shuffled_news_delta_sharpe"] = delta
@@ -526,6 +561,62 @@ def _trace_cache_rows(run_id: str, date: str, trace: dict[str, Any]) -> list[dic
             }
         )
     return rows
+
+
+def _checkpoint_stem(period: str, run_id: str) -> str:
+    safe = "".join(ch if ch.isalnum() or ch in {"-", "_"} else "_" for ch in f"{period}_{run_id}")
+    return safe
+
+
+def _write_checkpoint(checkpoint_dir: Path, period: str, run_id: str, run_result: dict[str, Any], config: GridEvaluationConfig) -> None:
+    stem = _checkpoint_stem(period, run_id)
+    weights_path = checkpoint_dir / f"{stem}_target_weights.npy"
+    np.save(weights_path, run_result["target_weights"])
+    payload = {
+        "summary": run_result["summary"],
+        "trace_rows": run_result["trace_rows"],
+        "cache_rows": run_result["cache_rows"],
+        "target_weights_path": str(weights_path),
+        "config_fingerprint": _checkpoint_fingerprint(config),
+    }
+    (checkpoint_dir / f"{stem}.json").write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
+
+
+def _load_checkpoint(checkpoint_dir: Path, period: str, run_id: str, config: GridEvaluationConfig) -> dict[str, Any] | None:
+    stem = _checkpoint_stem(period, run_id)
+    path = checkpoint_dir / f"{stem}.json"
+    if not path.exists():
+        return None
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if payload.get("config_fingerprint") != _checkpoint_fingerprint(config):
+        return None
+    weights_path = Path(payload.get("target_weights_path") or "")
+    if not weights_path.exists():
+        return None
+    return {
+        "summary": payload["summary"],
+        "trace_rows": payload.get("trace_rows", []),
+        "cache_rows": payload.get("cache_rows", []),
+        "target_weights": np.load(weights_path),
+    }
+
+
+def _checkpoint_fingerprint(config: GridEvaluationConfig) -> dict[str, Any]:
+    return {
+        "grid_path": str(config.grid_path),
+        "data_root": str(config.data_root),
+        "period": config.period,
+        "max_dates": config.max_dates,
+        "top_rank": config.top_rank,
+        "cutoff": config.cutoff,
+        "device": config.device,
+        "batch_size": config.batch_size,
+        "proxy_mode": config.proxy_mode,
+        "shuffle_news": config.shuffle_news,
+        "approved_models_path": str(config.approved_models_path or ""),
+        "local_models_path": str(config.local_models_path or ""),
+        "cache_root": str(config.cache_root or ""),
+    }
 
 
 def _evaluation_status(statuses: list[str]) -> str:
@@ -690,6 +781,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--proxy-mode", action="store_true", default=False)
     parser.add_argument("--include-shuffled", action="store_true", default=False)
     parser.add_argument("--run-id", action="append", default=[])
+    parser.add_argument("--approved-models", default=None)
+    parser.add_argument("--local-models", default=None)
+    parser.add_argument("--cache-root", default=None)
+    parser.add_argument("--no-resume", action="store_true", default=False)
     return parser
 
 
@@ -709,6 +804,10 @@ def main(argv: list[str] | None = None) -> int:
             proxy_mode=bool(args.proxy_mode),
             include_shuffled=bool(args.include_shuffled),
             run_ids=tuple(args.run_id or ()),
+            approved_models_path=Path(args.approved_models) if args.approved_models else None,
+            local_models_path=Path(args.local_models) if args.local_models else None,
+            cache_root=Path(args.cache_root) if args.cache_root else None,
+            resume=not bool(args.no_resume),
         )
     )
     print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
