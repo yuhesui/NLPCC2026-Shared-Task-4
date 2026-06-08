@@ -89,3 +89,59 @@ downstream transformer-aware I/S stacks. The optional
 cross-encoder are recorded as disabled approved candidates; they were not
 downloaded by Prompt20. Therefore `N3` is real-encoder aspect evidence rather
 than true classifier logits, and `N6` remains blocked.
+
+## Prompt20.1 Local-Only Architecture Status
+
+Prompt20.1 revalidated the architecture against pre-downloaded Hugging Face
+snapshots without any download command:
+
+- BGE bi-encoder: `BAAI/bge-small-zh-v1.5` snapshot
+  `e534609e6b53ac54bd42d8e87995d21a73b90bad`.
+- FinBERT-style classifier: `yiyanghkust/finbert-tone-chinese` snapshot
+  `e91b1a3af10e1e8c9c03429d3cd7d5e9a1c8000d`.
+- General sentiment fallback: `IDEA-CCNL/Erlangshen-Roberta-110M-Sentiment`
+  snapshot `7c257c5cde3225d0789acfa8d67eb043289b0295`, recorded but not used
+  while FinBERT is available.
+- Cross-encoder reranker: `BAAI/bge-reranker-v2-m3` snapshot
+  `953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e`.
+
+`N3` now uses local `AutoModelForSequenceClassification` logits when a
+sentiment/FinBERT model is configured. `N6` now uses a local pairwise
+sequence-classification scorer when the reranker snapshot loads. Both paths
+load with `local_files_only=True`.
+
+## Prompt21 Full-Grid Architecture Status
+
+Prompt21 executed the full configured News Overlay grid with local-only
+snapshots and checkpoint/resume support.
+
+- GPU tuning selected `gpu010`: BGE + FinBERT, batch 64, max length 256,
+  fp16/autocast, CUDA. The selected mixed-model row reached 73.0% peak GPU
+  utilization and 62.167% mean utilization; reranker-specific tuning rows
+  reached above 90% peak, but the mixed-grid setting did not meet the preferred
+  >80% peak target.
+- The process-local model cache keeps loaded tokenizer/model objects resident
+  while every `from_pretrained` call remains `local_files_only=True`.
+- Full 2024 candidate evidence used `real_model_executed` rows only; blocked
+  `N7`/`N8` ablation rows were retained as blocked evidence, not promoted.
+- Frozen 2025 replay used only the 2024-selected candidate set plus preserved
+  controls. It was not used for tuning or reselection.
+
+## Prompt22 Matrix Architecture Status
+
+Prompt22 adds a replay architecture for train/tune matrices that consumes
+Prompt21 checkpointed real-local transformer target weights and applies bounded
+overlay/gate transformations before official-semantics replay.
+
+- Local HF model loading is not repeated in Prompt22; offline variables are set
+  and the runner performs no download or API operation.
+- Matrix cache identity is separated from proxy mode by
+  `model_mode=cached_real_transformer_replay` and source Prompt21 run ids.
+- The 2024 train/tune matrix sweeps overlay strength, impact threshold,
+  confidence threshold, sensitivity threshold, turnover cap, and drawdown
+  throttle on 2024 only.
+- The frozen 2025 matrix accepts only the frozen 2024-selected parameters and
+  control rows.
+- Runtime evidence is split between Prompt21 direct local-model GPU tuning and
+  Prompt22 cached replay scoring; CUDA benefit is not claimed for full
+  end-to-end execution from Prompt22 alone.

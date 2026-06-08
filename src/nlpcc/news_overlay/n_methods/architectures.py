@@ -33,6 +33,8 @@ from nlpcc.stage1_news.schema import NormalizedNewsItem
 
 ASPECTS = ("policy", "regulation", "demand", "liquidity", "earnings", "geopolitics", "risk")
 
+_LOCAL_MODEL_CACHE: dict[tuple[str, str, str], tuple[Any, Any]] = {}
+
 SECTOR_PROTOTYPES: dict[str, tuple[str, ...]] = {
     "bank": ("银行", "商业银行", "息差", "信贷", "降准", "流动性", "512800", "bank"),
     "brokerage": ("券商", "证券", "资本市场", "交易活跃", "512880", "brokerage"),
@@ -343,15 +345,23 @@ def _run_n3(
     del payload
     report = check_model_availability(spec, context)
     transformer_vectors: tuple[list[list[float]], dict[str, list[float]]] | None = None
+    classifier_outputs: list[dict[str, Any]] | None = None
     if report.status == AvailabilityStatus.AVAILABLE:
         try:
             if is_proxy_report(report):
                 text_vectors = [_hash_vector(item.text) for item in bundle.items]
                 aspect_vectors = [_hash_vector(_aspect_description(aspect)) for aspect in ASPECTS]
+                transformer_vectors = (text_vectors, dict(zip(ASPECTS, aspect_vectors)))
+            elif _should_use_sequence_classifier(context, spec, report):
+                classifier_outputs = _classify_with_local_sequence_classifier(
+                    tuple(item.text for item in bundle.items),
+                    context,
+                    report.local_path,
+                )
             else:
                 text_vectors = _encode_with_local_transformer(tuple(item.text for item in bundle.items), context, report.local_path)
                 aspect_vectors = _encode_with_local_transformer(tuple(_aspect_description(aspect) for aspect in ASPECTS), context, report.local_path)
-            transformer_vectors = (text_vectors, dict(zip(ASPECTS, aspect_vectors)))
+                transformer_vectors = (text_vectors, dict(zip(ASPECTS, aspect_vectors)))
         except LocalTransformerLoadError as exc:
             report = _load_failure_report(report, exc)
     rows = []
@@ -359,7 +369,18 @@ def _run_n3(
         aspect_tone = _aspect_tone(item.text)
         warnings = ("aspect_tone_fallback_used",)
         extra = {"aspect_tone_backend": "fallback_lexical_aspect_tone"}
-        if transformer_vectors and report.status == AvailabilityStatus.AVAILABLE:
+        if classifier_outputs and report.status == AvailabilityStatus.AVAILABLE:
+            classifier = classifier_outputs[len(rows)]
+            aspect_tone = _aspect_tone_from_sentiment(item.text, float(classifier["sentiment_score"]))
+            warnings = ("local_finbert_sequence_classifier",)
+            extra = {
+                "aspect_tone_backend": "local_sequence_classifier",
+                "classifier_backend": "local_sequence_classifier",
+                "classifier_probabilities": classifier["probabilities"],
+                "classifier_label": classifier["label"],
+                "sentiment_score": classifier["sentiment_score"],
+            }
+        elif transformer_vectors and report.status == AvailabilityStatus.AVAILABLE:
             text_vector = transformer_vectors[0][len(rows)]
             aspect_strength = {aspect: _cosine(text_vector, transformer_vectors[1][aspect]) for aspect in ASPECTS}
             aspect_tone = _scale_aspect_tone(aspect_tone, aspect_strength)
@@ -577,6 +598,41 @@ def _run_unavailable_interface(
             availability=report.as_dict(),
             extra_outputs={"daily_features": _daily_summary(rows), "cross_encoder_scores": cross_scores, "interface_only": False},
         )
+    if report.status == AvailabilityStatus.AVAILABLE and not is_proxy_report(report):
+        try:
+            cross_scores = _rerank_with_local_cross_encoder(bundle.items, context, report.local_path)
+            rows = []
+            for item in bundle.items:
+                relevance = _top_scores(cross_scores.get(item.news_id, {}))
+                rows.append(
+                    _row_with_scores(
+                        spec,
+                        context,
+                        bundle,
+                        item,
+                        cache_key,
+                        relevance_by_sector=relevance,
+                        warnings=("local_cross_encoder_reranker",),
+                        extra={"cross_encoder_scores": relevance, "reranker_backend": "local_cross_encoder_sequence_classifier"},
+                    )
+                )
+            return _result(
+                spec,
+                AvailabilityStatus.AVAILABLE,
+                context,
+                bundle,
+                cache_key,
+                feature_rows=rows,
+                availability=report.as_dict(),
+                extra_outputs={
+                    "daily_features": _daily_summary(rows),
+                    "cross_encoder_scores": cross_scores,
+                    "interface_only": False,
+                    "reranker_backend": "local_cross_encoder_sequence_classifier",
+                },
+            )
+        except LocalTransformerLoadError as exc:
+            report = _load_failure_report(report, exc)
     rows = _fallback_rows(spec, context, bundle, cache_key, fallback_code)
     rows = [{**row, "warnings": tuple(sorted(set(row["warnings"]) | {"interface_only_unavailable"}))} for row in rows]
     return _result(
@@ -1166,6 +1222,158 @@ def _cosine(first: list[float], second: list[float]) -> float:
     return round(max(0.0, sum(a * b for a, b in zip(first, second)) / denom), 6)
 
 
+def _should_use_sequence_classifier(context: MethodRunContext, spec: MethodSpec, report: ModelAvailabilityReport) -> bool:
+    metadata = context.local_model_metadata.get(spec.code) or context.local_model_metadata.get(spec.model_identifier or "") or {}
+    role = str(metadata.get("role") or "").lower()
+    hf_model_id = str(report.hf_model_id or metadata.get("hf_model_id") or "").lower()
+    return any(token in role for token in ("sentiment", "finbert")) or any(
+        token in hf_model_id for token in ("sentiment", "finbert")
+    )
+
+
+def _classify_with_local_sequence_classifier(
+    texts: tuple[str, ...],
+    context: MethodRunContext,
+    local_path: str | None,
+) -> list[dict[str, Any]]:
+    if not texts:
+        return []
+    probabilities, labels = _sequence_classifier_probabilities(texts, None, context, local_path)
+    rows = []
+    for probs in probabilities:
+        labelled = {labels[index]: round(float(value), 6) for index, value in enumerate(probs)}
+        score = _sentiment_score(labelled)
+        rows.append(
+            {
+                "probabilities": labelled,
+                "label": max(labelled, key=labelled.get) if labelled else "unknown",
+                "sentiment_score": round(score, 6),
+            }
+        )
+    return rows
+
+
+def _rerank_with_local_cross_encoder(
+    items: tuple[NormalizedNewsItem, ...],
+    context: MethodRunContext,
+    local_path: str | None,
+) -> dict[str, dict[str, float]]:
+    if not items:
+        return {}
+    sector_names = tuple(SECTOR_PROTOTYPES)
+    left_texts = []
+    right_texts = []
+    for item in items:
+        for sector in sector_names:
+            left_texts.append(item.text)
+            right_texts.append(_sector_query_description(sector))
+    probabilities, _labels = _sequence_classifier_probabilities(tuple(left_texts), tuple(right_texts), context, local_path)
+    raw_scores = [_reranker_score(probs) for probs in probabilities]
+    result: dict[str, dict[str, float]] = {}
+    cursor = 0
+    for item in items:
+        sector_scores = {
+            sector: raw_scores[cursor + index]
+            for index, sector in enumerate(sector_names)
+        }
+        cursor += len(sector_names)
+        result[item.news_id] = _softmax_scores(sector_scores, temperature=1.0)
+    return result
+
+
+def _sequence_classifier_probabilities(
+    texts: tuple[str, ...],
+    pair_texts: tuple[str, ...] | None,
+    context: MethodRunContext,
+    local_path: str | None,
+) -> tuple[list[list[float]], list[str]]:
+    if not local_path:
+        raise LocalTransformerLoadError("local_path_missing_during_load")
+    try:
+        import torch  # type: ignore
+        from transformers import AutoModelForSequenceClassification, AutoTokenizer  # type: ignore
+    except Exception as exc:
+        raise LocalTransformerLoadError(f"missing_dependency:torch_or_transformers:{exc.__class__.__name__}") from exc
+    try:
+        device = _runtime_device(context, torch)
+        tokenizer, model = _cached_local_model(
+            "sequence_classifier",
+            local_path,
+            device,
+            AutoTokenizer,
+            AutoModelForSequenceClassification,
+        )
+        batch_size = max(1, int(context.batch_size or 16))
+        all_probs: list[list[float]] = []
+        labels: list[str] = []
+        max_length = 256
+        autocast_enabled = device == "cuda"
+        for start in range(0, len(texts), batch_size):
+            stop = start + batch_size
+            text_batch = list(texts[start:stop])
+            if pair_texts is None:
+                encoded = tokenizer(text_batch, padding=True, truncation=True, max_length=max_length, return_tensors="pt")
+            else:
+                encoded = tokenizer(text_batch, list(pair_texts[start:stop]), padding=True, truncation=True, max_length=max_length, return_tensors="pt")
+            encoded = {key: value.to(device) for key, value in encoded.items()}
+            with torch.no_grad(), torch.autocast("cuda", enabled=autocast_enabled, dtype=torch.float16):
+                logits = model(**encoded).logits
+                if logits.shape[-1] == 1:
+                    probs = torch.sigmoid(logits)
+                    labels = ["relevance"]
+                else:
+                    probs = torch.nn.functional.softmax(logits, dim=-1)
+                    labels = _classifier_labels(model, logits.shape[-1])
+            all_probs.extend([[float(value) for value in row] for row in probs.cpu().tolist()])
+        return all_probs, labels
+    except Exception as exc:
+        raise LocalTransformerLoadError(f"local_sequence_classifier_load_failed:{exc.__class__.__name__}") from exc
+
+
+def _classifier_labels(model: Any, width: int) -> list[str]:
+    id2label = getattr(getattr(model, "config", None), "id2label", {}) or {}
+    labels = []
+    for index in range(width):
+        labels.append(str(id2label.get(index, id2label.get(str(index), f"LABEL_{index}"))))
+    return labels
+
+
+def _sentiment_score(probabilities: dict[str, float]) -> float:
+    positive = 0.0
+    negative = 0.0
+    for label, value in probabilities.items():
+        normalized = str(label).lower()
+        if "pos" in normalized or normalized in {"label_1", "1"}:
+            positive += float(value)
+        elif "neg" in normalized or normalized in {"label_0", "0"}:
+            negative += float(value)
+    if positive == 0.0 and negative == 0.0 and len(probabilities) >= 2:
+        values = list(probabilities.values())
+        negative = float(values[0])
+        positive = float(values[-1])
+    return max(-1.0, min(1.0, positive - negative))
+
+
+def _aspect_tone_from_sentiment(text: str, sentiment_score: float) -> dict[str, float]:
+    lexical = _aspect_tone(text)
+    text_lower = text.lower()
+    values = {}
+    for aspect, keywords in ASPECT_KEYWORDS.items():
+        active = any(keyword.lower() in text_lower for keyword in keywords)
+        scale = 1.0 if active else 0.35
+        lexical_hint = abs(float(lexical.get(aspect, 0.0)))
+        values[aspect] = round(float(sentiment_score) * max(scale, lexical_hint), 6)
+    return values
+
+
+def _reranker_score(probabilities: list[float]) -> float:
+    if not probabilities:
+        return 0.0
+    if len(probabilities) == 1:
+        return float(probabilities[0])
+    return float(probabilities[-1])
+
+
 def _encode_with_local_transformer(texts: tuple[str, ...], context: MethodRunContext, local_path: str | None) -> list[list[float]]:
     if not texts:
         return []
@@ -1177,19 +1385,45 @@ def _encode_with_local_transformer(texts: tuple[str, ...], context: MethodRunCon
     except Exception as exc:
         raise LocalTransformerLoadError(f"missing_dependency:torch_or_transformers:{exc.__class__.__name__}") from exc
     try:
-        tokenizer = AutoTokenizer.from_pretrained(local_path, local_files_only=True)
-        model = AutoModel.from_pretrained(local_path, local_files_only=True)
-        device = context.device if context.device == "cuda" and getattr(torch.cuda, "is_available", lambda: False)() else "cpu"
-        model.to(device)
-        model.eval()
-        encoded = tokenizer(list(texts), padding=True, truncation=True, max_length=256, return_tensors="pt")
-        encoded = {key: value.to(device) for key, value in encoded.items()}
-        with torch.no_grad():
-            output = model(**encoded)
-            hidden = output.last_hidden_state
-            mask = encoded["attention_mask"].unsqueeze(-1)
-            pooled = (hidden * mask).sum(dim=1) / mask.sum(dim=1).clamp(min=1)
-            pooled = torch.nn.functional.normalize(pooled, p=2, dim=1)
-        return [[float(value) for value in row] for row in pooled.cpu().tolist()]
+        device = _runtime_device(context, torch)
+        tokenizer, model = _cached_local_model("encoder", local_path, device, AutoTokenizer, AutoModel)
+        batch_size = max(1, int(context.batch_size or 16))
+        autocast_enabled = device == "cuda"
+        rows: list[list[float]] = []
+        for start in range(0, len(texts), batch_size):
+            text_batch = list(texts[start : start + batch_size])
+            encoded = tokenizer(text_batch, padding=True, truncation=True, max_length=256, return_tensors="pt")
+            encoded = {key: value.to(device) for key, value in encoded.items()}
+            with torch.no_grad(), torch.autocast("cuda", enabled=autocast_enabled, dtype=torch.float16):
+                output = model(**encoded)
+                hidden = output.last_hidden_state
+                mask = encoded["attention_mask"].unsqueeze(-1)
+                pooled = (hidden * mask).sum(dim=1) / mask.sum(dim=1).clamp(min=1)
+                pooled = torch.nn.functional.normalize(pooled, p=2, dim=1)
+            rows.extend([[float(value) for value in row] for row in pooled.cpu().tolist()])
+        return rows
     except Exception as exc:
         raise LocalTransformerLoadError(f"local_transformer_load_failed:{exc.__class__.__name__}") from exc
+
+
+def _runtime_device(context: MethodRunContext, torch_module: Any) -> str:
+    return context.device if context.device == "cuda" and getattr(torch_module.cuda, "is_available", lambda: False)() else "cpu"
+
+
+def _cached_local_model(
+    role: str,
+    local_path: str,
+    device: str,
+    tokenizer_cls: Any,
+    model_cls: Any,
+) -> tuple[Any, Any]:
+    key = (role, str(Path(local_path).resolve()), device)
+    cached = _LOCAL_MODEL_CACHE.get(key)
+    if cached is not None:
+        return cached
+    tokenizer = tokenizer_cls.from_pretrained(local_path, local_files_only=True)
+    model = model_cls.from_pretrained(local_path, local_files_only=True)
+    model.to(device)
+    model.eval()
+    _LOCAL_MODEL_CACHE[key] = (tokenizer, model)
+    return tokenizer, model

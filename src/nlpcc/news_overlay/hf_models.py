@@ -27,32 +27,43 @@ DETECTED_ENV_VARS = (
 
 ROLE_ENV_PATHS = {
     "embedding_encoder": "BGE_MODEL_PATH",
+    "embedding_encoder_larger_optional": "BGE_MODEL_PATH",
     "aspect_tone_encoder": "FINBERT_MODEL_PATH",
+    "financial_sentiment": "FINBERT_MODEL_PATH",
+    "general_sentiment_fallback": "FINBERT_MODEL_PATH",
+    "finance_news_sentiment_optional": "FINBERT_MODEL_PATH",
     "reranker": "RERANKER_MODEL_PATH",
+    "reranker_fallback_optional": "RERANKER_MODEL_PATH",
 }
 
 
 DEFAULT_METHOD_CODES_BY_ROLE = {
     "embedding_encoder": (
         "N2",
-        "N3",
         "N4",
         "N5",
-        "N7",
-        "N8",
         "N12",
-        "N13",
         "N2345",
         "I5",
-        "I6",
-        "I7",
-        "I256",
         "S6",
-        "S7",
+        "S126",
+    ),
+    "embedding_encoder_larger_optional": (
+        "N2",
+        "N4",
+        "N5",
+        "N12",
+        "N2345",
+        "I5",
+        "S6",
         "S126",
     ),
     "aspect_tone_encoder": ("N3", "N13", "I6"),
+    "financial_sentiment": ("N3", "N13", "I6", "I256"),
+    "general_sentiment_fallback": ("N3_FALLBACK",),
+    "finance_news_sentiment_optional": ("N3", "N13", "I6"),
     "reranker": ("N6",),
+    "reranker_fallback_optional": ("N6",),
 }
 
 
@@ -68,6 +79,7 @@ class ApprovedHFModel:
     dependency_requirements: str = "torch; transformers; huggingface_hub"
     download_approved: bool = False
     method_codes: tuple[str, ...] = ()
+    local_cache_path: str = ""
     notes: str = ""
 
     @classmethod
@@ -80,7 +92,10 @@ class ApprovedHFModel:
             raise ValueError(f"Approved model entry {role!r} is missing hf_model_id.")
         if not revision:
             raise ValueError(f"Approved model entry {role!r} is missing pinned revision.")
-        method_codes = tuple(str(item).upper() for item in (values.get("method_codes") or DEFAULT_METHOD_CODES_BY_ROLE.get(role, ())))
+        method_codes = tuple(
+            str(item).upper()
+            for item in (values.get("method_codes") or values.get("methods") or DEFAULT_METHOD_CODES_BY_ROLE.get(role, ()))
+        )
         return cls(
             role=role,
             hf_model_id=hf_model_id,
@@ -92,6 +107,7 @@ class ApprovedHFModel:
             dependency_requirements=str(values.get("dependency_requirements") or "torch; transformers; huggingface_hub"),
             download_approved=_truthy(values.get("download_approved", False)),
             method_codes=method_codes,
+            local_cache_path=str(values.get("local_cache_path") or ""),
             notes=str(values.get("notes") or ""),
         )
 
@@ -169,14 +185,17 @@ def resolve_local_model_context(
     if approved_models_path:
         for model in load_approved_models(approved_models_path).values():
             env_path = os.environ.get(ROLE_ENV_PATHS.get(model.role, ""))
-            snapshot = Path(env_path).expanduser() if env_path else resolve_cached_snapshot(model, cache)
+            configured_path = Path(model.local_cache_path).expanduser() if model.local_cache_path else None
+            snapshot = Path(env_path).expanduser() if env_path else (configured_path if configured_path and configured_path.exists() else resolve_cached_snapshot(model, cache))
             load_status = "local_path_found" if snapshot and snapshot.exists() else "blocked_missing_model"
             local_cache_path = str(snapshot) if snapshot else str(model_cache_dir(model.hf_model_id, cache))
+            resolved_revision = resolved_snapshot_revision(snapshot, model)
             rows.append(
-                model.as_manifest_row(
+                _local_manifest_row(
+                    model,
                     local_cache_path=local_cache_path,
-                    download_status="cached" if load_status == "local_path_found" else "not_downloaded",
                     load_status=load_status,
+                    resolved_revision=resolved_revision,
                 )
             )
             if not model.enabled or not snapshot or not snapshot.exists():
@@ -186,7 +205,8 @@ def resolve_local_model_context(
                 metadata[method_code] = {
                     "role": model.role,
                     "hf_model_id": model.hf_model_id,
-                    "revision_or_commit": model.revision,
+                    "requested_revision": model.revision,
+                    "revision_or_commit": resolved_revision,
                     "local_cache_path": str(snapshot),
                     "license": model.license,
                     "expected_size": model.expected_size,
@@ -195,7 +215,8 @@ def resolve_local_model_context(
             metadata[sanitized] = {
                 "role": model.role,
                 "hf_model_id": model.hf_model_id,
-                "revision_or_commit": model.revision,
+                "requested_revision": model.revision,
+                "revision_or_commit": resolved_revision,
                 "local_cache_path": str(snapshot),
                 "license": model.license,
                 "expected_size": model.expected_size,
@@ -204,6 +225,47 @@ def resolve_local_model_context(
     if require_local and not local_paths:
         raise FileNotFoundError("No local News Overlay model paths resolved. Run explicit download-models first or set local overrides.")
     return local_paths, metadata, rows
+
+
+def approved_model_rows(path: str | Path) -> list[dict[str, Any]]:
+    """Return compact approved-model metadata rows without touching network."""
+
+    rows = []
+    for model in load_approved_models(path).values():
+        rows.append(
+            {
+                "model_role": model.role,
+                "hf_model_id": model.hf_model_id,
+                "requested_revision": model.revision,
+                "enabled": model.enabled,
+                "download_allowed": False,
+                "download_approved": model.download_approved,
+                "methods": ";".join(model.method_codes),
+                "license": model.license,
+                "expected_size": model.expected_size,
+                "dependency_requirements": model.dependency_requirements,
+                "purpose": model.purpose,
+                "notes": model.notes,
+                "configured_local_cache_path": model.local_cache_path,
+            }
+        )
+    return rows
+
+
+def write_local_model_manifests(
+    *,
+    approved_models_path: str | Path,
+    local_model_rows: list[dict[str, Any]],
+    report_dir: str | Path,
+) -> dict[str, Path]:
+    """Write Prompt20.1 local-only approved and cache manifests."""
+
+    report_path = Path(report_dir)
+    report_path.mkdir(parents=True, exist_ok=True)
+    return {
+        "approved_hf_models_csv": write_csv(approved_model_rows(approved_models_path), report_path / "approved_hf_models.csv"),
+        "local_hf_model_manifest_csv": write_csv(local_model_rows, report_path / "local_hf_model_manifest.csv"),
+    }
 
 
 def download_approved_models(
@@ -346,6 +408,46 @@ def resolve_cached_snapshot(model: ApprovedHFModel, cache_root: str | Path | Non
     if not candidates:
         return None
     return sorted(candidates, key=lambda path: path.name, reverse=True)[0]
+
+
+def resolved_snapshot_revision(snapshot: Path | None, model: ApprovedHFModel) -> str:
+    """Return the resolved snapshot commit if available, else requested revision."""
+
+    if snapshot and snapshot.exists():
+        parts = list(snapshot.parts)
+        if "snapshots" in parts:
+            index = parts.index("snapshots")
+            if index + 1 < len(parts):
+                return parts[index + 1]
+        return str(snapshot)
+    return model.revision
+
+
+def _local_manifest_row(
+    model: ApprovedHFModel,
+    *,
+    local_cache_path: str,
+    load_status: str,
+    resolved_revision: str,
+) -> dict[str, Any]:
+    row = model.as_manifest_row(
+        local_cache_path=local_cache_path,
+        download_status="cached" if load_status == "local_path_found" else "not_downloaded",
+        load_status=load_status,
+    )
+    row.update(
+        {
+            "requested_revision": model.revision,
+            "revision_or_commit": resolved_revision,
+            "enabled": model.enabled,
+            "download_allowed": False,
+            "download_user_approved": False,
+            "network_attempted": False,
+            "local_files_only": True,
+            "method_codes": ";".join(model.method_codes),
+        }
+    )
+    return row
 
 
 def write_csv(rows: list[dict[str, Any]], path: str | Path) -> Path:

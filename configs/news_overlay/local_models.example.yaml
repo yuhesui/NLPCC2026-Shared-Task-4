@@ -1,6 +1,6 @@
 # Example local-only model paths for News Overlay transformer methods.
 #
-# Prompt20 downloads approved Hugging Face models to the user's HF hub cache.
+# Prompt20.1 assumes models were downloaded manually before execution.
 # Do not copy model binaries into this repo or into official runtime packages.
 
 offline: true
@@ -11,25 +11,21 @@ proxy_mode: false
 
 default_hf_hub_cache: "C:\\Users\\jeanna\\.cache\\huggingface\\hub"
 approved_models: configs/news_overlay/approved_hf_models.yaml
+download_allowed: false
 
-# Preferred override: set BGE_MODEL_PATH to the resolved snapshot directory.
-# Example resolved path after download:
-# C:\Users\jeanna\.cache\huggingface\hub\models--BAAI--bge-small-zh-v1.5\snapshots\e534609e6b53ac54bd42d8e87995d21a73b90bad
+# Preferred override: set each variable to a resolved snapshot directory.
+# Defaults are discovered from approved_hf_models.yaml and the HF hub cache.
 local_model_paths:
   N2: ${BGE_MODEL_PATH}
-  N3: ${BGE_MODEL_PATH}
+  N3: ${FINBERT_MODEL_PATH}
   N4: ${BGE_MODEL_PATH}
   N5: ${BGE_MODEL_PATH}
-  N7: ${BGE_MODEL_PATH}
-  N8: ${BGE_MODEL_PATH}
   N12: ${BGE_MODEL_PATH}
-  N13: ${BGE_MODEL_PATH}
+  N13: ${FINBERT_MODEL_PATH}
   N2345: ${BGE_MODEL_PATH}
   I5: ${BGE_MODEL_PATH}
-  I6: ${BGE_MODEL_PATH}
-  I7: ${BGE_MODEL_PATH}
-  I256: ${BGE_MODEL_PATH}
+  I6: ${FINBERT_MODEL_PATH}
+  I256: ${FINBERT_MODEL_PATH}
   S6: ${BGE_MODEL_PATH}
-  S7: ${BGE_MODEL_PATH}
   S126: ${BGE_MODEL_PATH}
   N6: ${RERANKER_MODEL_PATH}

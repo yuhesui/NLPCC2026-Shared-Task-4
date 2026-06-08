@@ -1,69 +1,112 @@
-# Prompt20 approved Hugging Face download-once model list.
+# Prompt20.1 approved Hugging Face local-only model list.
 #
-# This file records metadata and download intent only. It must not contain
-# model binaries. Downloads must go through:
-#   python -m nlpcc.news_overlay.cli download-models --approved-models configs/news_overlay/approved_hf_models.yaml --download-user-approved
+# This file records approved local cache usage only. Prompt20.1 must not
+# download models. Inference and model checks must use local_files_only=True.
 
 policy:
-  download_once: true
+  download_once: false
+  download_allowed: false
   silent_download: false
   runtime_api_dependency: false
-  local_only_after_download: true
+  local_only: true
+  local_files_only: true
   default_hf_hub_cache: "C:\\Users\\jeanna\\.cache\\huggingface\\hub"
 
 models:
   embedding_encoder:
     hf_model_id: "BAAI/bge-small-zh-v1.5"
-    revision: "e534609e6b53ac54bd42d8e87995d21a73b90bad"
+    revision: "main"
     enabled: true
-    download_approved: true
-    purpose: "N2 embedding relevance, N3 real-encoder aspect similarity, N4 event-label attention, N5 sector-query attention, N2345, and downstream I/S transformer-aware stacks"
+    download_approved: false
+    download_allowed: false
+    purpose: "N2 embedding relevance, N4 event-label attention, N5 sector-query attention, N12, N2345, and downstream I/S attention stacks"
     license: "mit"
     expected_size: "24M params; about 95.8 MB model files"
-    dependency_requirements: "torch; transformers; huggingface_hub"
-    method_codes:
-      - N2
-      - N3
-      - N4
-      - N5
-      - N7
-      - N8
-      - N12
-      - N13
-      - N2345
-      - I5
-      - I6
-      - I7
-      - I256
-      - S6
-      - S7
-      - S126
-    notes: "Small Chinese BGE encoder; used as the real local encoder for Prompt20 smoke evidence."
+    dependency_requirements: "torch; transformers"
+    local_cache_path: "C:\\Users\\jeanna\\.cache\\huggingface\\hub\\models--BAAI--bge-small-zh-v1.5\\snapshots\\e534609e6b53ac54bd42d8e87995d21a73b90bad"
+    methods: [N2, N4, N5, N12, N2345, I5, S6, S126]
+    notes: "Primary small Chinese BGE encoder; Prompt20.1 uses the already-downloaded local snapshot only."
 
-  aspect_tone_encoder:
+  financial_sentiment:
     hf_model_id: "yiyanghkust/finbert-tone-chinese"
-    revision: "68214af0b980bb968e6186ad879b82ba7da7421c"
-    enabled: false
+    revision: "main"
+    enabled: true
     download_approved: false
-    purpose: "Optional true Chinese FinBERT-style sentiment classifier for later N3 classifier integration."
+    download_allowed: false
+    purpose: "True Chinese financial sentiment classifier for N3, N13, I6, and I256"
     license: "apache-2.0"
     expected_size: "about 409 MB model files"
-    dependency_requirements: "torch; transformers; huggingface_hub"
-    method_codes:
-      - N3
-      - N13
-      - I6
-    notes: "Recorded as approved candidate metadata only; not downloaded by default because current N3 uses encoder-style aspect similarity rather than sequence-classifier logits."
+    dependency_requirements: "torch; transformers"
+    local_cache_path: "C:\\Users\\jeanna\\.cache\\huggingface\\hub\\models--yiyanghkust--finbert-tone-chinese\\snapshots\\e91b1a3af10e1e8c9c03429d3cd7d5e9a1c8000d"
+    methods: [N3, N13, I6, I256]
+    notes: "Sequence-classification model; N3 should report classifier probabilities when this snapshot loads."
+
+  general_sentiment_fallback:
+    hf_model_id: "IDEA-CCNL/Erlangshen-Roberta-110M-Sentiment"
+    revision: "main"
+    enabled: true
+    download_approved: false
+    download_allowed: false
+    purpose: "General Chinese sentiment fallback status for N3 fallback accounting"
+    license: "unknown"
+    expected_size: "about 409 MB model files"
+    dependency_requirements: "torch; transformers"
+    local_cache_path: "C:\\Users\\jeanna\\.cache\\huggingface\\hub\\models--IDEA-CCNL--Erlangshen-Roberta-110M-Sentiment\\snapshots\\7c257c5cde3225d0789acfa8d67eb043289b0295"
+    methods: [N3_fallback]
+    notes: "Fallback status is recorded explicitly; it is not silently substituted for FinBERT when FinBERT is available."
 
   reranker:
-    hf_model_id: "BAAI/bge-reranker-base"
-    revision: "580465186bcc87f862a9b2f9003d720af2377980"
+    hf_model_id: "BAAI/bge-reranker-v2-m3"
+    revision: "main"
+    enabled: true
+    download_approved: false
+    download_allowed: false
+    purpose: "N6 true cross-encoder reranker when local runtime can load it"
+    license: "mit"
+    expected_size: "about 2.27 GB model file"
+    dependency_requirements: "torch; transformers"
+    local_cache_path: "C:\\Users\\jeanna\\.cache\\huggingface\\hub\\models--BAAI--bge-reranker-v2-m3\\snapshots\\953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e"
+    methods: [N6]
+    notes: "Large local reranker. N6 must report true_reranker execution only if local sequence-classification scoring succeeds."
+
+  embedding_encoder_larger_optional:
+    hf_model_id: "BAAI/bge-base-zh-v1.5"
+    revision: "main"
     enabled: false
     download_approved: false
-    purpose: "Optional N6 true cross-encoder reranker candidate for a later implementation."
+    download_allowed: false
+    purpose: "Optional larger Chinese BGE encoder for later ablation"
+    license: "mit"
+    expected_size: "about 409 MB model files"
+    dependency_requirements: "torch; transformers"
+    local_cache_path: "C:\\Users\\jeanna\\.cache\\huggingface\\hub\\models--BAAI--bge-base-zh-v1.5\\snapshots\\f03589ceff5aac7111bd60cfc7d497ca17ecac65"
+    methods: [N2, N4, N5, N12, N2345]
+    notes: "Optional; disabled for Prompt20.1 smoke runtime."
+
+  reranker_fallback_optional:
+    hf_model_id: "BAAI/bge-reranker-base"
+    revision: "main"
+    enabled: false
+    download_approved: false
+    download_allowed: false
+    purpose: "Optional smaller N6 reranker fallback for later runtime comparison"
     license: "mit"
     expected_size: "278M params; about 1.11 GB core model file"
-    dependency_requirements: "torch; transformers; huggingface_hub"
-    method_codes:
-      - N6
-    notes: "Kept disabled for Prompt20 because N6 true cross-encoder scoring is not implemented in the current News Overlay method."
+    dependency_requirements: "torch; transformers"
+    local_cache_path: "C:\\Users\\jeanna\\.cache\\huggingface\\hub\\models--BAAI--bge-reranker-base\\snapshots\\2cfc18c9415c912f9d8155881c133215df768a70"
+    methods: [N6]
+    notes: "Optional; disabled because Prompt20.1 target reranker is bge-reranker-v2-m3."
+
+  finance_news_sentiment_optional:
+    hf_model_id: "bardsai/finance-sentiment-zh-fast"
+    revision: "main"
+    enabled: false
+    download_approved: false
+    download_allowed: false
+    purpose: "Optional Chinese finance news sentiment model for later N3 comparison"
+    license: "unknown"
+    expected_size: "unknown"
+    dependency_requirements: "torch; transformers"
+    local_cache_path: "C:\\Users\\jeanna\\.cache\\huggingface\\hub\\models--bardsai--finance-sentiment-zh-fast\\snapshots\\4cf6d7f85579bc73ac402d1dc4ecbcf3de8b6b7a"
+    methods: [N3]
+    notes: "Optional; disabled for Prompt20.1 primary validation."

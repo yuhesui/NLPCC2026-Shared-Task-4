@@ -100,6 +100,22 @@ the pinned `BAAI/bge-small-zh-v1.5` snapshot. The latest CSV mirror is
 - No Prompt20 grid row changes the frozen official runtime or promotes a News
   Overlay candidate.
 
+## Prompt20.1 Local HF Model Asset Smoke
+
+Prompt20.1 updated `configs/news_overlay/grids/transformer_asset_smoke_grid.csv`
+to target the local-only approved model set. The latest CSV mirror is
+`outputs/reports/news_overlay/prompt01_11/reference/grid_search_status_table.csv`.
+
+- 11 of 11 Prompt20.1 asset-smoke rows passed as `real_model_executed`.
+- `N3`/`N13`/`I6`/`I256` used local FinBERT classifier-backed status instead
+  of the Prompt20 BGE aspect-similarity proxy.
+- `N6` used local `BAAI/bge-reranker-v2-m3` true reranker scoring with
+  `proxy=false`.
+- Every grid row reports `local_only=true`, `network_attempted=false`, and
+  `proxy_mode=false`.
+- This remains smoke evidence only; no 2024/2025 full evaluation, candidate
+  promotion, or official runtime change was made.
+
 ## Required Comparison Rule
 
 Transformer candidates must be compared against their lexical-control
@@ -113,3 +129,65 @@ G10B/G11B/G12B/G13B/G14B/G15B must beat or explain failure relative to G01B.
 Deterministic-only candidates may remain fallback and comparators, but cannot
 be declared the Section 1 success condition unless all transformer methods are
 blocked by unavailable local assets or fail ablation tests.
+
+## Prompt21 Full Real-Local Grid Audit
+
+Prompt21 outputs are stored under
+`outputs/reports/news_overlay/prompt21/`, not the legacy `prompt01_11`
+directory.
+
+- Full 2024 grid: 19 rows total, 17 passed, and 2 were `partial_blocked`
+  (`G22B`/`G23B`, missing deferred N7/N8/I7/S7-style assets).
+- Candidate evidence uses `model_mode=real_model_executed`; controls remain
+  `model_mode=control`, and blocked ablation rows remain `model_mode=blocked`.
+- Track A frozen 2024 candidates: `G10A` (`N2/I2/S3`), `G11A`
+  (`N13/I6/S13`), and `G12A` (`N2345/I256/S13`).
+- Track B frozen 2024 candidates: `G10B` (`N2/I2/S2`), `G21B`
+  (`N2345/I256/S5`), `G14B` (`N5/I5/S2`), `G15B` (`N4/I6/S2`), and `G12B`
+  (`N2345/I256/S126`).
+- Frozen 2025 replay ran only those frozen candidates plus `G00A/G00B/G01A/G01B`
+  controls. No 2025 result was used to tune thresholds or select a new row.
+- Dependency, leakage, and package-safety audits pass after excluding local
+  virtualenv files from the model-binary scan. Official runtime configs remain
+  unchanged.
+- Promotion gate verdict: research continues. Several rows are
+  `ablation_supported`, but no candidate is promotion-ready because frozen
+  2025 did not beat preserved controls and official-server parity was not run.
+
+Key Prompt21 artifacts:
+`outputs/reports/news_overlay/prompt21/reference/full_grid_2024_results.csv`,
+`outputs/reports/news_overlay/prompt21/reference/selection_freeze_2024.csv`,
+`outputs/reports/news_overlay/prompt21/reference/frozen_2025_results.csv`,
+and
+`outputs/reports/news_overlay/prompt21/presented/final_recommendation.md`.
+
+## Prompt22 Train/Tune and Frozen Matrix Status
+
+Prompt22 outputs are stored under `outputs/reports/news_overlay/prompt22/`.
+The run replays cached Prompt21 real-local transformer target checkpoints, so
+no Hugging Face download, online API call, or proxy row is used as candidate
+evidence.
+
+- 2024 train/tune matrix: 212 rows total, 212 passed, 0 failed or blocked.
+- Frozen 2024 candidates: 3 Track A rows and 5 Track B rows, selected before
+  any Prompt22 2025 replay.
+- Frozen 2025 matrix: controls plus the frozen 3 Track A and 5 Track B
+  candidates only; no 2025 thresholds or candidate order were changed.
+- Full ablation matrix now emits traceable rows for random features, component
+  off toggles, gate toggles, overlay/turnover sweeps, category removal, and
+  volatility regimes. Inapplicable toggles are explicit
+  `not_applicable_with_reason`.
+- `G22B` and `G23B` are intentionally classified as `deferred_with_reason` and
+  excluded from candidate consideration rather than left partially ambiguous.
+- Runtime matrix remains CUDA-inconclusive for end-to-end value because
+  Prompt22 is cached replay scoring; Prompt21 remains the direct model GPU
+  benchmark evidence.
+- No frozen official runtime config was changed and no candidate was promoted.
+
+Key Prompt22 artifacts:
+`outputs/reports/news_overlay/prompt22/reference/train_tune_2024_matrix.csv`,
+`outputs/reports/news_overlay/prompt22/reference/selection_freeze_2024.csv`,
+`outputs/reports/news_overlay/prompt22/reference/frozen_2025_matrix.csv`,
+`outputs/reports/news_overlay/prompt22/reference/full_ablation_matrix.csv`,
+and
+`outputs/reports/news_overlay/prompt22/presented/final_recommendation.md`.

@@ -18,6 +18,7 @@ from nlpcc.news_overlay.hf_models import (
     download_approved_models,
     expected_hf_cache_path,
     resolve_local_model_context,
+    write_local_model_manifests,
     write_csv,
 )
 from nlpcc.news_overlay.model_availability import check_model_availability
@@ -131,6 +132,12 @@ def main(argv: list[str] | None = None) -> int:
         rows = method_status_rows(context)
         if args.report_dir:
             report_dir = Path(args.report_dir)
+            if args.approved_models:
+                write_local_model_manifests(
+                    approved_models_path=args.approved_models,
+                    local_model_rows=model_rows,
+                    report_dir=report_dir,
+                )
             write_csv(rows, report_dir / "model_availability_report.csv")
             _write_error_log(report_dir / "error_log.md", rows, model_rows)
         for row in rows:
@@ -200,7 +207,7 @@ def main(argv: list[str] | None = None) -> int:
             local_model_paths=local_paths,
             local_model_metadata=local_metadata,
         )
-        trace = ScaffoldNewsOverlayPipeline(cfg).run()
+        trace = ScaffoldNewsOverlayPipeline(cfg).run(_default_cli_payload())
         path = JsonTraceWriter().write_trace(trace, Path(cfg.trace_dir) / f"{trace['trace_id']}.json")
         _write_trace_sidecars(trace, Path(cfg.trace_dir), trace["trace_id"])
         print(str(path))
@@ -232,7 +239,7 @@ def main(argv: list[str] | None = None) -> int:
                 local_model_paths=local_paths,
                 local_model_metadata=local_metadata,
             )
-            trace = ScaffoldNewsOverlayPipeline(cfg).run()
+            trace = ScaffoldNewsOverlayPipeline(cfg).run(_default_cli_payload())
             JsonTraceWriter().write_trace(trace, out_dir / f"{row.get('run_id', trace['trace_id'])}.json")
             run_id = row.get("run_id", trace["trace_id"])
             status_rows.append(_grid_status_row(run_id, row, trace))
@@ -403,11 +410,15 @@ def _smoke_payload(date: str, text: str, source: str) -> dict[str, Any]:
     }
 
 
+def _default_cli_payload() -> dict[str, Any]:
+    return _smoke_payload("2024-02-05", "央行宣布降准释放长期流动性", "prompt20_1_smoke")
+
+
 def _write_error_log(path: Path, rows: list[dict[str, Any]], model_rows: list[dict[str, Any]]) -> Path:
     blocked = [row for row in rows if str(row.get("asset_status")).startswith("blocked_")]
     env = detect_hf_environment()
     lines = [
-        "# Prompt20 News Overlay Error Log",
+        "# Prompt20.1 News Overlay Error Log",
         "",
         f"Default cache path: `{expected_hf_cache_path()}`",
         "",

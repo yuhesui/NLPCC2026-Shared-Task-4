@@ -15,22 +15,19 @@ trace_dir: .var/news_overlay_prompt01_11/logs
 
 default_hf_hub_cache: "C:\\Users\\jeanna\\.cache\\huggingface\\hub"
 approved_models: configs/news_overlay/approved_hf_models.yaml
+download_allowed: false
 
 local_model_paths:
-  N2: ${BGE_MODEL_PATH}
-  N3: ${BGE_MODEL_PATH}
-  N4: ${BGE_MODEL_PATH}
-  N5: ${BGE_MODEL_PATH}
-  N7: ${BGE_MODEL_PATH}
-  N8: ${BGE_MODEL_PATH}
-  N12: ${BGE_MODEL_PATH}
-  N13: ${BGE_MODEL_PATH}
-  N2345: ${BGE_MODEL_PATH}
-  I5: ${BGE_MODEL_PATH}
-  I6: ${BGE_MODEL_PATH}
-  I7: ${BGE_MODEL_PATH}
-  I256: ${BGE_MODEL_PATH}
-  S6: ${BGE_MODEL_PATH}
-  S7: ${BGE_MODEL_PATH}
-  S126: ${BGE_MODEL_PATH}
-  N6: ${RERANKER_MODEL_PATH}
+  N2: "C:\\Users\\jeanna\\.cache\\huggingface\\hub\\models--BAAI--bge-small-zh-v1.5\\snapshots\\e534609e6b53ac54bd42d8e87995d21a73b90bad"
+  N3: "C:\\Users\\jeanna\\.cache\\huggingface\\hub\\models--yiyanghkust--finbert-tone-chinese\\snapshots\\e91b1a3af10e1e8c9c03429d3cd7d5e9a1c8000d"
+  N4: "C:\\Users\\jeanna\\.cache\\huggingface\\hub\\models--BAAI--bge-small-zh-v1.5\\snapshots\\e534609e6b53ac54bd42d8e87995d21a73b90bad"
+  N5: "C:\\Users\\jeanna\\.cache\\huggingface\\hub\\models--BAAI--bge-small-zh-v1.5\\snapshots\\e534609e6b53ac54bd42d8e87995d21a73b90bad"
+  N12: "C:\\Users\\jeanna\\.cache\\huggingface\\hub\\models--BAAI--bge-small-zh-v1.5\\snapshots\\e534609e6b53ac54bd42d8e87995d21a73b90bad"
+  N13: "C:\\Users\\jeanna\\.cache\\huggingface\\hub\\models--yiyanghkust--finbert-tone-chinese\\snapshots\\e91b1a3af10e1e8c9c03429d3cd7d5e9a1c8000d"
+  N2345: "C:\\Users\\jeanna\\.cache\\huggingface\\hub\\models--BAAI--bge-small-zh-v1.5\\snapshots\\e534609e6b53ac54bd42d8e87995d21a73b90bad"
+  I5: "C:\\Users\\jeanna\\.cache\\huggingface\\hub\\models--BAAI--bge-small-zh-v1.5\\snapshots\\e534609e6b53ac54bd42d8e87995d21a73b90bad"
+  I6: "C:\\Users\\jeanna\\.cache\\huggingface\\hub\\models--yiyanghkust--finbert-tone-chinese\\snapshots\\e91b1a3af10e1e8c9c03429d3cd7d5e9a1c8000d"
+  I256: "C:\\Users\\jeanna\\.cache\\huggingface\\hub\\models--yiyanghkust--finbert-tone-chinese\\snapshots\\e91b1a3af10e1e8c9c03429d3cd7d5e9a1c8000d"
+  S6: "C:\\Users\\jeanna\\.cache\\huggingface\\hub\\models--BAAI--bge-small-zh-v1.5\\snapshots\\e534609e6b53ac54bd42d8e87995d21a73b90bad"
+  S126: "C:\\Users\\jeanna\\.cache\\huggingface\\hub\\models--BAAI--bge-small-zh-v1.5\\snapshots\\e534609e6b53ac54bd42d8e87995d21a73b90bad"
+  N6: "C:\\Users\\jeanna\\.cache\\huggingface\\hub\\models--BAAI--bge-reranker-v2-m3\\snapshots\\953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e"

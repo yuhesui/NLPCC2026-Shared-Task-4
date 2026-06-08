@@ -20,10 +20,10 @@
 | N0 | no-news / base-only input | control | base/null | no | no | no | implemented_cache_backed | Returns empty feature rows so the frozen base allocator can run unchanged. |
 | N1 | deterministic taxonomy + entity/BM25 relevance | fallback | lexical baseline only | no | no | optional | implemented_cache_backed | Chinese keyword/entity extraction, taxonomy labels, lexical relevance, duplicate clusters, and fallback rows. |
 | N2 | BGE-style bi-encoder text-to-sector relevance cache | required | main transformer relevance method | yes | yes | yes | implemented_local_transformer_optional | Uses local-only transformer embeddings for news and sector prototypes when configured; otherwise `blocked_missing_local_model` with N1 fallback. |
-| N3 | frozen FinBERT-style aspect-tone classifier | required | contextual tone/aspect feature | yes | yes | yes | implemented_local_transformer_optional | Uses local transformer aspect-similarity scaling when configured; otherwise complete aspect schema with deterministic tone fallback. |
+| N3 | frozen FinBERT-style aspect-tone classifier | required | contextual tone/aspect feature | yes | yes | yes | implemented_local_transformer_optional | Uses local `AutoModelForSequenceClassification` logits when the FinBERT snapshot is configured; otherwise complete aspect schema with deterministic tone fallback. |
 | N4 | label-attention / Title2Event-inspired event tagger | required | transformer event typing and argument extraction | yes | yes | yes | implemented_local_transformer_optional | Uses local transformer label-description attention when configured; otherwise lexical label probabilities and event arguments. |
 | N5 | sector-query attention daily news pooling | required | attention aggregation over daily Top-20 news | yes | depends_on_N2_or_local_encoder | yes | implemented_local_transformer_optional | Uses local transformer sector query/key attention when configured; otherwise lexical softmax attention. |
-| N6 | cross-encoder sector reranker gate | recommended | high-precision second-stage relevance | yes | yes | yes | interface_scaffold_blocked | Interface and status handling are present; without a local reranker it reports blocked and falls back to N2. |
+| N6 | cross-encoder sector reranker gate | recommended | high-precision second-stage relevance | yes | yes | yes | implemented_local_transformer_optional | Uses a local pairwise sequence-classification reranker when the reranker snapshot is configured; without it, reports blocked and falls back to N2. |
 | N7 | temporal lagged-news attention encoder | recommended | narrative persistence over lagged news | yes | depends_on_local_encoder | yes | implemented_cache_backed | Lightweight lagged-news attention over short histories with explicit short-history warnings and N1 fallback status. |
 | N8 | entity-sector graph-attention propagation | ablation/defer | indirect sector relevance | yes | optional | yes | implemented_cache_backed | Static entity-sector propagation scaffold for ablation; reports missing model assets when transformer graph attention is unavailable. |
 | N12 | N1 + N2 lexical/embedding hybrid | required | robust hybrid relevance | yes | yes_for_N2 | yes | implemented_cache_backed | Composite merges component rows and traces N1/N2 statuses. |
@@ -61,6 +61,19 @@
 | S13 | S1 + S3 event-study sensitivity + macro risk | required | Track A first robust gate | no | no | yes | implemented_cache_backed | Composite merges S1/S3 bounded overlays and component traces. |
 | S126 | S1 + S2 + S6 sensitivity stack | required | transformer-aware Track B gate | yes | depends_on_S6 | yes | implemented_cache_backed | Composite remains visible and blocked when S6 local assets are unavailable; S12 fallback is explicit. |
 
+## Prompt21 Full Real-Local Grid Note
+
+Prompt21 ran the full 2024 News Overlay grid with local-only transformer
+execution and no proxy-mode rows counted as candidate evidence.
+
+- Real local methods executed in the full grid: `N2`, `N3`, `N4`, `N5`, `N6`,
+  `N12`, `N13`, `N2345`, `I5`, `I6`, `I256`, `S6`, and `S126`.
+- `N6` executed as a true local `BAAI/bge-reranker-v2-m3` cross-encoder row
+  in `G13B`; it was not selected into the frozen 2025 candidate set.
+- `N7`, `N8`, `I7`, and `S7` remain blocked/deferred ablation assets; rows
+  `G22B` and `G23B` are recorded as `partial_blocked`.
+- No frozen official runtime config was changed and no candidate was promoted.
+
 ## Prompt09 Verification Note
 
 Prompt09 corrected the reference status table so `N3` is explicitly recorded as
@@ -80,3 +93,39 @@ cache. Local-only, no-proxy smokes now report `real_model_executed` for `N2`,
 enabled reranker snapshot is present. The optional FinBERT-style classifier is
 recorded as approved metadata but remains disabled; `N3` should be described as
 real BGE encoder evidence, not true FinBERT classifier execution.
+
+## Prompt20.1 Local HF Model Use Note
+
+Prompt20.1 did not download models. It used already-downloaded local Hugging
+Face snapshots under `C:\Users\jeanna\.cache\huggingface\hub` with
+`local_files_only=True` and `network_attempted=false`.
+
+- `N2`, `N4`, `N5`, `N12`, `N2345`, `I5`, `S6`, and `S126` use local
+  `BAAI/bge-small-zh-v1.5` encoder evidence.
+- `N3`, `N13`, `I6`, and `I256` use local
+  `yiyanghkust/finbert-tone-chinese` sequence-classification evidence.
+- `N6` now has true local `BAAI/bge-reranker-v2-m3` cross-encoder reranker
+  smoke evidence, with `proxy=false`.
+- `N7`, `N8`, `I7`, and `S7` remain `blocked_missing_local_model` because
+  Prompt20.1 did not approve or map dedicated assets for those ablation methods.
+
+No official runtime config was changed and no candidate was promoted.
+
+## Prompt22 Behaviour Repair Note
+
+Prompt22 keeps the Prompt20.1/Prompt21 local-only transformer method evidence
+and repairs the remaining grid/audit behaviour at the matrix layer:
+
+- `N2`, `N3`, `N4`, `N5`, `N12`, `N13`, `N2345`, `I6`, `I256`, `S6`, and
+  `S126` remain backed by real local transformer checkpoints where selected.
+- Prompt22 matrix rows use `cached_real_transformer_replay` to distinguish
+  replayed real-model target weights from fresh transformer inference and from
+  proxy-only evidence.
+- Component ablations now distinguish `pass`, `partial`, `fail`, `blocked`,
+  and `not_applicable_with_reason`.
+- Random transformer features, aspect-tone off, label-attention off,
+  sector-query attention off, gate-off toggles, overlay strength, turnover
+  cap, event-category removal, and high/low volatility regimes all produce
+  traceable ablation rows.
+- `N7`, `N8`, `I7`, and `S7` remain deferred research assets through
+  `G22B`/`G23B`; they are not candidate evidence and are not promoted.
