@@ -89,3 +89,55 @@ Every non-trivial change must include one of:
 ## 7. No Silent Deletion
 
 Do not silently delete files. If a file is obsolete or unclear, move it to `docs/archived/` only when the prompt asks for cleanup, and record the move in `docs/archived/README.md` and the implementation log.
+
+## 8. Focused Candidate Optimisation Phase Rules
+
+Current phase:
+
+```text
+Prompt01 — Pipeline Repair and Full Validation Run
+```
+
+Output folder:
+
+```text
+outputs/reports/focused_candidate_optimisation/prompt01_pipeline_repair_full_validation/
+```
+
+Must use:
+
+```text
+rtk
+rtk python
+rtk git
+rtk python -m pytest
+```
+
+Style:
+
+```text
+caveman English for reports and final response
+```
+
+Must fix:
+
+```text
+G15B zero-overlay pipeline or prove blocked
+exact G21B repaired/lite real 2024/2025 rerun
+Track A overlay trace inconsistency
+missing reference CSV artifacts
+dirty-state manifest and no-touch config hashes
+```
+
+Do not:
+
+```text
+write new Prompt01 outputs under outputs/reports/news_overlay/
+use hidden 2026
+tune on 2025
+edit official runtime configs
+run full 212-row matrix
+promote to official runtime
+download new models
+call online APIs
+```
