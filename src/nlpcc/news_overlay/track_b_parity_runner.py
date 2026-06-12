@@ -49,7 +49,7 @@ from nlpcc.news_overlay.prompt22_runner import (
 )
 from nlpcc.news_overlay.prompt23_runner import NvidiaSmiSampler
 from nlpcc.news_overlay.registry import validate_track_compatibility
-from tools.backtesting.reference_official_semantics import (
+from nlpcc.evaluation.reference_official_semantics import (
     OfficialSemanticsInput,
     load_official_semantics_arrays,
     run_reference_official_semantics,

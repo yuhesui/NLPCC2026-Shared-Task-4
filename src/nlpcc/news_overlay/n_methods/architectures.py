@@ -467,8 +467,14 @@ def _run_n4(
                 event_probabilities=label_scores,
                 label_attention_scores=label_scores,
                 entities=tuple(args["entities"]),
+                relevance_by_sector=_lexical_relevance(item.text),
+                aspect_tone=_aspect_tone(item.text),
                 warnings=warnings,
-                extra={"event_arguments": args, "label_attention_backend": backend},
+                extra={
+                    "event_arguments": args,
+                    "label_attention_backend": backend,
+                    "impact_side_fields": "lexical_relevance_and_aspect_tone",
+                },
             )
         )
     return _result(

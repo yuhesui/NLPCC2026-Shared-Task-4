@@ -21,3 +21,4 @@ models/huggingface/
 /data/
 /outputs/
 /tests/
+/scripts/

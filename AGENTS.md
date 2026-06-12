@@ -141,3 +141,54 @@ promote to official runtime
 download new models
 call online APIs
 ```
+
+## 9. Focused Candidate Optimisation — Prompt02 Rules
+
+Current prompt:
+
+```text
+Prompt02 — Hyperparameter Optimiser, Synthetic Backtester, and Type-C Robustness Study
+```
+
+Output folder:
+
+```text
+outputs/reports/focused_candidate_optimisation/prompt02_optimizer_synthetic_typec/
+```
+
+Must use:
+
+```text
+rtk
+rtk python
+rtk git
+rtk python -m pytest
+```
+
+Validation:
+
+```text
+Type A = 2024 direct
+Type B = 2024 tune then frozen 2025
+Type C = merged 2024/2025 80/20 5-round research-only test
+```
+
+Do not:
+
+```text
+run hidden 2026
+run official-server parity
+promote official runtime
+write Prompt02 outputs outside Prompt02 folder
+download new models
+call online APIs
+```
+
+Must do:
+
+```text
+build bounded optimiser
+build synthetic input backtester
+fix compileall and pip check if possible
+write full implementation log
+```

@@ -21,7 +21,7 @@ from typing import Any
 
 import numpy as np
 
-from tools.backtesting.reference_official_semantics import (
+from nlpcc.evaluation.reference_official_semantics import (
     OfficialSemanticsInput,
     load_official_semantics_arrays,
     run_reference_official_semantics,
