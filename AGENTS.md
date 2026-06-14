@@ -192,3 +192,55 @@ build synthetic input backtester
 fix compileall and pip check if possible
 write full implementation log
 ```
+
+## 10. Focused Candidate Optimisation — Prompt03 Rules
+
+Current prompt:
+
+```text
+Prompt03 — Package Hygiene, Clean Type-B Rerun, and Baseline-Gated Selection
+```
+
+Output folder:
+
+```text
+outputs/reports/focused_candidate_optimisation/prompt03_package_hygiene_typeb_gate/
+```
+
+Implementation log:
+
+```text
+exactly one implementation log only
+path: outputs/reports/focused_candidate_optimisation/prompt03_package_hygiene_typeb_gate/presented/implementation_log.md
+do not write docs/implementation_logs copy
+```
+
+Must use:
+
+```text
+rtk
+rtk python
+rtk git
+rtk python -m pytest
+```
+
+Must fix or prove:
+
+```text
+compileall pycache permission issue
+pip check dependency conflict
+dirty worktree attribution
+Type-B rerun after hygiene work
+no-news baseline gate
+```
+
+Do not:
+
+```text
+run hidden 2026
+run official-server parity
+promote official runtime
+write Prompt03 outputs outside Prompt03 folder
+download new models
+call online APIs
+```
