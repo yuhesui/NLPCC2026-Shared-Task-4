@@ -142,6 +142,66 @@ download new models
 call online APIs
 ```
 
+## 11. Focused Candidate Optimisation - Prompt04 Rules
+
+Current prompt:
+
+```text
+Prompt04 - Strategy Cleanup, Full Optimisation, and End-to-End Pipeline Completion
+```
+
+Output folder:
+
+```text
+outputs/reports/focused_candidate_optimisation/prompt04_strategy_cleanup_full_optimisation/
+```
+
+Implementation log:
+
+```text
+exactly one implementation log only
+path: outputs/reports/focused_candidate_optimisation/prompt04_strategy_cleanup_full_optimisation/presented/implementation_log.md
+update this same log for any later Prompt04 edits
+do not write docs/implementation_logs copy
+```
+
+Must use:
+
+```text
+rtk
+rtk python
+rtk git
+rtk python -m pytest
+```
+
+Must verify:
+
+```text
+RTK Python path is project .venv
+Optuna is visible to RTK Python
+```
+
+Must do:
+
+```text
+clean strategy registry
+run full Optuna optimisation
+run Type A/B/C and synthetic pipeline
+produce baseline-aware diagnostics
+recommend active research branches
+```
+
+Do not:
+
+```text
+run hidden 2026
+run official-server parity
+promote official runtime
+treat no-news baseline as hard rejection gate
+write duplicate implementation logs
+write Prompt04 outputs outside Prompt04 folder
+```
+
 ## 9. Focused Candidate Optimisation — Prompt02 Rules
 
 Current prompt:
