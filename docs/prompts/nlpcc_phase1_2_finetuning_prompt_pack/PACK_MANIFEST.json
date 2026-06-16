@@ -1,0 +1,87 @@
+{
+  "pack_name": "nlpcc_phase1_2_finetuning_prompt_pack",
+  "created_utc": "2026-06-16T10:24:45.058050Z",
+  "file_count": 16,
+  "files": [
+    {
+      "path": "README_NEXT_PHASE_PROMPT_PACK.md",
+      "bytes": 2688,
+      "sha256": "dd313daead60091d5f25e81834c116e9efa06167f3eed18ed1ca27739ed4a548"
+    },
+    {
+      "path": "RECOMMENDED_CODEX_SKILLS.md",
+      "bytes": 2069,
+      "sha256": "72759612a7f267d382d951968071fef0f0ef1306a0b70b311f7a74dbab1396d4"
+    },
+    {
+      "path": "config/model-and-execution-order.md",
+      "bytes": 898,
+      "sha256": "8cd57e3300de33aae2152267b43135873ca7418c65303c42e2e1c2b79b78ac6a"
+    },
+    {
+      "path": "config/shared-artifact-schema.md",
+      "bytes": 1170,
+      "sha256": "163004ca4123155c739d090ebd2e72de84eaaa1846405cd9e04b3deeabbe1ea3"
+    },
+    {
+      "path": "prompts/prompt00_init-session-finetuning-phase.md",
+      "bytes": 6411,
+      "sha256": "1e7bd92489b5798cff8a57346a1e798508a632728598b38807baf0eb4254b50f"
+    },
+    {
+      "path": "prompts/prompt01_data-label-audit-frozen-splits.md",
+      "bytes": 6821,
+      "sha256": "ff5607ad9dc940c1aa9a7df4ef3d9d991f3b6c97d5d2677f9a2b3f1dab42dbc3"
+    },
+    {
+      "path": "prompts/prompt02_phase1-retrieval-calibration-shallow-fusion.md",
+      "bytes": 6621,
+      "sha256": "c671ce29e7d34beb0ac04e958c5a3ebce4fdf9fb0ae7d4e52cbe432a8d1e409f"
+    },
+    {
+      "path": "prompts/prompt03_phase2-contrastive-bge-relevance-finetuning.md",
+      "bytes": 7237,
+      "sha256": "fe184af1d3ebcc934bd1c09d2884b0b6cb2df6a958f53d11d35b6d7607b81ff5"
+    },
+    {
+      "path": "prompts/prompt04_phase2-event-aspect-head-lora-cloud.md",
+      "bytes": 6394,
+      "sha256": "f558fbc005742ecaed57454d9cfc2b5afb97571bdcf93f2323b2e89a1dbf4a42"
+    },
+    {
+      "path": "prompts/prompt05_frozen-evaluation-ablation-report.md",
+      "bytes": 7528,
+      "sha256": "557e7e7b08b8f1b118fe6dd3fdd86247f35aac15b69b1d51a4be6b9a43b9f83b"
+    },
+    {
+      "path": "skills/skill01_nlpcc-evidence-ledger.md",
+      "bytes": 742,
+      "sha256": "3d0381910f8e5147644035b9846850bf30d324af3e8f38032f46483f7e6c84ee"
+    },
+    {
+      "path": "skills/skill02_leakage-split-auditor.md",
+      "bytes": 649,
+      "sha256": "8a83c705026dc3b8e6d3c77ee2679122b7435d4ce2e13f1f095c18af7b2e3fef"
+    },
+    {
+      "path": "skills/skill03_presented-folder-packager.md",
+      "bytes": 512,
+      "sha256": "6e4ee397bb4baa3e21e4b5ab94faf09e50e31f432c6cabf1c4f963d4c5d27799"
+    },
+    {
+      "path": "skills/skill04_local-hf-cache-provenance.md",
+      "bytes": 460,
+      "sha256": "54c3d60bb4745adbe92fc28d71d0c5f953675c422125bcaf814df9ea71ad92a1"
+    },
+    {
+      "path": "skills/skill05_small-gpu-finetuning-runner.md",
+      "bytes": 560,
+      "sha256": "b1a530293c5718ded946943982322a60510aa613816c6971990b9d58f6d9b8d3"
+    },
+    {
+      "path": "skills/skill06_official-parity-ablation-auditor.md",
+      "bytes": 628,
+      "sha256": "8bf5434eaf404aaa65f7142a8d66f92ce2a07a2bc66c42ad89227dcd3b5a0983"
+    }
+  ]
+}
