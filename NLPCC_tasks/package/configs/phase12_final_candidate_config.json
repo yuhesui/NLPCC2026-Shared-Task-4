@@ -1,0 +1,69 @@
+{
+  "schema_version": "phase12_final_candidate_config_v1",
+  "selection_scope": "2024_only",
+  "uses_2025_for_tuning": false,
+  "hidden_2026_used": false,
+  "network_attempted": false,
+  "candidate_policy": {
+    "track_a": "A2_real / G11A",
+    "track_b": "B2_real / G15B",
+    "controls": "A0/B0 reference_only"
+  },
+  "selected_branch": "prompt03a_bge_ported_with_prompt02_gate_zero",
+  "bge_model_path": "package/models/bge_contrastive_finetuned_2024_dev_best",
+  "notes": "Prompt03a fine-tuned BGE is portable through RealTransformerNewsTensorConfig.bge_path. Prompt03b event/aspect frozen heads remain diagnostic only because no production loader exists.",
+  "candidates": {
+    "A2_real": {
+      "track": "macro",
+      "candidate": "G11A",
+      "method_stack": "N13/I6/S13",
+      "uses_news_overlay": true,
+      "base_agent": "risk_parity",
+      "bge_path": "package/models/bge_contrastive_finetuned_2024_dev_best",
+      "required_model_roles": [
+        "embedding_encoder",
+        "financial_sentiment"
+      ],
+      "overlay_cap": 0.01,
+      "turnover_cap": 0.035,
+      "confidence_gate": 0.0,
+      "deadband": 8e-05,
+      "max_news_per_day": 20,
+      "production_real_nlp": true,
+      "allow_proxy_news": false,
+      "allow_heuristic_news": false,
+      "allow_fixed_target_replay": false,
+      "allow_old_research_table_replay": false,
+      "local_files_only": true,
+      "phase12_source": "Prompt03a fine-tuned BGE path plus Prompt02 2024 gate-disabled ablation.",
+      "finbert_path": "package/models/finbert_tone_chinese_e91b1a3"
+    },
+    "B2_real": {
+      "track": "sector",
+      "candidate": "G15B",
+      "method_stack": "N4/I6/S2",
+      "uses_news_overlay": true,
+      "base_agent": "s1_quant_core",
+      "bge_path": "package/models/bge_contrastive_finetuned_2024_dev_best",
+      "required_model_roles": [
+        "embedding_encoder",
+        "financial_sentiment"
+      ],
+      "overlay_cap": 0.012,
+      "turnover_cap": 0.035,
+      "confidence_gate": 0.0,
+      "deadband": 8e-05,
+      "max_news_per_day": 20,
+      "production_real_nlp": true,
+      "allow_proxy_news": false,
+      "allow_heuristic_news": false,
+      "allow_fixed_target_replay": false,
+      "allow_old_research_table_replay": false,
+      "local_files_only": true,
+      "phase12_source": "Prompt03a fine-tuned BGE path plus Prompt02 2024 gate-disabled ablation.",
+      "finbert_path": "package/models/finbert_tone_chinese_e91b1a3"
+    }
+  },
+  "submission_package": true,
+  "submission_path_policy": "Paths resolve from the NLPCC_tasks package root; local files only."
+}

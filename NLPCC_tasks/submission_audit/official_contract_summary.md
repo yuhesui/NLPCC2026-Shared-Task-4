@@ -1,0 +1,5 @@
+# Official Contract Summary
+
+The local starter-kit README names `start_server.py` as the server entry point and `agent_platform/demo_backtest.py` as the participant runner. The package adapts that runner to the fixed local Phase12 agent path. The server exposes `/api/backtest/start`, `/api/backtest/{session_id}/trade`, `/api/backtest/{session_id}/next_day`, `/api/backtest/{session_id}/historical_prices`, and `/api/backtest/results/{session_id}`. Track A uses the macro fund pool; Track B uses the sector fund pool in the official fund information module.
+
+The local materials say A-list submissions should retain agent code, daily 2025 trade/allocation logs, raw decisions, final results, and run instructions. They do not specify a canonical prediction filename, upload endpoint, repository visibility requirement, or a final submission archive layout. These items must be confirmed with the official task repository or WeChat group. The private 2026 evaluation is organizer-run and is not accessed by this package.
