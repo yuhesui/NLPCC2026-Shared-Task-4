@@ -1,17 +1,40 @@
+# Python and local environments
 __pycache__/
 *.py[cod]
 .pytest_cache/
-.ruff_cache/
+.venv/
+.venv_submission_check/
+submission_audit/pycache/
+submission_audit/*_stdout.log
+submission_audit/*_stderr.log
 
-logs/
-*.log
-
+# Runtime and server artifacts
+runtime_logs/
+logs/*.log
 agent_platform/demo_outputs/
-agent_platform/session_model_mapping.json
-agent_platform/news_summary_cache.json
-agent_platform/batch_session_mapping.json
+backtest_results_*/
+server_platform/prompt10_http_*/
+*.jsonl
 
-server_platform/exp_logs/
-server_platform/backtest_results*/
+# Official datasets are supplied separately; never push raw or hidden data.
+dataset/price_data/export_data/
+dataset/news_data/export_data/
+dataset/news_data/2025_12_news_demo/
 
-.DS_Store
+# Explicitly excluded legacy/research-only agents.
+agent_platform/agents/advanced_agents.py
+agent_platform/agents/prompt06_news_overlay_agent.py
+agent_platform/agents/prompt07_official_replay_agent.py
+agent_platform/agents/trading_strategy_prompt.py
+agent_platform/utils.py
+agent_platform/fund_info.py
+README-CN.md
+.env.example
+nlpcc/news_overlay/tensor_overlay.py
+
+# Secrets and local editor state
+.env
+*.key
+*.pem
+.idea/
+.vscode/

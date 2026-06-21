@@ -1,292 +1,113 @@
-# NLPCC Investment Agent Competition Starter Kit
+# NLPCC 2026 Shared Task 4 Submission Package
 
-[中文](README-CN.md)
+## Overview
 
-This directory provides a minimal but complete competition starter kit, including:
+This is a standalone, local-only submission package for NLPCC 2026 Shared Task 4. It contains the selected Phase12 agents, a minimal vendored runtime, the official-style server, and the two required transformer artifacts. It does not load parent workspace code, report folders, user caches, Prompt06 alpha mining, or Prompt07b factor-panel research.
 
-- a standardized backtesting server
-- public price and news datasets
-- leakage-safe DataLoader logic
-- agent client and demo runner
-- API and submission guidance
+The package is an academic shared-task system, not investment advice. Candidate selection is fixed: 2024 was used for fitting/selection, 2025 is frozen public evaluation only, and hidden 2026 data is never accessed by the agents.
 
-The public price and news datasets will be officially released at the start of the competition.
+## Included Agents
 
-## Task Overview
+- **News Track A best candidate:** risk parity + local BGE/FinBERT news overlay (`A2_real / G11A`).
+- **Track A no-news reference:** shrinkage risk parity only.
+- **News Track B best candidate:** S1 sector core + local BGE/FinBERT news overlay (`B2_real / G15B`).
+- **Track B no-news reference:** S1 sector core only.
 
-This task evaluates the ability of LLM-based Investment Advisor Agents to perform complex reasoning and quantitative decision-making in the Chinese capital market. Moving beyond traditional text analysis, the competition challenges participants to develop agents that interpret daily macroeconomic signals and sectoral shifts to execute daily asset allocation strategies.
+`agent_platform/agents/build_agent.py` defaults to the selected `phase12_final` path. Track A and Track B wrappers pin the fixed candidate IDs and reject cross-track calls.
 
-Operating in a backtesting environment, agents are provided with a daily `Top-20 Financial Hot News` feed and historical price data. Agents must autonomously generate daily rebalancing instructions for predefined ETF pools. All submissions are evaluated via a standardized daily-frequency backtesting engine with a `0.01%` transaction friction cost. The core challenge is to filter news noise while maintaining stable investment logic without future-data bias.
+## Model Architecture
 
-## Tracks
+Visible Top-20 news is ranking-sorted, content-deduplicated, and cutoff-safe. A local fine-tuned BGE-compatible four-layer BERT encoder creates L2-normalized relevance embeddings. A local Chinese FinBERT sequence classifier produces positive/negative sentiment, confidence, and normalized uncertainty. Per-fund relevance, event, aspect, sentiment, and recency fields form a centered bounded overlay.
 
-### Track 1: Macro-Asset Allocation
+Track A uses a shrinkage covariance risk-parity base. Track B uses an S1 sector core blending inverse volatility, momentum, and sector trend, followed by drawdown and breadth adjustment. Both agents enforce long-only target weights, a 0.97 invested target, per-fund caps, L1 overlay caps, turnover caps, local-only model loading, and fail-closed missing-model behavior.
 
-This track focuses on macro-level allocation over roughly 11 broad asset ETFs and indices. The public candidate pool in the starter kit is:
+## Folder Structure
 
-- `000300.SH` CSI 300
-- `000905.SH` CSI 500
-- `399006.SZ` ChiNext Index
-- `000688.SH` STAR 50
-- `000932.SH` CSI Consumer
-- `000941.SH` New Energy Index
-- `399971.SZ` CSI Media
-- `000819.SH` Nonferrous Metals Index
-- `000928.SH` CSI Energy Index
-- `000012.SH` Treasury Bond Index
-- `518880.SH` Gold ETF
-
-### Track 2: Sector-Rotation Allocation
-
-This track focuses on sector rotation over industry-themed ETFs. The public candidate pool is defined in [fund_info.py](server_platform/app/core/fund_info.py), including:
-
-- `512880.SH` Securities ETF
-- `512800.SH` Banking ETF
-- `512070.SH` Insurance ETF
-- `159995.SZ` Semiconductor ETF
-- `159819.SZ` AI ETF
-- `515880.SH` Communication Equipment ETF
-- `159852.SZ` Software ETF
-- `512010.SH` Pharma ETF
-- `512170.SH` Healthcare ETF
-- `159992.SZ` Innovative Drug ETF
-- `515170.SH` Food & Beverage ETF
-- `512690.SH` Liquor ETF
-- `512400.SH` Nonferrous Metals ETF
-- `515220.SH` Coal ETF
-- `159870.SZ` Chemicals ETF
-- `512200.SH` Real Estate ETF
-
-## Data Split
-
-- Public training set: `2024-01-01` to `2024-12-31`
-  - fully public for participants to build and tune agents
-- A leaderboard test set: `2025-01-01` to `2025-12-31`
-  - fully public; teams submit daily allocation logs and backtest results for this period
-- B leaderboard test set: `2026-01-01` to `2026-06-01`
-  - kept private and run centrally by the organizers
-
-## Backtest Rules
-
-- Initial capital: `100000` CNY
-- Transaction friction cost: `0.01%`
-- Trading frequency: daily
-- Execution price: closing price of the trading day; backward-adjusted price if available
-- Trading abstraction: ETF-linked fund style simulation, with no minimum lot size
-- Buy logic: buy by cash amount, for example “buy 10,000 CNY of Gold ETF”
-- Sell logic: sell by current holding percentage, for example “sell 30% of current Gold ETF holdings”
-
-## Inputs
-
-### 1. News
-
-- sourced from publicly accessible Chinese financial hot-topic rankings
-- default sources include:
-  - Sina Finance
-  - Tiantian Fund
-  - Tencent Finance / Tencent Stock
-  - Caixin
-- the main competition setting uses daily Top-20 hot financial news
-
-### 2. Market Data
-
-- daily OHLCV-style signals for candidate ETFs / indices
-- major fields include:
-  - `open`
-  - `close`
-  - `high`
-  - `low`
-  - `volume`
-  - `pctchange`
-
-For more detail, see [dataset/README.md](dataset/README.md).
-
-## No Future Leakage
-
-The official DataLoader enforces explicit anti-leakage rules:
-
-- historical price APIs return full history for previous trading days, plus only the current-day open
-- the current day close, high, low, and return are hidden from the agent
-- same-day news is truncated to items published before 15:00
-
-Participants are strongly encouraged to reuse this DataLoader rather than implementing their own slicing logic.
-
-Additional constraints:
-
-- Any future-price forecasting behavior or future-price label injection is prohibited
-- Participants must not use any data, features, labels, or external signals that would only become available after the decision timestamp
-- If a submission uses training, fine-tuning, or retrieval/index construction, the team must submit the full training data, preprocessing pipeline, dependency specification, and enough materials for reproducibility
-- If extra runtime dependencies are required, participants must also provide an executable Docker container or an equivalent reproducible environment for B leaderboard evaluation
-
-## Server and APIs
-
-Main server-side files:
-
-- [server_platform/app/main.py](server_platform/app/main.py)
-- [server_platform/app/api/backtest.py](server_platform/app/api/backtest.py)
-- [server_platform/app/core/backtest.py](server_platform/app/core/backtest.py)
-- [server_platform/app/core/data_loader.py](server_platform/app/core/data_loader.py)
-
-Common competition APIs:
-
-- `POST /api/backtest/start`
-- `POST /api/backtest/resume`
-- `POST /api/backtest/{session_id}/trade`
-- `GET /api/backtest/{session_id}/status`
-- `GET /api/backtest/{session_id}/next_day`
-- `GET /api/backtest/{session_id}/day_data`
-- `GET /api/backtest/{session_id}/historical_prices`
-- `POST /api/backtest/{session_id}/news`
-- `GET /api/backtest/results/{session_id}`
-
-## Save / Restore Logic
-
-The current starter kit already includes:
-
-- daily portfolio value persistence
-- daily holdings snapshot persistence
-- daily trade execution records
-- agent decision logs
-- resume-from-saved-state APIs
-- portfolio history alignment logic
-
-The core implementation lives in:
-
-- [server_platform/app/core/backtest.py](server_platform/app/core/backtest.py)
-- [server_platform/app/api/backtest.py](server_platform/app/api/backtest.py)
-- [agent_platform/client/platform_client.py](agent_platform/client/platform_client.py)
-- [agent_platform/demo_backtest.py](agent_platform/demo_backtest.py)
-
-## Demo and Usage
-
-### 1. Install Dependencies
-
-```bash
-pip install -r requirements.txt
+```text
+agent_platform/       selected agent wrappers, client, and local runner
+nlpcc/                vendored selected-runtime implementation closure
+package/configs/      package-relative Phase12 configuration
+package/models/       bundled BGE and Chinese FinBERT artifacts
+server_platform/      official-style local API server and DataLoader
+dataset/              organizer-provided public data location (not committed)
+tests/                selected-runtime package tests
+submission_audit/     scope, model, LFS, dependency, and readiness evidence
 ```
 
-### 2. Configure `.env` and LLM Access
+## Environment Setup
 
-The agent-side LLM calls are implemented in [advanced_agents.py](agent_platform/agents/advanced_agents.py) via `ChatOpenAI`, and `python-dotenv` loads settings from the project-root `.env`.
+Use a clean virtual environment without system site packages. The dependency lock is intentionally separate from the project-wide development environment.
 
-Required environment variables:
-
-- `OPENAI_API_BASE`
-- `OPENAI_API_KEY`
-
-Recommended setup:
-
-1. Copy the template:
-
-```bash
-cp .env.example .env
+```powershell
+cd <PACKAGE_ROOT>
+py -3 -m venv .venv_submission_check
+.\.venv_submission_check\Scripts\python.exe -m pip install --upgrade pip
+.\.venv_submission_check\Scripts\python.exe -m pip install -r requirements-submission-lock.txt
+.\.venv_submission_check\Scripts\python.exe -m pip check
 ```
 
-2. Fill in your endpoint and key:
+For offline installation, use an approved wheelhouse containing the exact lock versions. Do not replace the local model paths with an online download fallback.
 
-```bash
-OPENAI_API_BASE=https://api.openai.com/v1
-OPENAI_API_KEY=your_api_key_here
+## Model Artifacts
+
+The two runtime model directories are package-relative:
+
+```text
+package/models/bge_contrastive_finetuned_2024_dev_best/
+package/models/finbert_tone_chinese_e91b1a3/
 ```
 
-3. Select the model at runtime:
+They are checked by `submission_audit/model_artifact_audit.csv`. Both are loaded using `local_files_only=True`. Git LFS is required for the FinBERT safetensors file.
 
-```bash
-python agent_platform/demo_backtest.py --model gpt-5
+## Run Track A
+
+```powershell
+python -m agent_platform.demo_backtest --track macro --start-date 2025-01-02 --end-date 2025-12-31 --lookback-days 60
 ```
 
-Notes:
+This runs the fixed A2_real/G11A local agent against the official-style server. Use `RUN_GUIDE.md` for the server startup sequence and expected files.
 
-- Any OpenAI-compatible endpoint should work in most cases.
-- If you use a gateway, proxy, or self-hosted compatible service, simply change `OPENAI_API_BASE`.
-- News summarization, sentiment analysis, and trading decision modules currently share the same `.env` configuration.
+## Run Track B
 
-### 3. Start the Server
+```powershell
+python -m agent_platform.demo_backtest --track sector --start-date 2025-01-02 --end-date 2025-12-31 --lookback-days 60
+```
 
-```bash
+This runs the fixed B2_real/G15B local agent. B2 is packaged because policy is fixed and runtime parity is verified; it must not be claimed to beat B0 or the zeroed/shuffled controls.
+
+## Run HTTP Official-Style Server
+
+```powershell
 python start_server.py
 ```
 
-Default address:
+The default local address is `http://localhost:6207`. Start the server in one terminal and run a selected track in another. The matched-input HTTP/direct parity evidence and exact criteria are recorded in `RUN_GUIDE.md` and `submission_audit/http_direct_parity_audit.csv`.
 
-- `http://localhost:6207`
+## Reproduce A-list Predictions
 
-### 4. Run the Demo Agent
+Run the selected Track A or B command with the organizer-specified 2025 dates. The runner writes result JSON and decision traces inside this package. Export daily trade/allocation rows only in the organizer-required format after confirming the current official submission contract. The starter-kit README requests code, daily 2025 logs, raw decision outputs, and final results; it does not specify one canonical A-list filename in the local materials.
 
-```bash
-python agent_platform/demo_backtest.py
-```
-
-Example:
-
-```bash
-python agent_platform/demo_backtest.py --track macro --model gpt-5 --start-date 2025-01-02 --end-date 2025-03-31
-```
-
-## Suggested Submission Outputs
-
-Teams are encouraged to keep at least:
-
-- daily trade logs
-- daily allocation / holdings logs
-- final backtest result JSON
-- model and prompt documentation
-- raw model outputs for each decision step
-- executable code and run scripts
-
-For the A leaderboard stage, suggested submission contents are:
-
-1. agent code or executable script
-2. daily trade logs for `2025`
-3. daily allocation / holdings logs for `2025`
-4. raw model outputs for each decision in `2025`
-5. backtest results for `2025`
-6. clear run instructions
-
-The B leaderboard stage is run centrally by the organizers on the private set, so each team must submit executable code and complete runtime dependencies for reproducible execution.
-
-If the submission includes training, fine-tuning, or additional knowledge construction, teams must also provide:
-
-- the full training data and data-source description
-- preprocessing and build scripts
-- model weights or a reproducible way to obtain them
-- a Docker container or an equivalent reproducible environment description
-
-## Evaluation
-
-We will evaluate submissions by jointly considering Sharpe ratio, with separate evaluation categories under different turnover levels.
-
-## How To Read the Codebase
-
-If you are new to this starter kit, the recommended reading order is:
-
-1. [README.md](README.md)
-2. [dataset/README.md](dataset/README.md)
-3. [server_platform/app/core/data_loader.py](server_platform/app/core/data_loader.py)
-4. [server_platform/app/core/backtest.py](server_platform/app/core/backtest.py)
-5. [server_platform/app/api/backtest.py](server_platform/app/api/backtest.py)
-6. [agent_platform/client/platform_client.py](agent_platform/client/platform_client.py)
-7. [agent_platform/demo_backtest.py](agent_platform/demo_backtest.py)
-
-If you want to modify the agent strategy itself, start with:
-
-- [agent_platform/agents/advanced_agents.py](agent_platform/agents/advanced_agents.py)
-- [agent_platform/agents/trading_strategy_prompt.py](agent_platform/agents/trading_strategy_prompt.py)
-
-If your priority is avoiding leakage, do not bypass:
-
-- [server_platform/app/core/data_loader.py](server_platform/app/core/data_loader.py)
-- [dataset/dataloader_eval.py](dataset/dataloader_eval.py)
-
-## Repository Layout
+## Expected Outputs
 
 ```text
-NLPCC_tasks/
-├── agent_platform/      # participant-side client and demo agent
-├── dataset/             # public price and news data
-├── server_platform/     # official backtest engine and APIs
-├── config.py
-├── logs.py
-├── requirements.txt
-└── start_server.py
+runtime_logs/<track>_phase12_final/*.jsonl
+agent_platform/demo_outputs/<track>_phase12_final_<session>.json
+backtest_results_* / <organizer-configured result directory>
 ```
+
+These are ignored by Git because they can contain participant-local session data. Keep only sanitized organizer-required files in the upload bundle.
+
+## Validation Checklist
+
+Run the commands in `SUBMISSION_CHECKLIST.md`. The current scope, model, dependency, compiler, test, parity, A-list, and log evidence is under `submission_audit/`.
+
+## GitHub / Git LFS Notes
+
+The FinBERT model weight exceeds GitHub's 100 MiB normal Git limit. Use Git LFS for 
+`package/models/**`, `*.safetensors`, `*.bin`, and `*.pt`. Please install the FinBERT model 
+through huggingface directly.
+
+
+## Academic Use Disclaimer
+
+This code is for the NLPCC shared task and reproducible research. It is not investment advice, an investment product, or a recommendation to trade any instrument.

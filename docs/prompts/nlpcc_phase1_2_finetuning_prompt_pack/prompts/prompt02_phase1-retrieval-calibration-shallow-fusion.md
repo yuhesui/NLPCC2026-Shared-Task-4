@@ -1,9 +1,5 @@
 # prompt02_phase1-retrieval-calibration-shallow-fusion.md
 
-## Model Setting
-
-Use **GPT-5.5 High**. Use **GPT-5.5 xHigh** if Prompt01 found messy labels or source-path ambiguity.
-
 ## Role
 
 You are GPT-5.5 acting as:
