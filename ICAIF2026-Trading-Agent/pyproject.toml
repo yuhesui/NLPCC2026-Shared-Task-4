@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "icaif2026-trading-agent"
+version = "0.1.0"
+description = "Research + production workspace for the ACM ICAIF 2026 Trading Agent Competition."
+readme = "README.md"
+requires-python = ">=3.11"
+# Core: enough to run every quant baseline, the backtester, the experiment
+# registry and the offline competition adapter. No GPU / Hugging Face.
+dependencies = [
+    "numpy>=1.26",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+# Live submission through the official starter-kit client (it requires httpx).
+live = ["httpx==0.28.1"]
+# Research utilities (tables, plots, notebooks). Not needed by the runtime.
+research = ["pandas>=2.1", "scipy>=1.11", "matplotlib>=3.8"]
+# Local transformer inference. Models are NEVER downloaded at runtime; see
+# docs/research/EMBEDDING_MODEL_PLAN.md and configs/embeddings/.
+nlp = ["torch>=2.2", "transformers>=4.44", "sentence-transformers>=3.0"]
+# Fine-tuning programme (docs/research/FINETUNING_PLAN.md).
+training = ["torch>=2.2", "transformers>=4.44", "sentence-transformers>=3.0", "datasets>=2.20", "accelerate>=0.33"]
+dev = ["pytest>=8.0", "ruff>=0.5"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-q"
+markers = [
+    "official_kit: cross-checks against the official starter kit (skipped when third_party kit is absent)",
+    "network: requires outbound network (never run by default)",
+]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+src = ["src", "tests", "scripts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM"]
+ignore = ["E501", "SIM108"]

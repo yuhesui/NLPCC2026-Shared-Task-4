@@ -1,0 +1,5 @@
+extends: _base.yaml
+name: q0_cash
+fallback_chain: [primary]
+pipelines:
+  primary: {base: {method: cash}, exposure: {base: 0.0}}

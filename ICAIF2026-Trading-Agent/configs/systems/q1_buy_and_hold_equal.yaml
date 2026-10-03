@@ -1,0 +1,4 @@
+extends: _base.yaml
+name: q1_buy_and_hold_equal
+pipelines:
+  primary: {base: {method: equal}, rebalance: {mode: once}}

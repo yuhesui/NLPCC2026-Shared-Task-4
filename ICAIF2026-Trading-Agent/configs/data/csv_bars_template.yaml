@@ -1,0 +1,8 @@
+# Real historical bars from a terms-reviewed public source (see docs/data/DATA_PROVENANCE.md).
+# Files are git-ignored under data/raw/. Required CSV columns:
+# symbol,start,end,open,high,low,close,volume,available_at,source,source_id
+kind: csv
+name: us30_bars_30m
+bar_minutes: 30
+paths:
+  - data/raw/market/bars_30m.csv   # TODO(data): produce with scripts/data/ (not yet available)

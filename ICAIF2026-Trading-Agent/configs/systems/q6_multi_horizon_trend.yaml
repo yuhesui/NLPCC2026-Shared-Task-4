@@ -1,0 +1,9 @@
+extends: _base.yaml
+name: q6_multi_horizon_trend
+pipelines:
+  primary:
+    alpha: {method: multi_horizon_trend, horizons: {"4h": 0.15, "1d": 0.25, "5d": 0.35, "20d": 0.25}, trend_weight: 0.3}
+    base: {method: score_tilt, anchor: erc, kappa: 0.5}
+    exposure:
+      base: 1.0
+      regime: {trend_floor: -0.02, breadth_floor: 0.4, risk_off_gross: 0.6}

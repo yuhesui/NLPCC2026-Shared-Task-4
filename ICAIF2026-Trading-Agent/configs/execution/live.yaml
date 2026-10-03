@@ -1,0 +1,9 @@
+live:
+  phase: validation             # validation | official
+  mode: dry_run                 # dry_run | paper | live   (live requires explicit --live flag too)
+  safety_margin_seconds: 120    # never upload within 2 minutes of a deadline
+  poll_seconds: 30
+  state_path: .icaif/agent_state.json
+  ledger_path: .icaif/submission_ledger.jsonl
+  trace_dir: outputs/traces
+  private_dir: private/decisions

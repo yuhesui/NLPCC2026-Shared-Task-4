@@ -1,0 +1,4 @@
+extends: _base.yaml
+name: q0_equal_weight_rebalanced
+pipelines:
+  primary: {base: {method: equal}}

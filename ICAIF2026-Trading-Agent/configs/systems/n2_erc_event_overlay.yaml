@@ -1,0 +1,6 @@
+extends: q3_shrinkage_erc.yaml
+name: n2_erc_event_overlay
+pipelines:
+  primary:
+    overlay: {enabled: true, cap: 0.02, max_cap: 0.04, modes: [confidence, event], transform: topk, k: 3,
+              per_asset_cap: 0.015, min_confidence: 0.05}

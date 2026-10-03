@@ -1,0 +1,5 @@
+# SYNTHETIC data for tests and plumbing smoke runs only (never evidence).
+kind: synthetic
+seed: 7
+days: 60
+bar_minutes: 30

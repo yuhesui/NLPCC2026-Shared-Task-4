@@ -1,0 +1,158 @@
+# Initial experiment matrix (docs/research/EXPERIMENT_MATRIX.md explains each family).
+# status per family:
+#   runnable_synthetic   runs end-to-end today on SYNTHETIC data (plumbing only, no evidence)
+#   blocked_real_data    needs terms-reviewed historical bars/news (data/raw is empty)
+#   blocked_local_model  needs a manually registered local model (configs/embeddings/registry.yaml)
+#   blocked_rule         needs an organizer ruling (requires_rule_confirmation)
+# Real-data runs replace `defaults.data` with configs/data/csv_bars_template.yaml.
+# Grid keys use dotted paths into the experiment mapping.
+
+defaults:
+  data: {kind: synthetic, seed: 7, days: 60, bar_minutes: 30}
+  periods: {warmup_days: 25}
+  seed: 7
+  text: {enabled: false}
+  ablation: full
+
+families:
+  quant_baselines:
+    status: runnable_synthetic
+    experiments:
+      - {name: q0_cash, system: configs/systems/q0_cash.yaml}
+      - {name: q0_equal_weight_rebalanced, system: configs/systems/q0_equal_weight_rebalanced.yaml}
+      - {name: q1_buy_and_hold_equal, system: configs/systems/q1_buy_and_hold_equal.yaml}
+      - {name: q2_inverse_vol, system: configs/systems/q2_inverse_vol.yaml}
+      - {name: q3_shrinkage_erc, system: configs/systems/q3_shrinkage_erc.yaml}
+      - {name: q4_xs_momentum_5d, system: configs/systems/q4_xs_momentum.yaml}
+      - {name: q5_vol_scaled_momentum, system: configs/systems/q5_vol_scaled_momentum.yaml}
+      - {name: q6_multi_horizon_trend_erc, system: configs/systems/q6_multi_horizon_trend.yaml}
+      - {name: q7_turnover_aware_optimizer, system: configs/systems/q7_turnover_aware_optimizer.yaml}
+      - {name: q8_dynamic_exposure, system: configs/systems/q8_dynamic_exposure.yaml}
+
+  momentum_horizons:
+    status: runnable_synthetic
+    base: {system: configs/systems/q4_xs_momentum.yaml}
+    grid:
+      system_overrides.pipelines.primary.alpha.horizon: ["1h", "2h", "4h", "1d", "5d", "20d"]
+
+  covariance_estimators:
+    status: runnable_synthetic
+    base: {system: configs/systems/q3_shrinkage_erc.yaml}
+    grid:
+      system_overrides.pipelines.primary.risk.cov_method: [sample, fixed, ledoit_wolf, constant_correlation, ewma]
+
+  exposure_policies:
+    status: runnable_synthetic
+    base: {system: configs/systems/q3_shrinkage_erc.yaml}
+    variants:
+      fixed_100: {system_overrides: {pipelines: {primary: {exposure: {base: 1.0}}}}}
+      fixed_97_nlpcc: {system_overrides: {pipelines: {primary: {exposure: {base: 0.97}}}}}
+      fixed_80: {system_overrides: {pipelines: {primary: {exposure: {base: 0.8}}}}}
+      vol_target_15: {system_overrides: {pipelines: {primary: {exposure: {base: 1.0, vol_target: {target_vol_ann: 0.15}}}}}}
+      vol_target_10: {system_overrides: {pipelines: {primary: {exposure: {base: 1.0, vol_target: {target_vol_ann: 0.10}}}}}}
+      regime: {system_overrides: {pipelines: {primary: {exposure: {base: 1.0, regime: {trend_floor: -0.02, breadth_floor: 0.4, risk_off_gross: 0.6}}}}}}
+      drawdown_guard: {system_overrides: {pipelines: {primary: {exposure: {base: 1.0, drawdown: {start: 0.02, full: 0.08, min_gross: 0.3}}}}}}
+
+  turnover_controls:
+    status: runnable_synthetic
+    base: {system: configs/systems/q6_multi_horizon_trend.yaml}
+    variants:
+      unaware: {system_overrides: {pipelines: {primary: {turnover: {band: 0.0, min_total_change: 0.0}}}}}
+      light: {system_overrides: {pipelines: {primary: {turnover: {band: 0.002, min_total_change: 0.01}}}}}
+      standard: {system_overrides: {pipelines: {primary: {turnover: {band: 0.005, min_total_change: 0.02, max_round: 0.20, max_daily: 0.60}}}}}
+      strict_sparse: {system_overrides: {pipelines: {primary: {turnover: {band: 0.01, min_total_change: 0.04, max_round: 0.10, max_daily: 0.25, max_names: 8}}}}}
+      rebalance_r1_r4_only: {system_overrides: {pipelines: {primary: {rebalance: {mode: rounds, rounds: [1, 4]}}}}}
+
+  nlp_relevance:
+    status: runnable_synthetic   # lexical/hash variants only; transformer variants: blocked_local_model
+    base: {system: configs/systems/n1_erc_text_overlay.yaml, text: {enabled: true}}
+    grid:
+      text.relevance: [lexical_entity, dense_hash, hybrid_hash]
+    blocked:
+      - {name: dense_bge_small_en, reason: blocked_local_model+blocked_rule}
+      - {name: dense_qwen3_embedding_0_6b, reason: blocked_local_model+blocked_rule}
+      - {name: finetuned_biencoder, reason: "blocked_real_data (needs FINETUNING_PLAN Stage B labels)"}
+      - {name: cross_encoder_rerank, reason: blocked_local_model+blocked_rule}
+      - {name: llm_relevance_judge, reason: "needs hosted client + credits (allowed families only)"}
+
+  nlp_components:
+    status: runnable_synthetic
+    base: {system: configs/systems/n1_erc_text_overlay.yaml, text: {enabled: true, relevance: lexical_entity}}
+    variants:
+      no_text: {text: {enabled: false}}
+      relevance_only: {text: {signal: {direction: attention}}}
+      sentiment_only: {text: {signal: {relevance_mode: binary, direction: sentiment}}}
+      market_sentiment_uniform: {text: {signal: {relevance_mode: uniform, direction: sentiment}}}
+      event_only: {text: {signal: {relevance_mode: binary, direction: event}}}
+      relevance_sentiment: {text: {signal: {direction: sentiment, use_event_priors: false}}}
+      relevance_event: {text: {signal: {direction: event}}}
+      full_structured: {text: {signal: {direction: sentiment_x_event}}}
+
+  overlay_caps:
+    status: runnable_synthetic
+    base: {system: configs/systems/n1_erc_text_overlay.yaml, text: {enabled: true}}
+    grid:
+      system_overrides.pipelines.primary.overlay.cap: [0.0, 0.005, 0.01, 0.02, 0.04]
+
+  overlay_transforms:
+    status: runnable_synthetic
+    base: {system: configs/systems/n1_erc_text_overlay.yaml, text: {enabled: true}}
+    grid:
+      system_overrides.pipelines.primary.overlay.transform: [linear, rank, softmax, sigmoid, zscore, topk]
+
+  overlay_recency:
+    status: runnable_synthetic
+    base: {system: configs/systems/n1_erc_text_overlay.yaml, text: {enabled: true}}
+    variants:
+      priors_wall_clock: {text: {signal: {use_event_priors: true, clock: wall}}}
+      priors_trading_clock: {text: {signal: {use_event_priors: true, clock: trading}}}
+      fixed_6h: {text: {signal: {use_event_priors: false, default_half_life_hours: 6}}}
+      fixed_48h_nlpcc_2day: {text: {signal: {use_event_priors: false, default_half_life_hours: 48}}}
+      no_decay: {text: {signal: {use_recency: false, lookback_hours: 48}}}
+
+  overlay_budget_modes:
+    status: runnable_synthetic
+    base: {system: configs/systems/n2_erc_event_overlay.yaml, text: {enabled: true}}
+    grid:
+      system_overrides.pipelines.primary.overlay.modes: [[], [confidence], [confidence, event], [event]]
+
+  overlay_turnover_awareness:
+    status: runnable_synthetic
+    base: {system: configs/systems/n1_erc_text_overlay.yaml, text: {enabled: true}}
+    variants:
+      unaware: {system_overrides: {pipelines: {primary: {turnover: {band: 0.0, min_total_change: 0.0}}}}}
+      aware: {system_overrides: {pipelines: {primary: {turnover: {band: 0.005, min_total_change: 0.02, max_round: 0.2}}}}}
+
+  text_ablations:
+    status: runnable_synthetic
+    base: {system: configs/systems/n1_erc_text_overlay.yaml, text: {enabled: true}}
+    grid:
+      ablation: [no_news, zeroed, shuffled, wrong_asset, random, "stale:24", "stale:120", sign_flip, full]
+
+  source_removal:
+    status: runnable_synthetic
+    base: {system: configs/systems/n1_erc_text_overlay.yaml, text: {enabled: true}}
+    variants:
+      all_sources: {}
+      drop_synthetic_wire: {text: {exclude_sources: [synthetic]}}   # real runs: drop one source at a time
+
+  embedding_models:
+    status: blocked_local_model
+    note: "Expanded from configs/embeddings/registry.yaml once local paths are registered; see EMBEDDING_MODEL_PLAN.md"
+
+  llm_extraction:
+    status: blocked_rule
+    note: "no LLM client configured; allowed families only; Q-LLM-ALLOC direct allocation is a research baseline"
+
+  # Sensitivity check of the NLP plumbing: plant a known text->return effect of increasing strength in the
+  # synthetic world and verify full > no_news > sign_flip. Validates detection power, not real-market value.
+  planted_signal_recovery:
+    status: runnable_synthetic
+    base:
+      system: configs/systems/n1_erc_text_overlay.yaml
+      system_overrides: {pipelines: {primary: {overlay: {cap: 0.06, per_asset_cap: 0.03}}}}
+      data: {news_label_noise: 0.1}
+      text: {enabled: true}
+    grid:
+      data.event_impact_per_bar: [0.0015, 0.004, 0.008]
+      ablation: [no_news, full, sign_flip, shuffled]

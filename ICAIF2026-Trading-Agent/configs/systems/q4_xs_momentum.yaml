@@ -1,0 +1,7 @@
+# Cross-sectional momentum; horizon overridden per experiment (1h,2h,4h,1d,5d,20d).
+extends: _base.yaml
+name: q4_xs_momentum
+pipelines:
+  primary:
+    alpha: {method: momentum, horizon: 5d}
+    base: {method: topk_equal, k: 8, positive_only: true}

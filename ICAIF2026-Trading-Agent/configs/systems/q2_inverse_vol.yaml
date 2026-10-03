@@ -1,0 +1,4 @@
+extends: _base.yaml
+name: q2_inverse_vol
+pipelines:
+  primary: {base: {method: inverse_vol}}

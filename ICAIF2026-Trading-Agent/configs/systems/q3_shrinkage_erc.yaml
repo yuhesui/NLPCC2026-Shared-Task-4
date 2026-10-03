@@ -1,0 +1,4 @@
+extends: _base.yaml
+name: q3_shrinkage_erc
+pipelines:
+  primary: {base: {method: erc}}

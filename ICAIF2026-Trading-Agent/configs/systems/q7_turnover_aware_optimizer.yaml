@@ -1,0 +1,7 @@
+extends: _base.yaml
+name: q7_turnover_aware_optimizer
+pipelines:
+  primary:
+    alpha: {method: multi_horizon, horizons: {"1d": 0.3, "5d": 0.4, "20d": 0.3}}
+    base: {method: optimizer, ic: 0.05, risk_aversion: 2.0, gamma: 0.002, alpha_horizon: 5d, max_gross: 1.0}
+    turnover: {band: 0.002, min_total_change: 0.01, max_round: 0.20, max_daily: 0.60}

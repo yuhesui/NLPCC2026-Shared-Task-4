@@ -1,0 +1,12 @@
+# Candidate public sources. status: implemented_parser | interface_only | rejected
+# Every enabled source must have its terms reviewed and recorded in docs/data/DATA_PROVENANCE.md.
+sources:
+  sec_edgar_submissions: {status: implemented_parser, access: "https://data.sec.gov/submissions/CIK##########.json",
+                          availability: acceptanceDateTime, needs: SEC_USER_AGENT, enabled: false}
+  gdelt_doc_api:         {status: implemented_parser, access: "https://api.gdeltproject.org/api/v2/doc/doc?mode=artlist&format=json",
+                          availability: "seendate + 15min latency (historical)", enabled: false}
+  local_jsonl:           {status: implemented_parser, access: "data/raw/news/*.jsonl", enabled: false}
+  yahoo_finance_news:    {status: interface_only, note: "recommended by organizer; check Yahoo terms before automated access", enabled: false}
+  company_ir_rss:        {status: interface_only, note: "per-company press-release RSS; availability = feed timestamp", enabled: false}
+  fred_alfred:           {status: implemented_parser, access: "api.stlouisfed.org (free key)", availability: realtime_start, enabled: false}
+  paid_or_private_feeds: {status: rejected, note: "prohibited by competition rules"}

@@ -1,0 +1,51 @@
+# --- secrets / private competition state ---
+.env
+.env.*
+!.env.example
+.icaif/
+private/
+**/decision.json
+!tests/fixtures/**/decision.json
+*credentials*.json
+*.schedule.json
+
+# --- official kit checkout (fetched by scripts/setup/fetch_official_kit.sh) ---
+third_party/*
+!third_party/README.md
+
+# --- data / caches / models ---
+data/raw/*
+data/interim/*
+data/processed/*
+data/cache/*
+data/manifests/*
+!data/**/.gitkeep
+!data/README.md
+models/
+checkpoints/
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.onnx
+*.gguf
+hf_cache/
+.cache/
+
+# --- generated outputs (keep folder skeleton only) ---
+outputs/*/*
+!outputs/*/.gitkeep
+!outputs/README.md
+
+# --- python / tooling ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+build/
+dist/

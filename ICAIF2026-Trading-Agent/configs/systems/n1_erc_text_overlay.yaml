@@ -1,0 +1,6 @@
+# Bounded text overlay on the Q3 core. Text signal settings come from the experiment config.
+extends: q3_shrinkage_erc.yaml
+name: n1_erc_text_overlay
+pipelines:
+  primary:
+    overlay: {enabled: true, cap: 0.02, modes: [confidence], transform: zscore, per_asset_cap: 0.01, min_confidence: 0.05}

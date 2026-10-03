@@ -1,0 +1,4 @@
+backtest:
+  fee_rate: 0.001               # cannot be changed for serious runs (engine raises)
+  decision_lead_minutes: 5      # AS_OF = deadline - 5 min
+  serious: true

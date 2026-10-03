@@ -1,0 +1,11 @@
+extends: _base.yaml
+name: q8_dynamic_exposure
+pipelines:
+  primary:
+    base: {method: erc}
+    exposure:
+      base: 1.0
+      min_gross: 0.2
+      vol_target: {target_vol_ann: 0.15}
+      regime: {trend_floor: -0.02, breadth_floor: 0.4, risk_off_gross: 0.6}
+      drawdown: {start: 0.02, full: 0.08, min_gross: 0.3}

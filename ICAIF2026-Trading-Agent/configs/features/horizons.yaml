@@ -1,0 +1,4 @@
+# Horizons in trading hours (one session = 6.5h). Bars per horizon = hours * 60 / bar_minutes.
+horizons: {"1h": 1.0, "2h": 2.0, "4h": 4.0, "1d": 6.5, "5d": 32.5, "20d": 130.0}
+# Note: with 60-minute bars aligned to :30, rounds R2..R7 see a bar that is one hour stale;
+# prefer <= 30-minute bars for intraday horizons.

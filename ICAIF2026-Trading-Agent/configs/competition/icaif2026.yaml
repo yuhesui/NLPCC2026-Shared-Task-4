@@ -1,0 +1,20 @@
+# Mirror of the official starter kit (DeepIntoStreams/2026ICAIF_Trading_Agent_Competition,
+# commit ad237b07). Source of truth for code is src/icaif/core/constants.py; this file
+# documents the values and is checked against them in tests/competition/test_configs.py.
+competition: ICAIF 2026 Trading Agent Competition (Codabench 99)
+official_kit_commit: ad237b074d31dca39c5c975b3e5cb61cf85a8feb
+timezone: America/New_York
+initial_nav: 1000000
+max_weight: 0.30
+max_gross: 1.0
+fee_rate: 0.001
+rounds_per_day: 7
+round_deadlines_et: ["09:10", "10:25", "11:25", "12:25", "13:25", "14:25", "15:25"]
+round_execution_times_et: ["09:30", "10:30", "11:30", "12:30", "13:30", "14:30", "15:30"]
+regular_close_et: "16:00"
+sharpe_annualisation: 42      # sqrt(252*7)
+phases:
+  validation: ["2026-10-08", "2026-10-09"]     # 14 rounds
+  official: ["2026-10-12", "2026-10-30"]       # 15 trading days, 105 rounds
+metrics: [cumulative_return, sharpe_ratio, maximum_drawdown, turnover]
+ranking: mean of the four metric ranks (lower is better); ties -> average rank

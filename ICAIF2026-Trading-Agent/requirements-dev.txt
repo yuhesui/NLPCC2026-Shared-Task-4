@@ -1,0 +1,5 @@
+-r requirements.txt
+pytest>=8.0
+ruff>=0.5
+# Needed only for live submission through the official client:
+httpx==0.28.1

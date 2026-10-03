@@ -1,0 +1,5 @@
+risk:
+  cov_method: ledoit_wolf      # sample | fixed | ledoit_wolf | constant_correlation | ewma
+  cov_lookback_hours: 130      # ~20 trading days
+  vol_lookback_hours: 65       # ~10 trading days
+  fixed_alpha: 0.2             # only for cov_method: fixed (AlphaAllocator default; NLPCC Track A used 0.05)

@@ -1,0 +1,18 @@
+# Shared defaults. Every system: primary pipeline -> deterministic fallback -> HOLD.
+strict: false
+max_staleness_hours: 72
+hard_max_turnover: 2.0
+fallback_chain: [primary, fallback_erc]
+pipelines:
+  primary:
+    min_history_hours: 13
+    risk: {cov_method: ledoit_wolf, cov_lookback_hours: 130, vol_lookback_hours: 65}
+    exposure: {base: 1.0}
+    turnover: {band: 0.002, min_total_change: 0.01}
+  fallback_erc:
+    min_history_hours: 6.5
+    base: {method: erc}
+    alpha: {method: none}
+    risk: {cov_method: ledoit_wolf, cov_lookback_hours: 65, vol_lookback_hours: 32.5}
+    exposure: {base: 0.9}
+    turnover: {band: 0.005, min_total_change: 0.02, max_round: 0.25}

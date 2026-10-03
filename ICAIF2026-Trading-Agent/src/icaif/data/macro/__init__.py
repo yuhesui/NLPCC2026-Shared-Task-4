@@ -1,0 +1,1 @@
+"""Vintage-aware macro observations."""
