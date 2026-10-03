@@ -1,4 +1,4 @@
-# ICAIF2026-Trading-Agent
+# icaif-trading-agent
 
 Research + production workspace for the **ACM ICAIF 2026 Trading Agent Competition**
 ([Codabench 99](https://hackathon2.deepintomlf.ai/competitions/99/);
@@ -64,8 +64,8 @@ data/, outputs/, third_party/   git-ignored contents (skeleton only)
 
 Everything needed to backtest, ablate and run the quant baselines and the lexical text overlay works
 offline and is tested (official-kit parity included). **No real market or news data is bundled**, so
-no strategy has real-market evidence yet; transformer encoders are interfaces until local model files
-are registered and their competition status is confirmed. See the audit for what is stubbed or blocked.
+no strategy has real-market evidence yet; transformer encoders are policy-cleared (public models run
+locally are permitted) but remain interfaces until local model files are registered. See the audit for what is stubbed or blocked.
 
 ## Rules for contributors (humans and agents)
 

@@ -1,71 +1,76 @@
 # Encoder / reranker candidates. NOTHING here is downloaded automatically.
+#
+# Policy basis (team ruling, 2026-10-03): non-LLM encoders are permitted. A publicly
+# available model that runs locally on the team's own machine is acceptable. The organizer's
+# LLM list still applies to generative LLMs. Paid / third-party hosted APIs stay excluded.
+# See docs/competition/ICAIF_RULES_AND_PROTOCOL.md §6 (Q1, resolved).
+#
 # status:
-#   ready                  permitted and runnable offline now (or via an allowed LLM family)
-#   requires_confirmation  technically testable; competition-policy status needs an organizer ruling
-#   unsuitable             do not use (language mismatch, paid/proprietary, licence)
-#   deferred               interesting, postponed (cost/complexity)
-# requires_rule_confirmation: true blocks LIVE use (icaif.nlp.embeddings.check_policy) and
-# blocks offline use unless allow_unconfirmed_research is set explicitly.
-# local_path: fill in after a manual, recorded download (scripts/setup/register_local_model.py).
-# Licences/sizes are as published on the model cards; re-check before use.
+#   ready        permitted; runnable once `local_path` points at a manually downloaded, pinned snapshot
+#   unsuitable   do not use (language mismatch, paid/hosted, licence)
+#   deferred     permitted but postponed (cost/complexity)
+# requires_rule_confirmation: true blocks LIVE use (icaif.nlp.embeddings.check_policy) and offline use
+# unless allow_unconfirmed_research is set. It stays available for any future ambiguous entry.
+# local_path: fill in after a manual, recorded download (model id, revision, licence, weights sha256, date).
+# Licences are as published on the model cards; re-check before use.
 models:
   lexical_hash_512:
     {family: lexical_baseline, status: ready, requires_rule_confirmation: false, notes: "feature hashing; not a transformer"}
   lexical_entity_v1:
     {family: lexical_baseline, status: ready, requires_rule_confirmation: false, notes: "entity linking relevance"}
 
-  # --- allowed LLM families used as encoders (LLM list names Qwen3, Llama 4, Gemma 3, ...) ---
-  Qwen/Qwen3-0.6B:
-    {family: allowed_llm_as_encoder, status: ready, requires_rule_confirmation: false,
-     notes: "Qwen3 is on the organizer LLM list; mean-pooled hidden states; disclose as LLM use; GPU recommended"}
-  Qwen/Qwen3-Embedding-0.6B:
-    {family: allowed_family_derivative, status: requires_confirmation, requires_rule_confirmation: true,
-     notes: "embedding fine-tune of Qwen3; confirm that Qwen3-derived embedding models count as Qwen3"}
-  Qwen/Qwen3-Embedding-4B:
-    {family: allowed_family_derivative, status: deferred, requires_rule_confirmation: true, notes: "cost; after 0.6B"}
-  Qwen/Qwen3-Reranker-0.6B:
-    {family: allowed_family_derivative, status: requires_confirmation, requires_rule_confirmation: true, notes: "cross-encoder reranker"}
-  google/embeddinggemma-300m:
-    {family: allowed_family_derivative, status: requires_confirmation, requires_rule_confirmation: true,
-     notes: "Gemma-3-based embedding model; Gemma licence terms"}
-
-  # --- generic open sentence encoders (not LLMs; policy on non-LLM encoders is unstated) ---
+  # --- generic open sentence encoders (public, local) ---
   sentence-transformers/all-MiniLM-L6-v2:
-    {family: generic_encoder, status: requires_confirmation, requires_rule_confirmation: true, license: apache-2.0}
+    {family: generic_encoder, status: ready, requires_rule_confirmation: false, license: apache-2.0, notes: "fast CPU baseline"}
   BAAI/bge-small-en-v1.5:
-    {family: generic_encoder, status: requires_confirmation, requires_rule_confirmation: true, license: mit,
+    {family: generic_encoder, status: ready, requires_rule_confirmation: false, license: mit,
      notes: "English successor of the NLPCC bge-small-zh choice"}
   BAAI/bge-base-en-v1.5:
-    {family: generic_encoder, status: requires_confirmation, requires_rule_confirmation: true, license: mit}
+    {family: generic_encoder, status: ready, requires_rule_confirmation: false, license: mit}
   intfloat/e5-base-v2:
-    {family: generic_encoder, status: requires_confirmation, requires_rule_confirmation: true, license: mit}
+    {family: generic_encoder, status: ready, requires_rule_confirmation: false, license: mit, notes: "needs 'query:'/'passage:' prefixes"}
   Alibaba-NLP/gte-base-en-v1.5:
-    {family: generic_encoder, status: requires_confirmation, requires_rule_confirmation: true, license: apache-2.0}
+    {family: generic_encoder, status: ready, requires_rule_confirmation: false, license: apache-2.0, notes: "trust_remote_code model"}
   nomic-ai/nomic-embed-text-v1.5:
-    {family: generic_encoder, status: requires_confirmation, requires_rule_confirmation: true, license: apache-2.0}
-  cross-encoder/ms-marco-MiniLM-L-6-v2:
-    {family: generic_reranker, status: requires_confirmation, requires_rule_confirmation: true, license: apache-2.0}
-  BAAI/bge-reranker-base:
-    {family: generic_reranker, status: requires_confirmation, requires_rule_confirmation: true, license: mit}
+    {family: generic_encoder, status: ready, requires_rule_confirmation: false, license: apache-2.0, notes: "task prefixes; trust_remote_code"}
 
-  # --- finance-domain ---
+  # --- rerankers (public, local) ---
+  cross-encoder/ms-marco-MiniLM-L-6-v2:
+    {family: generic_reranker, status: ready, requires_rule_confirmation: false, license: apache-2.0}
+  BAAI/bge-reranker-base:
+    {family: generic_reranker, status: ready, requires_rule_confirmation: false, license: mit}
+
+  # --- finance-domain (public, local) ---
   ProsusAI/finbert:
-    {family: finance_sentiment, status: requires_confirmation, requires_rule_confirmation: true,
+    {family: finance_sentiment, status: ready, requires_rule_confirmation: false,
      notes: "3-class financial tone (FinBERT-style tone baseline from AlphaAllocator, English)"}
   yiyanghkust/finbert-tone:
-    {family: finance_sentiment, status: requires_confirmation, requires_rule_confirmation: true}
+    {family: finance_sentiment, status: ready, requires_rule_confirmation: false}
   FinLang/finance-embeddings-investopedia:
-    {family: finance_encoder, status: requires_confirmation, requires_rule_confirmation: true,
+    {family: finance_encoder, status: ready, requires_rule_confirmation: false,
      notes: "bge-base fine-tuned on finance QA; verify card/licence"}
 
-  # --- unsuitable / deferred ---
+  # --- LLM-family encoders (public weights, local). Qwen3/Gemma 3 are also on the organizer LLM list. ---
+  Qwen/Qwen3-Embedding-0.6B:
+    {family: llm_family_encoder, status: ready, requires_rule_confirmation: false, notes: "GPU recommended"}
+  Qwen/Qwen3-Reranker-0.6B:
+    {family: llm_family_encoder, status: ready, requires_rule_confirmation: false, notes: "cross-encoder reranker"}
+  google/embeddinggemma-300m:
+    {family: llm_family_encoder, status: ready, requires_rule_confirmation: false, notes: "Gemma licence terms"}
+  Qwen/Qwen3-0.6B:
+    {family: allowed_llm_as_encoder, status: ready, requires_rule_confirmation: false,
+     notes: "mean-pooled hidden states of an organizer-listed LLM; disclose as LLM use"}
+  Qwen/Qwen3-Embedding-4B:
+    {family: llm_family_encoder, status: deferred, requires_rule_confirmation: false, notes: "cost; after 0.6B"}
+
+  # --- unsuitable ---
   BAAI/bge-small-zh-v1.5:
-    {family: legacy_nlpcc, status: unsuitable, requires_rule_confirmation: true, notes: "Chinese; NLPCC legacy"}
+    {family: legacy_nlpcc, status: unsuitable, requires_rule_confirmation: false, notes: "Chinese; NLPCC legacy"}
   yiyanghkust/finbert-tone-chinese:
-    {family: legacy_nlpcc, status: unsuitable, requires_rule_confirmation: true, notes: "Chinese; NLPCC legacy"}
+    {family: legacy_nlpcc, status: unsuitable, requires_rule_confirmation: false, notes: "Chinese; NLPCC legacy"}
   voyage-finance-2:
     {family: hosted_paid_embedding, status: unsuitable, requires_rule_confirmation: true,
-     notes: "paid hosted API, not on LLM list; sending data to third parties"}
+     notes: "paid third-party hosted API; not local"}
   openai/text-embedding-3-large:
-    {family: hosted_paid_embedding, status: deferred, requires_rule_confirmation: true,
-     notes: "OpenAI is a listed provider but this is not GPT-5; confirm"}
+    {family: hosted_paid_embedding, status: unsuitable, requires_rule_confirmation: true,
+     notes: "paid hosted API, not local, not an organizer-listed LLM"}

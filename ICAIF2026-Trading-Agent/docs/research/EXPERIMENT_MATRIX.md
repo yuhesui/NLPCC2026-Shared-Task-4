@@ -11,7 +11,7 @@ gets a deterministic id `<family>.<name>.<digest>` and a record under `outputs/e
 | covariance_estimators | sample, fixed α, Ledoit-Wolf, constant correlation, EWMA | risk model choice | runnable (synthetic) |
 | exposure_policies | fixed 100 / 97 (NLPCC) / 80, vol target 15% / 10%, regime, drawdown guard | is fixed ~97% optimal? | runnable (synthetic) |
 | turnover_controls | unaware, light, standard, strict sparse, rebalance R1+R4 only | fee/turnover-metric trade-off | runnable (synthetic) |
-| nlp_relevance | lexical entity, dense hash, hybrid hash; *blocked*: bge-small-en, Qwen3-Embedding, fine-tuned bi-encoder, cross-encoder, LLM judge | relevance method | partly runnable; rest blocked_local_model / blocked_rule / blocked_real_data |
+| nlp_relevance | lexical entity, dense hash, hybrid hash; *blocked*: bge-small-en, Qwen3-Embedding, cross-encoder (local model files), fine-tuned bi-encoder (real data), LLM judge (client) | relevance method | partly runnable; rest blocked_local_model / blocked_real_data |
 | nlp_components | no text, relevance only, sentiment only, market sentiment, event only, relevance+sentiment, relevance+event, full structured | which text component matters | runnable (synthetic) |
 | overlay_caps | η = 0, 0.005, 0.01, 0.02, 0.04 | overlay magnitude | runnable (synthetic) |
 | overlay_transforms | linear, rank, softmax, sigmoid, z-score, top-k | score → tilt mapping | runnable (synthetic) |

@@ -16,8 +16,9 @@
 4. **Fees are always on** (0.001). Never weaken `BacktestConfig` cost checks.
 5. **Competition rules.** Weights: 30 symbols, 0 ≤ w ≤ 0.30, Σ ≤ 1, finite numbers. Use
    `competition/submission.py` and the official validator. One intended upload per round (ledger).
-6. **LLMs/encoders**: only organizer-listed LLM families; anything ambiguous is
-   `requires_rule_confirmation: true`. LLMs extract information; they do not allocate in production.
+6. **LLMs/encoders**: generative LLMs must be organizer-listed families. Non-LLM encoders are allowed when
+   the model is public and runs locally (team ruling 2026-10-03); paid/hosted APIs are not. Anything
+   ambiguous is `requires_rule_confirmation: true`. LLMs extract information; they do not allocate in production.
 7. **Secrets** never appear in code, configs, traces or logs (`.env`, `.icaif/`, `private/` are ignored).
 8. **Do not vendor the official kit** (no licence); reference it via `official_adapter.py`.
 

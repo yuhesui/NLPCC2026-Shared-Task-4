@@ -1,6 +1,6 @@
 # Final repository audit — 2026-10-03
 
-Scope: first build of `ICAIF2026-Trading-Agent` (≈7.3k LOC in `src/`, 1.7k in `tests/`, 0.4k in
+Scope: first build of `icaif-trading-agent` (≈7.3k LOC in `src/`, 1.7k in `tests/`, 0.4k in
 `scripts/`). Official kit pinned at `ad237b07` (2026-09-21). Validation starts 2026-10-08.
 
 ## Checks run
@@ -80,7 +80,7 @@ alpha · Black-Litterman text views · official `watch` strategy adapter (the cu
 |---|---|
 | Any real-market evidence (baselines, NLP value) | no point-in-time historical bars/news in the repo |
 | Live trading | team registration/credentials, profile, a live intraday data job (TODO(data)) |
-| Transformer encoders / rerankers / FinBERT | local model files (manual pinned download) **and** organizer ruling Q1 |
+| Transformer encoders / rerankers / FinBERT | local model files (manual pinned download); policy cleared (Q1 resolved 2026-10-03) |
 | Fine-tuning Stages A–C | labelled real data + base models |
 | LLM experiments | client implementation, API credits, disclosure plan |
 
@@ -91,7 +91,7 @@ IR feeds) with publication times; EDGAR filings (fetch script ready; CIK map unv
 
 ## Needs organizer confirmation
 
-Q1 non-LLM encoders and Qwen3/Gemma-3-derived embedding models · Q2 official execution price source ·
+Q1 resolved (non-LLM / public local encoders permitted) · Q2 official execution price source ·
 Q3 fee funding at Σw≈1 · Q4 portfolio/ledger/round API response schemas · Q5 use of platform valuations
 as inputs · Q6 GDELT / Yahoo automated access · Q7 model-knowledge-cutoff disclosure · Q8 exceptional
 sessions (see `docs/competition/ICAIF_RULES_AND_PROTOCOL.md` §6).
@@ -105,9 +105,9 @@ sessions (see `docs/competition/ICAIF_RULES_AND_PROTOCOL.md` §6).
 * Language detection is a heuristic; entity aliases are hand-curated (no coverage study yet).
 * Event priors are uncalibrated guesses.
 * `PITStore.extend` is O(n) per insert (fine for current sizes); `MarketPanel.as_of` converts a tuple per call.
-* The repository currently lives as a directory on branch `claude/peaceful-cerf-3amyvl` of
-  `yuhesui/NLPCC2026-Shared-Task-4` (the session could not create a new GitHub repository); extract with
-  `git subtree split --prefix=ICAIF2026-Trading-Agent`.
+* Built as a directory on branch `claude/peaceful-cerf-3amyvl` of `yuhesui/NLPCC2026-Shared-Task-4`
+  and extracted with `git subtree split --prefix=ICAIF2026-Trading-Agent` into `icaif-trading-agent`
+  (history preserved).
 
 ## Recommended next experiments
 
@@ -118,7 +118,7 @@ sessions (see `docs/competition/ICAIF_RULES_AND_PROTOCOL.md` §6).
    (turnover is 1 of 4 ranks) — likely the largest single lever.
 3. **Lexical text overlay on real news** with the full ablation set (no_news, shuffled, wrong_asset,
    sign_flip, stale) and planted-signal power analysis calibrated to real noise.
-4. **Encoder comparison E1/E3** (bge-small-en, MiniLM, Qwen3-0.6B-as-encoder) once Q1 is answered —
+4. **Encoder comparison E1/E3** (bge-small-en, MiniLM, Qwen3-Embedding-0.6B; policy cleared) —
    promote only on downstream PIT evidence.
 5. **Event-study calibration** of half-lives and magnitudes per event type (replace the uncalibrated priors),
    then compare event-aware budgets against the fixed cap.

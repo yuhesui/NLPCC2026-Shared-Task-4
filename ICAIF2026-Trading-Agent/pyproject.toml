@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "icaif2026-trading-agent"
+name = "icaif-trading-agent"
 version = "0.1.0"
 description = "Research + production workspace for the ACM ICAIF 2026 Trading Agent Competition."
 readme = "README.md"

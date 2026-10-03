@@ -5,17 +5,16 @@ asset-conditioned relevance (and label-attention event typing) — not which get
 
 ## 1. Policy status (configs/embeddings/registry.yaml)
 
-The organizer list restricts **LLMs** to named families; it is silent on smaller encoders. A model
-being publicly downloadable does not make it compliant. Every non-baseline model therefore carries
-`requires_rule_confirmation`, which `nlp.embeddings.check_policy` enforces (blocked live; offline only
-with `allow_unconfirmed_research`). Open question Q1 in `docs/competition/ICAIF_RULES_AND_PROTOCOL.md`.
+The organizer list restricts **generative LLMs** to named families. **Team ruling (2026-10-03,
+Q1 resolved): non-LLM encoders are permitted; a publicly available model run locally on the team's own
+machine is acceptable.** Paid or third-party hosted embedding APIs remain excluded. The
+`requires_rule_confirmation` flag and `nlp.embeddings.check_policy` stay in place for any future ambiguous entry.
 
 | Category | Models |
 |---|---|
-| Permitted and ready | lexical/entity baseline; feature-hashing encoder; allowed-family LLMs used as encoders (e.g. Qwen3-0.6B mean-pooled hidden states — disclosed as LLM use) |
-| Testable, needs rule confirmation | Qwen3-Embedding-0.6B, Qwen3-Reranker-0.6B, EmbeddingGemma-300m (allowed-family derivatives); all-MiniLM-L6-v2, bge-small/base-en-v1.5, e5-base-v2, gte-base-en-v1.5, nomic-embed-text-v1.5 (generic); ms-marco MiniLM cross-encoder, bge-reranker-base; ProsusAI/finbert, finbert-tone (tone); FinLang finance-embeddings |
-| Unsuitable | bge-small-zh, finbert-tone-chinese (language; NLPCC legacy); voyage-finance-2 (paid hosted, not on list) |
-| Deferred | Qwen3-Embedding-4B/8B (cost), OpenAI text-embedding-3 (not GPT-5; confirm), LLM2Vec-style conversions |
+| Permitted and ready (needs a local snapshot) | lexical/entity baseline; feature-hashing encoder; all-MiniLM-L6-v2, bge-small/base-en-v1.5, e5-base-v2, gte-base-en-v1.5, nomic-embed-text-v1.5 (generic); ms-marco MiniLM cross-encoder, bge-reranker-base (rerankers); ProsusAI/finbert, finbert-tone (tone); FinLang finance-embeddings; Qwen3-Embedding-0.6B, Qwen3-Reranker-0.6B, EmbeddingGemma-300m; Qwen3-0.6B mean-pooled (disclosed as LLM use) |
+| Unsuitable | bge-small-zh, finbert-tone-chinese (language; NLPCC legacy); voyage-finance-2, OpenAI text-embedding-3 (paid hosted, not local) |
+| Deferred | Qwen3-Embedding-4B/8B (cost), LLM2Vec-style conversions |
 
 Model files are **never downloaded by code in this repository**. A human downloads a pinned revision
 once, records it (model id, revision, licence, sha256 of weights, date) and sets `local_path`.
@@ -57,9 +56,10 @@ company). **Downstream** (required for promotion): rank-IC of the per-asset text
 An encoder is promoted only if, on locked validation windows: downstream rank-objective improves over both
 no-news and lexical controls in a majority of windows; the improvement survives the shuffled /
 wrong-asset / sign-flip ablations (which must degrade it); turnover-adjusted CR does not fall; its
-policy status is confirmed. Better Recall@K alone never promotes a model.
+registry status is `ready`. Better Recall@K alone never promotes a model.
 
 ## 6. Status
 
-Interfaces, policy gate, registry and E0 are implemented and tested. E1–E7 are **blocked on local model
-files and (for live use) organizer confirmation**; E4 also needs labelled real data.
+Interfaces, policy gate, registry and E0 are implemented and tested. E1–E3, E5, E6 are now policy-cleared
+and **blocked only on local model files** (manual pinned download); E4 also needs labelled real data; E7
+needs an LLM client.

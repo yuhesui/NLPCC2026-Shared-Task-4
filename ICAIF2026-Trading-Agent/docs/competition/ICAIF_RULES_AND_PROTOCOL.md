@@ -81,7 +81,7 @@ calculator to 1e-12 (parity test). `overall_rank_scores` reproduces ranking give
 
 | # | Question | Why it matters | Current handling |
 |---|---|---|---|
-| Q1 | Are non-LLM encoders (e.g. BERT-size sentence encoders, FinBERT, cross-encoders) restricted by the LLM list? Do Qwen3-/Gemma-3-derived embedding models (Qwen3-Embedding, EmbeddingGemma) count as their parent family? | Determines which NLP models are legal | `requires_rule_confirmation: true`; blocked live |
+| Q1 | ~~Are non-LLM encoders restricted by the LLM list?~~ **Resolved 2026-10-03 (team ruling):** non-LLM encoders are permitted; any publicly available model run locally on the team's machine is acceptable. Paid/hosted embedding APIs stay excluded. | Determines which NLP models are legal | Registry entries set to `ready` (`configs/embeddings/registry.yaml`) |
 | Q2 | Exact official execution price: "hourly open" from which data vendor/feed, and for R1 the official opening auction price? | Backtest execution proxy (open of bar starting at execution time) | Proxy documented |
 | Q3 | How is the fee funded when Σw is at/near 1 (cash after fees < 0)? Does the backend scale buys, reduce cash below zero, or "correct tolerated excess" some other way? | Edge-case accounting | We leave `fee_rate × turnover` cash buffer; simulator scales buys |
 | Q4 | Response schemas of `/api/v1/me/portfolio`, `/ledger`, `/rounds/{id}` (field names for cash/positions/prices)? | Live portfolio parsing | Strict parser; unknown shape → HOLD; verify in Validation |

@@ -69,10 +69,10 @@ families:
     grid:
       text.relevance: [lexical_entity, dense_hash, hybrid_hash]
     blocked:
-      - {name: dense_bge_small_en, reason: blocked_local_model+blocked_rule}
-      - {name: dense_qwen3_embedding_0_6b, reason: blocked_local_model+blocked_rule}
+      - {name: dense_bge_small_en, reason: blocked_local_model}
+      - {name: dense_qwen3_embedding_0_6b, reason: blocked_local_model}
       - {name: finetuned_biencoder, reason: "blocked_real_data (needs FINETUNING_PLAN Stage B labels)"}
-      - {name: cross_encoder_rerank, reason: blocked_local_model+blocked_rule}
+      - {name: cross_encoder_rerank, reason: blocked_local_model}
       - {name: llm_relevance_judge, reason: "needs hosted client + credits (allowed families only)"}
 
   nlp_components:

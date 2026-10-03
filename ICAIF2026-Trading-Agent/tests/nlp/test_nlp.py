@@ -313,3 +313,17 @@ def test_training_pairs_cover_negative_types(world):
     assert {"positive", "random_company", "same_sector", "market_wide", "temporal_adjacent"} <= kinds
     pos = [p for p in pairs if p.label == 1]
     assert pos and all(p.asset in SYMBOLS for p in pairs)
+
+
+def test_public_local_encoders_are_policy_cleared():
+    """Team ruling 2026-10-03: non-LLM encoders are fine if public and run locally; hosted paid APIs are not."""
+
+    from icaif.core.config import load_config
+
+    reg = load_config("configs/embeddings/registry.yaml")["models"]
+    for model_id in ("BAAI/bge-small-en-v1.5", "sentence-transformers/all-MiniLM-L6-v2", "ProsusAI/finbert",
+                     "cross-encoder/ms-marco-MiniLM-L-6-v2", "Qwen/Qwen3-Embedding-0.6B"):
+        check_policy(EncoderSpec.from_mapping({"model_id": model_id, **reg[model_id]}), live=True)
+    for model_id in ("voyage-finance-2", "openai/text-embedding-3-large"):
+        with pytest.raises(ModelPolicyError):
+            check_policy(EncoderSpec.from_mapping({"model_id": model_id, **reg[model_id]}), live=True)
